@@ -1,1 +1,2 @@
-pub mod vec3;
+pub mod geo;
+mod random;

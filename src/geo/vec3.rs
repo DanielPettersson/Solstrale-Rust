@@ -1,0 +1,207 @@
+use crate::random;
+use std::f64::consts::PI;
+
+/// Vec3 is a 3 dimensional vector
+#[derive(Copy, Clone)]
+pub struct Vec3 {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
+
+/// A value that is so small as to be almost zero
+const ALMOST_ZERO: f64 = 1e-8;
+pub const ZERO_VECTOR: Vec3 = Vec3 {
+    x: 0.,
+    y: 0.,
+    z: 0.,
+};
+
+impl Vec3 {
+    /// returns a Vec3 that has all values negated
+    pub fn neg(&self) -> Vec3 {
+        Vec3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
+    }
+
+    /// returns a Vec3 that has all values added with corresponding value in given Vec3
+    pub fn add(&self, v: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x + v.x,
+            y: self.y + v.y,
+            z: self.z + v.z,
+        }
+    }
+
+    /// returns a Vec3 that has all values subtracted by corresponding value in given Vec3
+    pub fn sub(&self, v: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x - v.x,
+            y: self.y - v.y,
+            z: self.z - v.z,
+        }
+    }
+
+    /// returns a Vec3 that has all values multiplied with corresponding value in given Vec3
+    pub fn mul(&self, v: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * v.x,
+            y: self.y * v.y,
+            z: self.z * v.z,
+        }
+    }
+
+    /// returns a Vec3 that has all values multiplied with given scalar
+    pub fn mul_s(&self, t: f64) -> Vec3 {
+        Vec3 {
+            x: self.x * t,
+            y: self.y * t,
+            z: self.z * t,
+        }
+    }
+
+    /// returns a Vec3 that has all values divided by given scalar
+    pub fn div_s(&self, t: f64) -> Vec3 {
+        Vec3 {
+            x: self.x / t,
+            y: self.y / t,
+            z: self.z / t,
+        }
+    }
+
+    /// returns the dot product with given Vec3
+    pub fn dot(&self, v: Vec3) -> f64 {
+        self.x * v.x + self.y * v.y + self.z * v.z
+    }
+
+    /// returns the cross product with given Vec3
+    pub fn cross(&self, v: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.y * v.z - self.z * v.y,
+            y: self.z * v.x - self.x * v.z,
+            z: self.x * v.y - self.y * v.x,
+        }
+    }
+
+    /// return the squared length of the vector
+    /// # Examples:
+    /// ```
+    /// use solstrale::geo::vec3::Vec3;
+    /// let v = Vec3 {x: 1., y: 2., z: 3.};
+    /// assert_eq!(14., v.length_squared())
+    /// ```
+    pub fn length_squared(&self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    /// return the length of the vector
+    pub fn length(&self) -> f64 {
+        self.length_squared().sqrt()
+    }
+
+    /// returns the vector but sized to a length of 1
+    pub fn unit(&self) -> Vec3 {
+        self.div_s(self.length())
+    }
+
+    /// Checks if the vectors length is near zero
+    pub fn near_zero(&self) -> bool {
+        self.x.abs() < ALMOST_ZERO && self.y.abs() < ALMOST_ZERO && self.z.abs() < ALMOST_ZERO
+    }
+
+    /// returns the reflection vector given the normal n
+    pub fn reflect(&self, n: Vec3) -> Vec3 {
+        self.sub(n.mul_s(self.dot(n) * 2.))
+    }
+
+    /// returns the refraction vector given the normal n and the index of refraction of the material
+    pub fn refract(&self, n: Vec3, index_of_refraction: f64) -> Vec3 {
+        let cos_theta = self.neg().dot(n).min(1.);
+        let r_out_perp = n.mul_s(cos_theta).add(*self).mul_s(index_of_refraction);
+        let r_out_parallel = n.mul_s(-(1. - r_out_perp.length_squared()).abs().sqrt());
+        r_out_perp.add(r_out_parallel)
+    }
+}
+
+/// Creates a random Vec3 within the given interval
+pub fn random_vec3(min: f64, max: f64) -> Vec3 {
+    Vec3 {
+        x: random::random_float(min, max),
+        y: random::random_float(min, max),
+        z: random::random_float(min, max),
+    }
+}
+
+/// Creates a random Vec3 that is shorter than 1
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = Vec3 {
+            x: random::random_float(-1., 1.),
+            y: random::random_float(-1., 1.),
+            z: random::random_float(-1., 1.),
+        };
+
+        if p.length_squared() < 1. {
+            return p;
+        }
+    }
+}
+
+/// Creates a random Vec3 that has the length of 1
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().unit()
+}
+
+/// Creates a random Vec3 that is shorter than 1.
+/// And in the same general direction as given normal.
+pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if in_unit_sphere.dot(normal) > 0. {
+        return in_unit_sphere;
+    }
+    return in_unit_sphere.neg();
+}
+
+/// Creates a random Vec3 that is shorter than 1 and that has a Z value of 0
+pub fn random_in_unit_disc() -> Vec3 {
+    loop {
+        let p = Vec3 {
+            x: random::random_float(-1., 1.),
+            y: random::random_float(-1., 1.),
+            z: 0.,
+        };
+
+        if p.length_squared() < 1. {
+            return p;
+        }
+    }
+}
+
+/// Generates a random vector similar to RandomUnitVector
+/// in that the length is always 1. But with a different distribution
+/// as it is generated by two random angles.
+pub fn random_cosine_direction() -> Vec3 {
+    let r1 = random::random_normal_float();
+    let r2 = random::random_normal_float();
+    let r2_sqrt = r2.sqrt();
+
+    let phi = 2. * PI * r1;
+    let x = phi.cos() * r2_sqrt;
+    let y = phi.sin() * r2_sqrt;
+    let z = (1. - r2).sqrt();
+
+    Vec3 { x, y, z }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(1, 1);
+    }
+}
