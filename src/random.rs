@@ -7,7 +7,7 @@ pub fn random_normal_float() -> f64 {
 
 /// returns a random float min to <max
 pub fn random_float(min: f64, max: f64) -> f64 {
-    fastrand::f64() * (max - min) + max
+    fastrand::f64() * (max - min) + min
 }
 
 /// returns a random uint32 0 to <max

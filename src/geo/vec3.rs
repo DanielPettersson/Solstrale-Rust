@@ -2,7 +2,7 @@ use crate::random;
 use std::f64::consts::PI;
 
 /// Vec3 is a 3 dimensional vector
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -10,7 +10,7 @@ pub struct Vec3 {
 }
 
 /// A value that is so small as to be almost zero
-const ALMOST_ZERO: f64 = 1e-8;
+pub const ALMOST_ZERO: f64 = 1e-8;
 pub const ZERO_VECTOR: Vec3 = Vec3 {
     x: 0.,
     y: 0.,
@@ -19,6 +19,12 @@ pub const ZERO_VECTOR: Vec3 = Vec3 {
 
 impl Vec3 {
     /// returns a Vec3 that has all values negated
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: -3.}.neg();
+    /// assert_eq!(Vec3 {x: -1., y: -2., z: 3.}, res)
+    /// ```
     pub fn neg(&self) -> Vec3 {
         Vec3 {
             x: -self.x,
@@ -28,6 +34,12 @@ impl Vec3 {
     }
 
     /// returns a Vec3 that has all values added with corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: 3.}.add(Vec3 {x: 4., y: 5., z: 6.});
+    /// assert_eq!(Vec3 {x: 5., y: 7., z: 9.}, res)
+    /// ```
     pub fn add(&self, v: Vec3) -> Vec3 {
         Vec3 {
             x: self.x + v.x,
@@ -37,6 +49,12 @@ impl Vec3 {
     }
 
     /// returns a Vec3 that has all values subtracted by corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: 3.}.sub(Vec3 {x: 6., y: 5., z: 4.});
+    /// assert_eq!(Vec3 {x: -5., y: -3., z: -1.}, res)
+    /// ```
     pub fn sub(&self, v: Vec3) -> Vec3 {
         Vec3 {
             x: self.x - v.x,
@@ -46,6 +64,12 @@ impl Vec3 {
     }
 
     /// returns a Vec3 that has all values multiplied with corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: 3.}.mul(Vec3 {x: 4., y: 5., z: 6.});
+    /// assert_eq!(Vec3 {x: 4., y: 10., z: 18.}, res)
+    /// ```
     pub fn mul(&self, v: Vec3) -> Vec3 {
         Vec3 {
             x: self.x * v.x,
@@ -55,6 +79,12 @@ impl Vec3 {
     }
 
     /// returns a Vec3 that has all values multiplied with given scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: 3.}.mul_s(2.);
+    /// assert_eq!(Vec3 {x: 2., y: 4., z: 6.}, res)
+    /// ```
     pub fn mul_s(&self, t: f64) -> Vec3 {
         Vec3 {
             x: self.x * t,
@@ -64,6 +94,12 @@ impl Vec3 {
     }
 
     /// returns a Vec3 that has all values divided by given scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: 3.}.div_s(2.);
+    /// assert_eq!(Vec3 {x: 0.5, y: 1., z: 1.5}, res)
+    /// ```
     pub fn div_s(&self, t: f64) -> Vec3 {
         Vec3 {
             x: self.x / t,
@@ -73,11 +109,23 @@ impl Vec3 {
     }
 
     /// returns the dot product with given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 1., y: 2., z: 3.}.dot(Vec3 {x: 4., y: 5., z: 6.});
+    /// assert_eq!(32., res)
+    /// ```
     pub fn dot(&self, v: Vec3) -> f64 {
         self.x * v.x + self.y * v.y + self.z * v.z
     }
 
     /// returns the cross product with given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3 {x: 2., y: 3., z: 4.}.cross(Vec3 {x: 5., y: 6., z: 7.});
+    /// assert_eq!(Vec3 {x: -3., y: 6., z: -3.}, res)
+    /// ```
     pub fn cross(&self, v: Vec3) -> Vec3 {
         Vec3 {
             x: self.y * v.z - self.z * v.y,
@@ -89,7 +137,7 @@ impl Vec3 {
     /// return the squared length of the vector
     /// # Examples:
     /// ```
-    /// use solstrale::geo::vec3::Vec3;
+    /// # use solstrale::geo::vec3::Vec3;
     /// let v = Vec3 {x: 1., y: 2., z: 3.};
     /// assert_eq!(14., v.length_squared())
     /// ```
@@ -98,31 +146,66 @@ impl Vec3 {
     }
 
     /// return the length of the vector
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let v = Vec3 {x: 0., y: 3., z: 4.};
+    /// assert_eq!(5., v.length())
+    /// ```
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }
 
     /// returns the vector but sized to a length of 1
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::{random_vec3, Vec3, ALMOST_ZERO};
+    /// let v = random_vec3(-10., 10.);
+    /// let unit_v = v.unit();
+    /// assert!((unit_v.length() - 1.).abs() < ALMOST_ZERO);
+    /// assert!(v.dot(unit_v) > 0.)
+    /// ```
     pub fn unit(&self) -> Vec3 {
         self.div_s(self.length())
     }
 
     /// Checks if the vectors length is near zero
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
+    /// let v = Vec3 {x: 1., y: 2., z: 3.};
+    /// assert!(!v.near_zero());
+    /// assert!(ZERO_VECTOR.near_zero());
+    /// ```
     pub fn near_zero(&self) -> bool {
         self.x.abs() < ALMOST_ZERO && self.y.abs() < ALMOST_ZERO && self.z.abs() < ALMOST_ZERO
     }
 
     /// returns the reflection vector given the normal n
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let v = Vec3 {x: 0., y: 3., z: 4.};
+    /// assert_eq!(Vec3 {x: 0., y: -3., z: 4.}, v.reflect(Vec3 {x: 0., y: 1., z: 0.}));
+    /// assert_eq!(Vec3 {x: 0., y: 3., z: -4.}, v.reflect(Vec3 {x: 0., y: 0., z: 1.}))
+    /// ```
     pub fn reflect(&self, n: Vec3) -> Vec3 {
         self.sub(n.mul_s(self.dot(n) * 2.))
     }
 
     /// returns the refraction vector given the normal n and the index of refraction of the material
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let v = Vec3 {x: -3., y: -3., z: 0.}.unit();
+    /// let ret = v.refract(Vec3 {x: 0., y: 1., z: 0.}, 1.);
+    /// assert!(ret.sub(v).near_zero());
+    /// ```
     pub fn refract(&self, n: Vec3, index_of_refraction: f64) -> Vec3 {
         let cos_theta = self.neg().dot(n).min(1.);
-        let r_out_perp = n.mul_s(cos_theta).add(*self).mul_s(index_of_refraction);
-        let r_out_parallel = n.mul_s(-(1. - r_out_perp.length_squared()).abs().sqrt());
-        r_out_perp.add(r_out_parallel)
+        let r_out_perpendicular = n.mul_s(cos_theta).add(*self).mul_s(index_of_refraction);
+        let r_out_parallel = n.mul_s(-(1. - r_out_perpendicular.length_squared()).abs().sqrt());
+        r_out_perpendicular.add(r_out_parallel)
     }
 }
 
@@ -199,9 +282,26 @@ pub fn random_cosine_direction() -> Vec3 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::util::interval::Interval;
 
     #[test]
-    fn it_works() {
-        assert_eq!(1, 1);
+    fn test_random_vec3() {
+        let interval = Interval { min: -2., max: 2. };
+
+        for _ in 0..100 {
+            let vec = random_vec3(interval.min, interval.max);
+
+            assert!(interval.contains(vec.x), "x = {}", vec.x);
+            assert!(interval.contains(vec.y));
+            assert!(interval.contains(vec.z));
+        }
+    }
+
+    #[test]
+    fn test_random_in_unit_sphere() {
+        for _ in 0..100 {
+            let vec = random_in_unit_sphere();
+            assert!(vec.length() <= 1.);
+        }
     }
 }
