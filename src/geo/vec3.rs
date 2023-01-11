@@ -1,5 +1,6 @@
 use crate::random;
 use std::f64::consts::PI;
+use std::fmt;
 
 /// Vec3 is a 3 dimensional vector
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -7,6 +8,12 @@ pub struct Vec3 {
     pub x: f64,
     pub y: f64,
     pub z: f64,
+}
+
+impl fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{ x: {}, y: {}, z: {} }}", self.x, self.y, self.z)
+    }
 }
 
 /// A value that is so small as to be almost zero
@@ -302,6 +309,51 @@ mod tests {
         for _ in 0..100 {
             let vec = random_in_unit_sphere();
             assert!(vec.length() <= 1.);
+        }
+    }
+
+    #[test]
+    fn test_random_unit_vector() {
+        for _ in 0..100 {
+            let vec = random_unit_vector();
+            assert!((vec.length() - 1.) < ALMOST_ZERO);
+        }
+    }
+
+    #[test]
+    fn test_random_cosine_direction() {
+        for _ in 0..100 {
+            let vec = random_cosine_direction();
+            assert!((vec.length() - 1.) < ALMOST_ZERO);
+        }
+    }
+
+    #[test]
+    fn test_random_in_hemisphere() {
+        for _ in 0..100 {
+            let normal = random_unit_vector();
+            let vec = random_in_hemisphere(normal);
+            assert!(
+                vec.length() <= 1.,
+                "vec {} is not in unit sphere as length is {}",
+                vec,
+                vec.length()
+            );
+            assert!(
+                vec.dot(normal) > 0.,
+                "vec {} is not is not pointing in same general direction as normal {}",
+                vec,
+                normal
+            )
+        }
+    }
+
+    #[test]
+    fn test_random_in_unit_disc() {
+        for _ in 0..100 {
+            let vec = random_in_unit_disc();
+            assert!(vec.length() <= 1.);
+            assert_eq!(0., vec.z)
         }
     }
 }

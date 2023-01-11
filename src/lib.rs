@@ -1,3 +1,3 @@
 pub mod geo;
-mod random;
-mod util;
+pub mod random;
+pub mod util;
