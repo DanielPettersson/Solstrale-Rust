@@ -252,7 +252,7 @@ pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
     if in_unit_sphere.dot(normal) > 0. {
         return in_unit_sphere;
     }
-    return in_unit_sphere.neg();
+    in_unit_sphere.neg()
 }
 
 /// Creates a random Vec3 that is shorter than 1 and that has a Z value of 0

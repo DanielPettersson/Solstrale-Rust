@@ -39,7 +39,7 @@ impl Interval {
         if x > self.max {
             return self.max;
         }
-        return x;
+        x
     }
 
     /// return the size of the interval
