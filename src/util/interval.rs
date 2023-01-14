@@ -1,5 +1,5 @@
 /// Defines a range between min and max inclusive
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -26,6 +26,10 @@ pub fn combine_intervals(a: Interval, b: Interval) -> Interval {
 }
 
 impl Interval {
+    /// Creates a new Interval
+    pub fn new(min: f64, max: f64) -> Interval {
+        Interval { min, max }
+    }
     /// Checks if the interval contains a given value
     pub fn contains(&self, x: f64) -> bool {
         self.min <= x && x <= self.max
@@ -73,23 +77,19 @@ mod tests {
 
     #[test]
     fn test_combine_intervals() {
-        let mut res =
-            combine_intervals(Interval { min: 0., max: 2. }, Interval { min: 1., max: 3. });
-        assert_eq!(Interval { min: 0., max: 3. }, res);
+        let mut res = combine_intervals(Interval::new(0., 2.), Interval::new(1., 3.));
+        assert_eq!(Interval::new(0., 3.), res);
 
-        res = combine_intervals(Interval { min: 0., max: 1. }, Interval { min: 2., max: 3. });
-        assert_eq!(Interval { min: 0., max: 3. }, res);
+        res = combine_intervals(Interval::new(0., 1.), Interval::new(2., 3.));
+        assert_eq!(Interval::new(0., 3.), res);
 
-        res = combine_intervals(
-            Interval { min: 3., max: 3. },
-            Interval { min: -1., max: -1. },
-        );
-        assert_eq!(Interval { min: -1., max: 3. }, res);
+        res = combine_intervals(Interval::new(3., 3.), Interval::new(-1., -1.));
+        assert_eq!(Interval::new(-1., 3.), res);
     }
 
     #[test]
     fn test_contains() {
-        let interval = Interval { min: -2., max: 2. };
+        let interval = Interval::new(-2., 2.);
         assert!(!interval.contains(-3.));
         assert!(interval.contains(-2.));
         assert!(interval.contains(2.));
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn test_clamp() {
-        let interval = Interval { min: -2., max: 2. };
+        let interval = Interval::new(-2., 2.);
         assert_eq!(-2., interval.clamp(-3.));
         assert_eq!(-2., interval.clamp(-2.));
         assert_eq!(0., interval.clamp(-0.));
@@ -108,15 +108,15 @@ mod tests {
 
     #[test]
     fn test_size() {
-        assert_eq!(0., Interval { min: 0., max: 0. }.size());
-        assert_eq!(2., Interval { min: -1., max: 1. }.size());
-        assert_eq!(-2., Interval { min: 1., max: -1. }.size());
+        assert_eq!(0., Interval::new(0., 0.).size());
+        assert_eq!(2., Interval::new(-1., 1.).size());
+        assert_eq!(-2., Interval::new(1., -1.).size());
     }
 
     #[test]
     fn test_expand() {
-        let interval = Interval { min: -2., max: 2. };
-        assert_eq!(Interval { min: -3., max: 3. }, interval.expand(2.));
+        let interval = Interval::new(-2., 2.);
+        assert_eq!(Interval::new(-3., 3.), interval.expand(2.));
         assert_eq!(
             Interval {
                 min: -3.5,
@@ -124,14 +124,14 @@ mod tests {
             },
             interval.expand(3.)
         );
-        assert_eq!(Interval { min: -1., max: 1. }, interval.expand(-2.));
+        assert_eq!(Interval::new(-1., 1.), interval.expand(-2.));
     }
 
     #[test]
     fn test_add() {
-        let interval = Interval { min: -2., max: 2. };
-        assert_eq!(Interval { min: 0., max: 4. }, interval.add(2.));
-        assert_eq!(Interval { min: 1., max: 5. }, interval.add(3.));
-        assert_eq!(Interval { min: -4., max: 0. }, interval.add(-2.));
+        let interval = Interval::new(-2., 2.);
+        assert_eq!(Interval::new(0., 4.), interval.add(2.));
+        assert_eq!(Interval::new(1., 5.), interval.add(3.));
+        assert_eq!(Interval::new(-4., 0.), interval.add(-2.));
     }
 }

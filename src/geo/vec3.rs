@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 use std::fmt;
 
 /// Vec3 is a 3 dimensional vector
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -25,12 +25,17 @@ pub const ZERO_VECTOR: Vec3 = Vec3 {
 };
 
 impl Vec3 {
+    /// Creates a new Vec3
+    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
+        Vec3 { x, y, z }
+    }
+
     /// returns a Vec3 that has all values negated
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: -3.}.neg();
-    /// assert_eq!(Vec3 {x: -1., y: -2., z: 3.}, res)
+    /// let res = Vec3::new(1., 2., 3.).neg();
+    /// assert_eq!(Vec3::new(-1., -2., -3.), res)
     /// ```
     pub fn neg(&self) -> Vec3 {
         Vec3 {
@@ -44,8 +49,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: 3.}.add(Vec3 {x: 4., y: 5., z: 6.});
-    /// assert_eq!(Vec3 {x: 5., y: 7., z: 9.}, res)
+    /// let res = Vec3::new(1., 2., 3.).add(Vec3::new(4., 5., 6.));
+    /// assert_eq!(Vec3::new(5., 7., 9.), res)
     /// ```
     pub fn add(&self, v: Vec3) -> Vec3 {
         Vec3 {
@@ -59,8 +64,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: 3.}.sub(Vec3 {x: 6., y: 5., z: 4.});
-    /// assert_eq!(Vec3 {x: -5., y: -3., z: -1.}, res)
+    /// let res = Vec3::new(1., 2., 3.).sub(Vec3::new(6., 5., 4.));
+    /// assert_eq!(Vec3::new(-5., -3., -1.), res)
     /// ```
     pub fn sub(&self, v: Vec3) -> Vec3 {
         Vec3 {
@@ -74,8 +79,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: 3.}.mul(Vec3 {x: 4., y: 5., z: 6.});
-    /// assert_eq!(Vec3 {x: 4., y: 10., z: 18.}, res)
+    /// let res = Vec3::new(1., 2., 3.).mul(Vec3::new(4., 5., 6.));
+    /// assert_eq!(Vec3::new(4., 10., 18.), res)
     /// ```
     pub fn mul(&self, v: Vec3) -> Vec3 {
         Vec3 {
@@ -89,8 +94,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: 3.}.mul_s(2.);
-    /// assert_eq!(Vec3 {x: 2., y: 4., z: 6.}, res)
+    /// let res = Vec3::new(1., 2., 3.).mul_s(2.);
+    /// assert_eq!(Vec3::new(2., 4., 6.), res)
     /// ```
     pub fn mul_s(&self, t: f64) -> Vec3 {
         Vec3 {
@@ -104,8 +109,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: 3.}.div_s(2.);
-    /// assert_eq!(Vec3 {x: 0.5, y: 1., z: 1.5}, res)
+    /// let res = Vec3::new(1., 2., 3.).div_s(2.);
+    /// assert_eq!(Vec3::new(0.5, 1., 1.5), res)
     /// ```
     pub fn div_s(&self, t: f64) -> Vec3 {
         Vec3 {
@@ -119,7 +124,7 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 1., y: 2., z: 3.}.dot(Vec3 {x: 4., y: 5., z: 6.});
+    /// let res = Vec3::new(1., 2., 3.).dot(Vec3::new(4., 5., 6.));
     /// assert_eq!(32., res)
     /// ```
     pub fn dot(&self, v: Vec3) -> f64 {
@@ -130,8 +135,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3 {x: 2., y: 3., z: 4.}.cross(Vec3 {x: 5., y: 6., z: 7.});
-    /// assert_eq!(Vec3 {x: -3., y: 6., z: -3.}, res)
+    /// let res = Vec3::new(2., 3., 4.).cross(Vec3::new(5., 6., 7.));
+    /// assert_eq!(Vec3::new(-3., 6., -3.), res)
     /// ```
     pub fn cross(&self, v: Vec3) -> Vec3 {
         Vec3 {
@@ -145,7 +150,7 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let v = Vec3 {x: 1., y: 2., z: 3.};
+    /// let v = Vec3::new(1., 2., 3.);
     /// assert_eq!(14., v.length_squared())
     /// ```
     pub fn length_squared(&self) -> f64 {
@@ -156,7 +161,7 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let v = Vec3 {x: 0., y: 3., z: 4.};
+    /// let v = Vec3::new(0., 3., 4.);
     /// assert_eq!(5., v.length())
     /// ```
     pub fn length(&self) -> f64 {
@@ -180,7 +185,7 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
-    /// let v = Vec3 {x: 1., y: 2., z: 3.};
+    /// let v = Vec3::new(1., 2., 3.);
     /// assert!(!v.near_zero());
     /// assert!(ZERO_VECTOR.near_zero());
     /// ```
@@ -192,9 +197,9 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let v = Vec3 {x: 0., y: 3., z: 4.};
-    /// assert_eq!(Vec3 {x: 0., y: -3., z: 4.}, v.reflect(Vec3 {x: 0., y: 1., z: 0.}));
-    /// assert_eq!(Vec3 {x: 0., y: 3., z: -4.}, v.reflect(Vec3 {x: 0., y: 0., z: 1.}))
+    /// let v = Vec3::new(0., 3., 4.);
+    /// assert_eq!(Vec3::new(0., -3., 4.), v.reflect(Vec3::new(0., 1., 0.)));
+    /// assert_eq!(Vec3::new(0., 3., -4.), v.reflect(Vec3::new(0., 0., 1.)))
     /// ```
     pub fn reflect(&self, n: Vec3) -> Vec3 {
         self.sub(n.mul_s(self.dot(n) * 2.))
@@ -204,8 +209,8 @@ impl Vec3 {
     /// # Examples:
     /// ```
     /// # use solstrale::geo::vec3::Vec3;
-    /// let v = Vec3 {x: -3., y: -3., z: 0.}.unit();
-    /// let ret = v.refract(Vec3 {x: 0., y: 1., z: 0.}, 1.);
+    /// let v = Vec3::new(-3., -3., 0.).unit();
+    /// let ret = v.refract(Vec3::new(0., 1., 0.), 1.);
     /// assert!(ret.sub(v).near_zero());
     /// ```
     pub fn refract(&self, n: Vec3, index_of_refraction: f64) -> Vec3 {
