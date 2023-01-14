@@ -1,6 +1,7 @@
 use crate::geo::vec3::Vec3;
 
 /// Defines a ray of light used by the ray tracer
+#[derive(PartialEq, Debug, Default)]
 pub struct Ray {
     pub origin: Vec3,
     pub direction: Vec3,
