@@ -1,6 +1,7 @@
 use crate::random;
 use std::f64::consts::PI;
 use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
 
 /// Vec3 is a 3 dimensional vector
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
@@ -10,12 +11,6 @@ pub struct Vec3 {
     pub z: f64,
 }
 
-impl fmt::Display for Vec3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ x: {}, y: {}, z: {} }}", self.x, self.y, self.z)
-    }
-}
-
 /// A value that is so small as to be almost zero
 pub const ALMOST_ZERO: f64 = 1e-8;
 pub const ZERO_VECTOR: Vec3 = Vec3 {
@@ -23,6 +18,126 @@ pub const ZERO_VECTOR: Vec3 = Vec3 {
     y: 0.,
     z: 0.,
 };
+
+impl fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{ x: {}, y: {}, z: {} }}", self.x, self.y, self.z)
+    }
+}
+
+impl Add for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values added with corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) + Vec3::new(4., 5., 6.);
+    /// assert_eq!(Vec3::new(5., 7., 9.), res)
+    /// ```
+    fn add(self, v: Self) -> Self::Output {
+        Vec3 {
+            x: self.x + v.x,
+            y: self.y + v.y,
+            z: self.z + v.z,
+        }
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values subtracted by corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) - Vec3::new(6., 5., 4.);
+    /// assert_eq!(Vec3::new(-5., -3., -1.), res)
+    /// ```
+    fn sub(self, v: Self) -> Self::Output {
+        Vec3 {
+            x: self.x - v.x,
+            y: self.y - v.y,
+            z: self.z - v.z,
+        }
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values multiplied with corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) * Vec3::new(4., 5., 6.);
+    /// assert_eq!(Vec3::new(4., 10., 18.), res)
+    /// ```
+    fn mul(self, v: Self) -> Self::Output {
+        Vec3 {
+            x: self.x * v.x,
+            y: self.y * v.y,
+            z: self.z * v.z,
+        }
+    }
+}
+
+impl Mul<f64> for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values multiplied with given scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) * 2.;
+    /// assert_eq!(Vec3::new(2., 4., 6.), res)
+    /// ```
+    fn mul(self, t: f64) -> Self::Output {
+        Vec3 {
+            x: self.x * t,
+            y: self.y * t,
+            z: self.z * t,
+        }
+    }
+}
+
+impl Div<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values multiplied with corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) / Vec3::new(5., 4., 3.);
+    /// assert_eq!(Vec3::new(0.2, 0.5, 1.), res)
+    /// ```
+    fn div(self, v: Self) -> Self::Output {
+        Vec3 {
+            x: self.x / v.x,
+            y: self.y / v.y,
+            z: self.z / v.z,
+        }
+    }
+}
+
+impl Div<f64> for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values multiplied with given scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) / 2.;
+    /// assert_eq!(Vec3::new(0.5, 1., 1.5), res)
+    /// ```
+    fn div(self, t: f64) -> Self::Output {
+        Vec3 {
+            x: self.x / t,
+            y: self.y / t,
+            z: self.z / t,
+        }
+    }
+}
 
 impl Vec3 {
     /// Creates a new Vec3
@@ -42,81 +157,6 @@ impl Vec3 {
             x: -self.x,
             y: -self.y,
             z: -self.z,
-        }
-    }
-
-    /// returns a Vec3 that has all values added with corresponding value in given Vec3
-    /// # Examples:
-    /// ```
-    /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3::new(1., 2., 3.).add(Vec3::new(4., 5., 6.));
-    /// assert_eq!(Vec3::new(5., 7., 9.), res)
-    /// ```
-    pub fn add(&self, v: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x + v.x,
-            y: self.y + v.y,
-            z: self.z + v.z,
-        }
-    }
-
-    /// returns a Vec3 that has all values subtracted by corresponding value in given Vec3
-    /// # Examples:
-    /// ```
-    /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3::new(1., 2., 3.).sub(Vec3::new(6., 5., 4.));
-    /// assert_eq!(Vec3::new(-5., -3., -1.), res)
-    /// ```
-    pub fn sub(&self, v: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x - v.x,
-            y: self.y - v.y,
-            z: self.z - v.z,
-        }
-    }
-
-    /// returns a Vec3 that has all values multiplied with corresponding value in given Vec3
-    /// # Examples:
-    /// ```
-    /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3::new(1., 2., 3.).mul(Vec3::new(4., 5., 6.));
-    /// assert_eq!(Vec3::new(4., 10., 18.), res)
-    /// ```
-    pub fn mul(&self, v: Vec3) -> Vec3 {
-        Vec3 {
-            x: self.x * v.x,
-            y: self.y * v.y,
-            z: self.z * v.z,
-        }
-    }
-
-    /// returns a Vec3 that has all values multiplied with given scalar
-    /// # Examples:
-    /// ```
-    /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3::new(1., 2., 3.).mul_s(2.);
-    /// assert_eq!(Vec3::new(2., 4., 6.), res)
-    /// ```
-    pub fn mul_s(&self, t: f64) -> Vec3 {
-        Vec3 {
-            x: self.x * t,
-            y: self.y * t,
-            z: self.z * t,
-        }
-    }
-
-    /// returns a Vec3 that has all values divided by given scalar
-    /// # Examples:
-    /// ```
-    /// # use solstrale::geo::vec3::Vec3;
-    /// let res = Vec3::new(1., 2., 3.).div_s(2.);
-    /// assert_eq!(Vec3::new(0.5, 1., 1.5), res)
-    /// ```
-    pub fn div_s(&self, t: f64) -> Vec3 {
-        Vec3 {
-            x: self.x / t,
-            y: self.y / t,
-            z: self.z / t,
         }
     }
 
@@ -178,7 +218,7 @@ impl Vec3 {
     /// assert!(v.dot(unit_v) > 0.)
     /// ```
     pub fn unit(&self) -> Vec3 {
-        self.div_s(self.length())
+        *self / self.length()
     }
 
     /// Checks if the vectors length is near zero
@@ -202,7 +242,7 @@ impl Vec3 {
     /// assert_eq!(Vec3::new(0., 3., -4.), v.reflect(Vec3::new(0., 0., 1.)))
     /// ```
     pub fn reflect(&self, n: Vec3) -> Vec3 {
-        self.sub(n.mul_s(self.dot(n) * 2.))
+        self.sub(n * (self.dot(n) * 2.))
     }
 
     /// returns the refraction vector given the normal n and the index of refraction of the material
@@ -211,13 +251,13 @@ impl Vec3 {
     /// # use solstrale::geo::vec3::Vec3;
     /// let v = Vec3::new(-3., -3., 0.).unit();
     /// let ret = v.refract(Vec3::new(0., 1., 0.), 1.);
-    /// assert!(ret.sub(v).near_zero());
+    /// assert!((ret - v).near_zero());
     /// ```
     pub fn refract(&self, n: Vec3, index_of_refraction: f64) -> Vec3 {
         let cos_theta = self.neg().dot(n).min(1.);
-        let r_out_perpendicular = n.mul_s(cos_theta).add(*self).mul_s(index_of_refraction);
-        let r_out_parallel = n.mul_s(-(1. - r_out_perpendicular.length_squared()).abs().sqrt());
-        r_out_perpendicular.add(r_out_parallel)
+        let r_out_perpendicular = n * cos_theta + *self * index_of_refraction;
+        let r_out_parallel = n * (-(1. - r_out_perpendicular.length_squared()).abs().sqrt());
+        r_out_perpendicular + r_out_parallel
     }
 }
 

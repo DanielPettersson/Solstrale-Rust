@@ -24,7 +24,7 @@ impl Ray {
 
     /// returns the position at a given length of the ray
     pub fn at(&self, distance: f64) -> Vec3 {
-        self.origin.add(self.direction.mul_s(distance))
+        self.origin + self.direction * distance
     }
 }
 
@@ -43,8 +43,8 @@ mod tests {
         let r = Ray::new(origin, direction, random::random_normal_float());
 
         assert_eq!(r.at(0.), origin);
-        assert!(r.at(l).sub(origin.add(direction)).near_zero());
-        assert!(r.at(-l).sub(origin.sub(direction)).near_zero());
-        assert!(r.at(l * 3.).sub(Vec3::new(13., 17., 21.)).near_zero());
+        assert!((r.at(l) - origin - direction).near_zero());
+        assert!((r.at(-l) - origin + direction).near_zero());
+        assert!((r.at(l * 3.) - Vec3::new(13., 17., 21.)).near_zero());
     }
 }

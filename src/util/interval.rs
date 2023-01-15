@@ -1,3 +1,5 @@
+use std::ops::{Add, Sub};
+
 /// Defines a range between min and max inclusive
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Interval {
@@ -22,6 +24,32 @@ pub fn combine_intervals(a: Interval, b: Interval) -> Interval {
     Interval {
         min: a.min.min(b.min),
         max: a.max.max(b.max),
+    }
+}
+
+impl Add<f64> for Interval {
+    type Output = Interval;
+
+    /// returns a new interval that is increased with given value.
+    /// The returned interval has same size as original
+    fn add(self, rhs: f64) -> Self::Output {
+        Interval {
+            min: self.min + rhs,
+            max: self.max + rhs,
+        }
+    }
+}
+
+impl Sub<f64> for Interval {
+    type Output = Interval;
+
+    /// returns a new interval that is decreased with given value.
+    /// The returned interval has same size as original
+    fn sub(self, rhs: f64) -> Self::Output {
+        Interval {
+            min: self.min - rhs,
+            max: self.max - rhs,
+        }
     }
 }
 
@@ -58,15 +86,6 @@ impl Interval {
         Interval {
             min: self.min - padding,
             max: self.max + padding,
-        }
-    }
-
-    /// returns a new interval that is increased with given value.
-    /// The returned interval has same size as original
-    pub fn add(&self, displacement: f64) -> Interval {
-        Interval {
-            min: self.min + displacement,
-            max: self.max + displacement,
         }
     }
 }
@@ -128,10 +147,10 @@ mod tests {
     }
 
     #[test]
-    fn test_add() {
+    fn test_sub_and_add() {
         let interval = Interval::new(-2., 2.);
-        assert_eq!(Interval::new(0., 4.), interval.add(2.));
-        assert_eq!(Interval::new(1., 5.), interval.add(3.));
-        assert_eq!(Interval::new(-4., 0.), interval.add(-2.));
+        assert_eq!(Interval::new(0., 4.), interval + 2.);
+        assert_eq!(Interval::new(1., 5.), interval + 3.);
+        assert_eq!(Interval::new(-4., 0.), interval - 2.);
     }
 }

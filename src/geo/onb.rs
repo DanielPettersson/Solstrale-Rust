@@ -26,9 +26,6 @@ impl Onb {
 
     /// Translates the given vector to the Orthonormal Basis
     pub fn local(&self, a: Vec3) -> Vec3 {
-        self.u
-            .mul_s(a.x)
-            .add(self.v.mul_s(a.y))
-            .add(self.w.mul_s(a.z))
+        self.u * a.x + self.v * a.y + self.w * a.z
     }
 }
