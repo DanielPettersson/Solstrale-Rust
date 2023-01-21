@@ -20,9 +20,9 @@ pub struct HitRecord<'a> {
 
 /// A collection of attributes from the scattering of a ray with a material
 pub struct ScatterRecord {
-    attenuation: Vec3,
-    pdf: Box<dyn Pdf>,
-    skip_pdf_ray: Option<Ray>,
+    pub attenuation: Vec3,
+    pub pdf: Box<dyn Pdf>,
+    pub skip_pdf_ray: Option<Ray>,
 }
 
 /// The traut for types that describe how
@@ -31,13 +31,13 @@ pub trait Material {
     fn scattering_pdf(&self, _rec: HitRecord, _scattered: Ray) -> f64 {
         0.
     }
-    fn emitted(&self, _rec: HitRecord) -> Vec3 {
+    fn emitted(&self, _rec: &HitRecord) -> Vec3 {
         ZERO_VECTOR
     }
     fn is_light(&self) -> bool {
         false
     }
-    fn scatter(&self, ray: Ray, rec: HitRecord) -> Option<ScatterRecord>;
+    fn scatter(&self, ray: Ray, rec: &HitRecord) -> Option<ScatterRecord>;
 }
 
 /// A typical matte material
@@ -61,7 +61,7 @@ impl Material for Lambertian {
         }
     }
 
-    fn scatter(&self, _: Ray, rec: HitRecord) -> Option<ScatterRecord> {
+    fn scatter(&self, _: Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.color(&rec);
         let pdf = CosinePdf::new(rec.normal);
 
