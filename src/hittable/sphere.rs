@@ -1,4 +1,5 @@
 use crate::geo::aabb::Aabb;
+use crate::geo::onb::Onb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
 use crate::hittable::Hittable;
@@ -7,7 +8,7 @@ use crate::random::random_normal_float;
 use crate::util::interval::Interval;
 use std::f64::consts::PI;
 
-struct Sphere {
+pub struct Sphere {
     center: Vec3,
     radius: f64,
     mat: Box<dyn Material>,
@@ -31,11 +32,27 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
-        todo!()
+        let ray = Ray::new(origin, direction, 0.);
+
+        let hit = self.hit(ray, Interval::new(0.001, f64::INFINITY));
+
+        match hit {
+            None => 0.,
+            Some(_) => {
+                let cos_theta_max = (1.
+                    - self.radius * self.radius / (self.center - origin).length_squared())
+                .sqrt();
+                let solid_angle = 2. * PI * (1. - cos_theta_max);
+
+                return 1. / solid_angle;
+            }
+        }
     }
 
     fn random_direction(&self, origin: Vec3) -> Vec3 {
-        todo!()
+        let direction = self.center - origin;
+        let uvw = Onb::new(direction);
+        return uvw.local(random_to_sphere(self.radius, direction.length_squared()));
     }
 
     fn hit(&self, r: Ray, ray_length: Interval) -> Option<HitRecord> {
@@ -69,7 +86,7 @@ impl Hittable for Sphere {
         Some(HitRecord {
             hit_point,
             normal,
-            material: &self.mat,
+            material: self.mat.as_ref(),
             ray_length: root,
             u,
             v,
@@ -77,12 +94,12 @@ impl Hittable for Sphere {
         })
     }
 
-    fn bounding_box(&self) -> Aabb {
-        self.b_box
+    fn bounding_box(&self) -> &Aabb {
+        &self.b_box
     }
 
     fn is_light(&self) -> bool {
-        todo!()
+        self.mat.is_light()
     }
 }
 

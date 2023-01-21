@@ -12,14 +12,14 @@ use crate::util::interval::Interval;
 
 /// The common trait for all objects in the ray tracing scene
 /// that can be hit by rays
-trait Hittable {
-    fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
+pub trait Hittable {
+    fn pdf_value(&self, _origin: Vec3, _direction: Vec3) -> f64 {
         panic!("Should not be used for materials that can not be lights")
     }
-    fn random_direction(&self, origin: Vec3) -> Vec3 {
+    fn random_direction(&self, _origin: Vec3) -> Vec3 {
         panic!("Should not be used for materials that can not be lights")
     }
     fn hit(&self, r: Ray, ray_length: Interval) -> Option<HitRecord>;
-    fn bounding_box(&self) -> Aabb;
+    fn bounding_box(&self) -> &Aabb;
     fn is_light(&self) -> bool;
 }
