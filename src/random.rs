@@ -14,3 +14,7 @@ pub fn random_float(min: f64, max: f64) -> f64 {
 pub fn random_uint32(max: u32) -> u32 {
     fastrand::u32(0..max)
 }
+
+pub fn random_element_index<T>(v: &Vec<T>) -> usize {
+    fastrand::usize(..v.len())
+}

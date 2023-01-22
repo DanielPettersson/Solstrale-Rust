@@ -28,7 +28,7 @@ pub struct ScatterRecord {
 /// The traut for types that describe how
 /// a ray behaves when hitting an object.
 pub trait Material {
-    fn scattering_pdf(&self, _rec: HitRecord, _scattered: Ray) -> f64 {
+    fn scattering_pdf(&self, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.
     }
     fn emitted(&self, _rec: &HitRecord) -> Vec3 {
@@ -37,7 +37,7 @@ pub trait Material {
     fn is_light(&self) -> bool {
         false
     }
-    fn scatter(&self, ray: Ray, rec: &HitRecord) -> Option<ScatterRecord>;
+    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
 }
 
 /// A typical matte material
@@ -52,7 +52,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scattering_pdf(&self, rec: HitRecord, scattered: Ray) -> f64 {
+    fn scattering_pdf(&self, rec: &HitRecord, scattered: &Ray) -> f64 {
         let cos_theta = rec.normal.dot(scattered.direction.unit());
         if cos_theta < 0. {
             0.
@@ -61,7 +61,7 @@ impl Material for Lambertian {
         }
     }
 
-    fn scatter(&self, _: Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+    fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.color(&rec);
         let pdf = CosinePdf::new(rec.normal);
 

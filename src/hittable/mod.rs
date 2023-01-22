@@ -2,6 +2,8 @@
 //! Some of these hittable objects are containers for other objects
 //! Some others are used to translate or rotate other objects
 
+pub mod hittable_list;
+pub mod hittable_pdf;
 pub mod sphere;
 
 use crate::geo::aabb::Aabb;
@@ -19,7 +21,7 @@ pub trait Hittable {
     fn random_direction(&self, _origin: Vec3) -> Vec3 {
         panic!("Should not be used for materials that can not be lights")
     }
-    fn hit(&self, r: Ray, ray_length: Interval) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord>;
     fn bounding_box(&self) -> &Aabb;
     fn is_light(&self) -> bool;
 }

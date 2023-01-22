@@ -34,7 +34,7 @@ impl Hittable for Sphere {
     fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
         let ray = Ray::new(origin, direction, 0.);
 
-        let hit = self.hit(ray, Interval::new(0.001, f64::INFINITY));
+        let hit = self.hit(&ray, &Interval::new(0.001, f64::INFINITY));
 
         match hit {
             None => 0.,
@@ -55,7 +55,7 @@ impl Hittable for Sphere {
         return uvw.local(random_to_sphere(self.radius, direction.length_squared()));
     }
 
-    fn hit(&self, r: Ray, ray_length: Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = oc.dot(r.direction);

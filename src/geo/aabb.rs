@@ -1,6 +1,6 @@
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
-use crate::util::interval::{combine_intervals, Interval};
+use crate::util::interval::{combine_intervals, Interval, EMPTY_INTERVAL};
 use std::ops::Add;
 
 const PAD_DELTA: f64 = 0.0001;
@@ -13,6 +13,14 @@ pub struct Aabb {
 }
 
 impl Aabb {
+    pub fn new_with_empty_intervals() -> Aabb {
+        Aabb {
+            x: EMPTY_INTERVAL,
+            y: EMPTY_INTERVAL,
+            z: EMPTY_INTERVAL,
+        }
+    }
+
     pub fn new_from_2_points(a: Vec3, b: Vec3) -> Aabb {
         Aabb {
             x: Interval {
@@ -47,7 +55,7 @@ impl Aabb {
         }
     }
 
-    pub fn combine_aabbs(a: Aabb, b: Aabb) -> Aabb {
+    pub fn combine_aabbs(a: &Aabb, b: &Aabb) -> Aabb {
         Aabb {
             x: combine_intervals(a.x, b.x),
             y: combine_intervals(a.y, b.y),
