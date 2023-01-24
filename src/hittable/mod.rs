@@ -28,4 +28,7 @@ pub trait Hittable {
     fn children(&self) -> Option<Iter<Box<dyn Hittable>>> {
         None
     }
+    fn clone_light(&self) -> Box<dyn Hittable> {
+        panic!("Should not be used for materials that can not be lights")
+    }
 }

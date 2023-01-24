@@ -12,8 +12,8 @@ pub trait Texture {
 pub struct SolidColor(Vec3);
 
 impl SolidColor {
-    pub fn new(r: f64, g: f64, b: f64) -> SolidColor {
-        SolidColor(Vec3::new(r, g, b))
+    pub fn new(r: f64, g: f64, b: f64) -> Box<dyn Texture> {
+        Box::new(SolidColor(Vec3::new(r, g, b)))
     }
 }
 

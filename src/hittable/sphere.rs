@@ -3,7 +3,8 @@ use crate::geo::onb::Onb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
 use crate::hittable::Hittable;
-use crate::material::{HitRecord, Material};
+use crate::material::texture::SolidColor;
+use crate::material::{DiffuseLight, HitRecord, Material};
 use crate::random::random_normal_float;
 use crate::util::interval::Interval;
 use std::f64::consts::PI;
@@ -100,6 +101,14 @@ impl Hittable for Sphere {
 
     fn is_light(&self) -> bool {
         self.mat.is_light()
+    }
+
+    fn clone_light(&self) -> Box<dyn Hittable> {
+        Sphere::new(
+            self.center,
+            self.radius,
+            DiffuseLight::new(SolidColor::new(1., 1., 1.)),
+        )
     }
 }
 

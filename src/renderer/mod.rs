@@ -80,7 +80,7 @@ fn find_lights(s: &dyn Hittable, list: &mut HittableList) {
     match s.children() {
         None => {
             if s.is_light() {
-                list.add(s);
+                list.add(s.clone_light());
             }
         }
         Some(children) => {

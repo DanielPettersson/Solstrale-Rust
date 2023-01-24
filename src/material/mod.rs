@@ -72,3 +72,32 @@ impl Material for Lambertian {
         });
     }
 }
+
+/// A material used for emitting light
+pub struct DiffuseLight {
+    tex: Box<dyn Texture>,
+}
+
+impl DiffuseLight {
+    /// Creates a new diffuse light material
+    pub fn new(tex: Box<dyn Texture>) -> Box<dyn Material> {
+        Box::new(DiffuseLight { tex })
+    }
+}
+
+impl Material for DiffuseLight {
+    fn emitted(&self, rec: &HitRecord) -> Vec3 {
+        if !rec.front_face {
+            return ZERO_VECTOR;
+        }
+        return self.tex.color(rec);
+    }
+
+    fn is_light(&self) -> bool {
+        true
+    }
+
+    fn scatter(&self, _: &Ray, _: &HitRecord) -> Option<ScatterRecord> {
+        None
+    }
+}
