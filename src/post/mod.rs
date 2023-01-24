@@ -5,6 +5,7 @@ use std::error::Error;
 /// Responsible for taking the rendered image and transforming it
 pub trait PostProcessor {
     fn post_process(
+        &self,
         pixel_colors: Vec<Vec3>,
         albedo_colors: Vec<Vec3>,
         normal_colors: Vec<Vec3>,

@@ -5,6 +5,7 @@ use crate::hittable::Hittable;
 use crate::material::HitRecord;
 use crate::random::random_element_index;
 use crate::util::interval::Interval;
+use std::slice::Iter;
 
 /// A special type of hittable that is a container
 /// for a list of other hittable objects. Used to be able to have many
@@ -65,5 +66,9 @@ impl Hittable for HittableList {
 
     fn is_light(&self) -> bool {
         false
+    }
+
+    fn children(&self) -> Option<Iter<Box<dyn Hittable>>> {
+        Some(self.list.iter())
     }
 }

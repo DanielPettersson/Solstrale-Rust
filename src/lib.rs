@@ -1,5 +1,3 @@
-extern crate core;
-
 pub mod camera;
 pub mod geo;
 pub mod hittable;

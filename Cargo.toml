@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 fastrand = "1.8.0"
 image = "0.24.5"
+simple-error = "0.2.3"

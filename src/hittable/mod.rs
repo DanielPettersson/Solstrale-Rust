@@ -11,6 +11,7 @@ use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
+use std::slice::Iter;
 
 /// The common trait for all objects in the ray tracing scene
 /// that can be hit by rays
@@ -24,4 +25,7 @@ pub trait Hittable {
     fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord>;
     fn bounding_box(&self) -> &Aabb;
     fn is_light(&self) -> bool;
+    fn children(&self) -> Option<Iter<Box<dyn Hittable>>> {
+        None
+    }
 }
