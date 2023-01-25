@@ -1,17 +1,21 @@
-pub mod texture;
+use std::f64::consts::PI;
+
+use enum_dispatch::enum_dispatch;
 
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::material::texture::Texture;
-use crate::pdf::{CosinePdf, Pdf};
-use std::f64::consts::PI;
+use crate::material::texture::Textures;
+use crate::pdf::{CosinePdf, Pdfs};
+
+pub mod texture;
 
 /// A collection of all interesting properties from
 /// when a ray hits a hittable object
 pub struct HitRecord<'a> {
     pub hit_point: Vec3,
     pub normal: Vec3,
-    pub material: &'a dyn Material,
+    pub material: &'a Materials,
     pub ray_length: f64,
     pub u: f64,
     pub v: f64,
@@ -19,14 +23,15 @@ pub struct HitRecord<'a> {
 }
 
 /// A collection of attributes from the scattering of a ray with a material
-pub struct ScatterRecord {
+pub struct ScatterRecord<'a> {
     pub attenuation: Vec3,
-    pub pdf: Box<dyn Pdf>,
+    pub pdf: Pdfs<'a>,
     pub skip_pdf_ray: Option<Ray>,
 }
 
 /// The traut for types that describe how
 /// a ray behaves when hitting an object.
+#[enum_dispatch]
 pub trait Material {
     fn scattering_pdf(&self, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.
@@ -40,14 +45,20 @@ pub trait Material {
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord>;
 }
 
+#[enum_dispatch(Material)]
+pub enum Materials {
+    Lambertian(Lambertian),
+    DiffuseLight(DiffuseLight),
+}
+
 /// A typical matte material
 pub struct Lambertian {
-    tex: Box<dyn Texture>,
+    tex: Textures,
 }
 
 impl Lambertian {
-    pub fn new(tex: Box<dyn Texture>) -> Box<dyn Material> {
-        Box::new(Lambertian { tex })
+    pub fn new(tex: Textures) -> Materials {
+        Materials::Lambertian(Lambertian { tex })
     }
 }
 
@@ -75,13 +86,13 @@ impl Material for Lambertian {
 
 /// A material used for emitting light
 pub struct DiffuseLight {
-    tex: Box<dyn Texture>,
+    tex: Textures,
 }
 
 impl DiffuseLight {
     /// Creates a new diffuse light material
-    pub fn new(tex: Box<dyn Texture>) -> Box<dyn Material> {
-        Box::new(DiffuseLight { tex })
+    pub fn new(tex: Textures) -> Materials {
+        Materials::DiffuseLight(DiffuseLight { tex })
     }
 }
 

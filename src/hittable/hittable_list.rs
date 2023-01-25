@@ -1,7 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
-use crate::hittable::Hittable;
+use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::random::random_element_index;
 use crate::util::interval::Interval;
@@ -11,7 +11,7 @@ use std::slice::Iter;
 /// for a list of other hittable objects. Used to be able to have many
 /// objects in a scene
 pub struct HittableList {
-    pub list: Vec<Box<dyn Hittable>>,
+    pub list: Vec<Hittables>,
     b_box: Aabb,
 }
 
@@ -25,7 +25,7 @@ impl HittableList {
     }
 
     /// Adds a new hittable object to this HittableList
-    pub fn add(&mut self, h: Box<dyn Hittable>) {
+    pub fn add(&mut self, h: Hittables) {
         self.b_box = Aabb::combine_aabbs(&self.b_box, h.bounding_box());
         self.list.push(h);
     }
@@ -68,7 +68,7 @@ impl Hittable for HittableList {
         false
     }
 
-    fn children(&self) -> Option<Iter<Box<dyn Hittable>>> {
+    fn children(&self) -> Option<Iter<Hittables>> {
         Some(self.list.iter())
     }
 }

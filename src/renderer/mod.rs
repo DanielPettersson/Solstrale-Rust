@@ -7,22 +7,22 @@ use crate::camera::CameraConfig;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::hittable::hittable_list::HittableList;
-use crate::hittable::Hittable;
-use crate::post::PostProcessor;
-use crate::renderer::shader::{AlbedoShader, NormalShader, Shader};
+use crate::hittable::{Hittable, Hittables};
+use crate::post::PostProcessors;
+use crate::renderer::shader::{AlbedoShader, NormalShader, Shaders};
 
 pub mod shader;
 
 ///Input to the ray tracer for how the image should be rendered
 pub struct RenderConfig {
     pub samples_per_pixel: i32,
-    pub shader: Box<dyn Shader>,
-    pub post_processor: Option<Box<dyn PostProcessor>>,
+    pub shader: Shaders,
+    pub post_processor: Option<PostProcessors>,
 }
 
 /// Contains all information needed to render an image
 pub struct Scene {
-    pub world: Box<dyn Hittable>,
+    pub world: Hittables,
     pub camera: CameraConfig,
     pub background_color: Vec3,
     pub render_config: RenderConfig,
@@ -54,7 +54,7 @@ impl<'a> Renderer<'a> {
         abort: &'a Receiver<bool>,
     ) -> Result<Renderer<'a>, SimpleError> {
         let mut lights = HittableList::new();
-        find_lights(scene.world.as_ref(), &mut lights);
+        find_lights(&scene.world, &mut lights);
 
         if lights.list.len() == 0 {
             return Err(SimpleError::new("Scene should have at least one light"));
@@ -76,7 +76,7 @@ impl<'a> Renderer<'a> {
     }
 }
 
-fn find_lights(s: &dyn Hittable, list: &mut HittableList) {
+fn find_lights(s: &Hittables, list: &mut HittableList) {
     match s.children() {
         None => {
             if s.is_light() {
@@ -85,7 +85,7 @@ fn find_lights(s: &dyn Hittable, list: &mut HittableList) {
         }
         Some(children) => {
             for child in children {
-                find_lights(child.as_ref(), list)
+                find_lights(&child, list)
             }
         }
     }

@@ -2,9 +2,9 @@ use crate::geo::aabb::Aabb;
 use crate::geo::onb::Onb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
-use crate::hittable::Hittable;
+use crate::hittable::{Hittable, Hittables};
 use crate::material::texture::SolidColor;
-use crate::material::{DiffuseLight, HitRecord, Material};
+use crate::material::{DiffuseLight, HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::Interval;
 use std::f64::consts::PI;
@@ -12,17 +12,17 @@ use std::f64::consts::PI;
 pub struct Sphere {
     center: Vec3,
     radius: f64,
-    mat: Box<dyn Material>,
+    mat: Materials,
     b_box: Aabb,
 }
 
 impl Sphere {
     ///Creates a new sphere shaped hittable object
-    pub fn new(center: Vec3, radius: f64, mat: Box<dyn Material>) -> Box<dyn Hittable> {
+    pub fn new(center: Vec3, radius: f64, mat: Materials) -> Hittables {
         let r_vec = Vec3::new(radius, radius, radius);
         let b_box = Aabb::new_from_2_points(center - r_vec, center + r_vec);
 
-        Box::new(Sphere {
+        Hittables::Sphere(Sphere {
             center,
             radius,
             mat,
@@ -87,7 +87,7 @@ impl Hittable for Sphere {
         Some(HitRecord {
             hit_point,
             normal,
-            material: self.mat.as_ref(),
+            material: &self.mat,
             ray_length: root,
             u,
             v,
@@ -103,7 +103,7 @@ impl Hittable for Sphere {
         self.mat.is_light()
     }
 
-    fn clone_light(&self) -> Box<dyn Hittable> {
+    fn clone_light(&self) -> Hittables {
         Sphere::new(
             self.center,
             self.radius,
