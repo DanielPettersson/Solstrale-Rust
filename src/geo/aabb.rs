@@ -6,6 +6,7 @@ use std::ops::Add;
 const PAD_DELTA: f64 = 0.0001;
 
 /// Axis Aligned Bounding Box
+#[derive(Clone)]
 pub struct Aabb {
     x: Interval,
     y: Interval,

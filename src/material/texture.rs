@@ -14,7 +14,16 @@ pub enum Textures {
     SolidColor(SolidColor),
 }
 
+impl Clone for Textures {
+    fn clone(&self) -> Self {
+        match self {
+            Textures::SolidColor(t) => Textures::SolidColor(t.clone()),
+        }
+    }
+}
+
 /// A texture with just the same color everywhere
+#[derive(Clone)]
 pub struct SolidColor(Vec3);
 
 impl SolidColor {

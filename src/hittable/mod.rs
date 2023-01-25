@@ -31,13 +31,19 @@ pub trait Hittable {
     fn children(&self) -> Option<Iter<Hittables>> {
         None
     }
-    fn clone_light(&self) -> Hittables {
-        panic!("Should not be used for materials that can not be lights")
-    }
 }
 
 #[enum_dispatch(Hittable)]
 pub enum Hittables {
     HittableList(HittableList),
     Sphere(Sphere),
+}
+
+impl Clone for Hittables {
+    fn clone(&self) -> Self {
+        match self {
+            Hittables::HittableList(_) => Hittables::HittableList(HittableList::new()),
+            Hittables::Sphere(s) => Hittables::Sphere(s.clone()),
+        }
+    }
 }

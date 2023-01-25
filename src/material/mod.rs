@@ -51,6 +51,15 @@ pub enum Materials {
     DiffuseLight(DiffuseLight),
 }
 
+impl Clone for Materials {
+    fn clone(&self) -> Self {
+        match self {
+            Materials::Lambertian(m) => Materials::Lambertian(m.clone()),
+            Materials::DiffuseLight(m) => Materials::DiffuseLight(m.clone()),
+        }
+    }
+}
+
 /// A typical matte material
 pub struct Lambertian {
     tex: Textures,
@@ -84,6 +93,14 @@ impl Material for Lambertian {
     }
 }
 
+impl Clone for Lambertian {
+    fn clone(&self) -> Self {
+        Lambertian {
+            tex: self.tex.clone(),
+        }
+    }
+}
+
 /// A material used for emitting light
 pub struct DiffuseLight {
     tex: Textures,
@@ -110,5 +127,13 @@ impl Material for DiffuseLight {
 
     fn scatter(&self, _: &Ray, _: &HitRecord) -> Option<ScatterRecord> {
         None
+    }
+}
+
+impl Clone for DiffuseLight {
+    fn clone(&self) -> Self {
+        DiffuseLight {
+            tex: self.tex.clone(),
+        }
     }
 }
