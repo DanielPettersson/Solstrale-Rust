@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
 pub mod interval;
+pub mod rgb_color;
 
 /// Converts an angle in degrees to radians
 pub fn degrees_to_radians(degrees: f64) -> f64 {

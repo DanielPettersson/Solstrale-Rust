@@ -39,7 +39,7 @@ impl Shader for PathTracingShader {
             None => emitted_color,
             Some(scatter_record) => match scatter_record.skip_pdf_ray {
                 Some(skip_pdf_ray) => {
-                    let (rc, _, _) = renderer.ray_color(skip_pdf_ray, depth + 1);
+                    let (rc, _, _) = renderer.ray_color(&skip_pdf_ray, depth + 1);
                     return scatter_record.attenuation * rc;
                 }
                 None => {
@@ -49,7 +49,7 @@ impl Shader for PathTracingShader {
                     let scattered = Ray::new(rec.hit_point, pdf_direction, ray.time);
                     let pdf_val = mix_value(&light_pdf, &scatter_record.pdf, scattered.direction);
                     let scattering_pdf = rec.material.scattering_pdf(rec, &scattered);
-                    let (rc, _, _) = renderer.ray_color(scattered, depth + 1);
+                    let (rc, _, _) = renderer.ray_color(&scattered, depth + 1);
                     let scatter_color = scatter_record.attenuation * scattering_pdf * rc / pdf_val;
 
                     filter_invalid_color_values(emitted_color + scatter_color)

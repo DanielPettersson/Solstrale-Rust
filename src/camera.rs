@@ -27,7 +27,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(image_width: i32, image_height: i32, c: CameraConfig) -> Camera {
+    pub fn new(image_width: u32, image_height: u32, c: &CameraConfig) -> Camera {
         let aspect_ratio = image_width as f64 / image_height as f64;
         let theta = degrees_to_radians(c.vertical_fov_degrees);
         let h = (theta / 2.).tan();
