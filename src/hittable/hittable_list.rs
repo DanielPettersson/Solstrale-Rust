@@ -17,17 +17,11 @@ pub struct HittableList {
 
 impl HittableList {
     /// Creates new empty HittableList
-    pub fn new() -> HittableList {
-        HittableList {
+    pub fn new() -> Hittables {
+        Hittables::HittableList(HittableList {
             list: Vec::new(),
             b_box: Aabb::new_with_empty_intervals(),
-        }
-    }
-
-    /// Adds a new hittable object to this HittableList
-    pub fn add(&mut self, h: Hittables) {
-        self.b_box = Aabb::combine_aabbs(&self.b_box, h.bounding_box());
-        self.list.push(h);
+        })
     }
 }
 
@@ -70,5 +64,11 @@ impl Hittable for HittableList {
 
     fn children(&self) -> Option<Iter<Hittables>> {
         Some(self.list.iter())
+    }
+
+    /// Adds a new hittable object to this HittableList
+    fn add(&mut self, h: Hittables) {
+        self.b_box = Aabb::combine_aabbs(&self.b_box, h.bounding_box());
+        self.list.push(h);
     }
 }

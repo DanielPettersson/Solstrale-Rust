@@ -1,12 +1,13 @@
 //! Package pdf provides probability density functions
 
+use std::f64::consts::PI;
+
+use enum_dispatch::enum_dispatch;
+
 use crate::geo::onb::Onb;
 use crate::geo::vec3::{random_cosine_direction, Vec3};
-use crate::hittable::hittable_list::HittableList;
-use crate::hittable::Hittable;
+use crate::hittable::{Hittable, Hittables};
 use crate::random::random_normal_float;
-use enum_dispatch::enum_dispatch;
-use std::f64::consts::PI;
 
 #[enum_dispatch]
 pub trait Pdf {
@@ -63,13 +64,13 @@ impl Pdf for CosinePdf {
 
 /// A wrapper for generating pdfs for a list of hittable objects
 pub struct HittablePdf<'a> {
-    objects: &'a HittableList,
+    objects: &'a Hittables,
     origin: Vec3,
 }
 
 impl<'a> HittablePdf<'a> {
     /// Creates a new instance of HittablePdf
-    pub fn new(objects: &'a HittableList, origin: Vec3) -> Pdfs {
+    pub fn new(objects: &'a Hittables, origin: Vec3) -> Pdfs {
         Pdfs::HittablePdf(HittablePdf { objects, origin })
     }
 }

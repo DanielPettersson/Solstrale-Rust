@@ -8,3 +8,6 @@ fastrand = "1.8.0"
 image = "0.24.5"
 simple-error = "0.2.3"
 enum_dispatch = "0.3.11"
+
+[dev-dependencies]
+image-compare = "0.2.4"

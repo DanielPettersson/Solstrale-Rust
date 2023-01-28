@@ -31,6 +31,9 @@ pub trait Hittable {
     fn children(&self) -> Option<Iter<Hittables>> {
         None
     }
+    fn add(&mut self, _hittable: Hittables) {
+        panic!("Can only add child to HittableList")
+    }
 }
 
 #[enum_dispatch(Hittable)]
@@ -42,7 +45,7 @@ pub enum Hittables {
 impl Clone for Hittables {
     fn clone(&self) -> Self {
         match self {
-            Hittables::HittableList(_) => Hittables::HittableList(HittableList::new()),
+            Hittables::HittableList(_) => panic!("Should not clone HittableList"),
             Hittables::Sphere(s) => Hittables::Sphere(s.clone()),
         }
     }

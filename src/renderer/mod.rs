@@ -42,8 +42,8 @@ pub struct RenderProgress {
 /// process reporting back progress to the caller
 pub struct Renderer<'a> {
     scene: Scene,
-    pub lights: HittableList,
-    output: &'a Sender<Result<RenderProgress, Box<dyn Error>>>,
+    pub lights: Hittables,
+    output: &'a Sender<RenderProgress>,
     abort: &'a Receiver<bool>,
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
@@ -58,13 +58,18 @@ impl<'a> Renderer<'a> {
     /// Creates a new renderer given a scene and channels for communicating with the caller
     pub fn new(
         scene: Scene,
-        output: &'a Sender<Result<RenderProgress, Box<dyn Error>>>,
+        output: &'a Sender<RenderProgress>,
         abort: &'a Receiver<bool>,
     ) -> Result<Renderer<'a>, Box<dyn Error>> {
         let mut lights = HittableList::new();
         find_lights(&scene.world, &mut lights);
 
-        if lights.list.len() == 0 {
+        let has_lights = match lights.children() {
+            Some(mut list) => list.next().is_some(),
+            None => false,
+        };
+
+        if !has_lights {
             return Err(Box::new(SimpleError::new(
                 "Scene should have at least one light",
             )));
@@ -162,8 +167,8 @@ fn create_progress(
     sample: u32,
     samples_per_pixel: u32,
     pixel_colors: Vec<Vec3>,
-    output: &Sender<Result<RenderProgress, Box<dyn Error>>>,
-) -> Result<(), SendError<Result<RenderProgress, Box<dyn Error>>>> {
+    output: &Sender<RenderProgress>,
+) -> Result<(), SendError<RenderProgress>> {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
 
     for y in 0..image_height {
@@ -173,13 +178,13 @@ fn create_progress(
         }
     }
 
-    output.send(Ok(RenderProgress {
+    output.send(RenderProgress {
         progress: sample as f64 / samples_per_pixel as f64,
         render_image: img,
-    }))
+    })
 }
 
-fn find_lights(s: &Hittables, list: &mut HittableList) {
+fn find_lights(s: &Hittables, list: &mut Hittables) {
     match s.children() {
         None => {
             if s.is_light() {

@@ -2,6 +2,7 @@ use solstrale::camera::CameraConfig;
 use solstrale::geo::vec3::Vec3;
 use solstrale::hittable::hittable_list::HittableList;
 use solstrale::hittable::sphere::Sphere;
+use solstrale::hittable::Hittable;
 use solstrale::material::texture::SolidColor;
 use solstrale::material::{DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
@@ -21,7 +22,12 @@ pub fn simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene 
     if add_light {
         world.add(Sphere::new(Vec3::new(0., 100., 0.), 20., light))
     }
-    world.Add(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
+    world.add(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
 
-    return Scene::new(world, camera, Vec3::new(0.2, 0.3, 0.5), render_config);
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0.2, 0.3, 0.5),
+        render_config,
+    }
 }

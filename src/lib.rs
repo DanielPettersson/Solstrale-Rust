@@ -18,15 +18,8 @@ pub fn ray_trace<'a>(
     width: u32,
     height: u32,
     scene: Scene,
-    output: &'a Sender<Result<RenderProgress, Box<dyn Error>>>,
+    output: &'a Sender<RenderProgress>,
     abort: &'a Receiver<bool>,
-) {
-    match Renderer::new(scene, output, abort) {
-        Ok(r) => {
-            r.render(width, height);
-        }
-        Err(e) => {
-            output.send(Err(e)).unwrap();
-        }
-    }
+) -> Result<(), Box<dyn Error>> {
+    Ok(Renderer::new(scene, output, abort)?.render(width, height))
 }
