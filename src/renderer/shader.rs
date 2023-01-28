@@ -9,7 +9,7 @@ use enum_dispatch::enum_dispatch;
 /// shader calculates the color from a ray hitting a hittable object
 #[enum_dispatch]
 pub trait Shader {
-    fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, depth: i32) -> Vec3;
+    fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, depth: u32) -> Vec3;
 }
 
 #[enum_dispatch(Shader)]
@@ -22,12 +22,18 @@ pub enum Shaders {
 
 /// A full raytracing shader
 pub struct PathTracingShader {
-    max_depth: i32,
+    max_depth: u32,
+}
+
+impl PathTracingShader {
+    pub fn new(max_depth: u32) -> Shaders {
+        Shaders::PathTracingShader(PathTracingShader { max_depth })
+    }
 }
 
 impl Shader for PathTracingShader {
     /// Calculates the color using path tracing
-    fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, depth: i32) -> Vec3 {
+    fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, depth: u32) -> Vec3 {
         if depth >= self.max_depth {
             return ZERO_VECTOR;
         }
@@ -81,14 +87,14 @@ fn filter_color_value(val: f64) -> f64 {
 pub struct AlbedoShader {}
 
 impl AlbedoShader {
-    pub fn new() -> AlbedoShader {
-        AlbedoShader {}
+    pub fn new() -> Shaders {
+        Shaders::AlbedoShader(AlbedoShader {})
     }
 }
 
 impl Shader for AlbedoShader {
     /// Calculates the color only attenuation color
-    fn shade(&self, _: &Renderer, rec: &HitRecord, ray: &Ray, _: i32) -> Vec3 {
+    fn shade(&self, _: &Renderer, rec: &HitRecord, ray: &Ray, _: u32) -> Vec3 {
         match rec.material.scatter(ray, rec) {
             None => rec.material.emitted(rec),
             Some(scatter_record) => scatter_record.attenuation,
@@ -100,14 +106,14 @@ impl Shader for AlbedoShader {
 pub struct NormalShader {}
 
 impl NormalShader {
-    pub fn new() -> NormalShader {
-        NormalShader {}
+    pub fn new() -> Shaders {
+        Shaders::NormalShader(NormalShader {})
     }
 }
 
 impl Shader for NormalShader {
     /// Calculates the color only using normal
-    fn shade(&self, _: &Renderer, rec: &HitRecord, _: &Ray, _: i32) -> Vec3 {
+    fn shade(&self, _: &Renderer, rec: &HitRecord, _: &Ray, _: u32) -> Vec3 {
         rec.normal.unit()
     }
 }
@@ -118,16 +124,16 @@ pub struct SimpleShader {
 }
 
 impl SimpleShader {
-    pub fn new() -> SimpleShader {
-        SimpleShader {
+    pub fn new() -> Shaders {
+        Shaders::SimpleShader(SimpleShader {
             light_dir: Vec3::new(1., 1., -1.),
-        }
+        })
     }
 }
 
 impl Shader for SimpleShader {
     /// Calculates the color only using normal and attenuation color
-    fn shade(&self, _: &Renderer, rec: &HitRecord, ray: &Ray, _: i32) -> Vec3 {
+    fn shade(&self, _: &Renderer, rec: &HitRecord, ray: &Ray, _: u32) -> Vec3 {
         match rec.material.scatter(ray, rec) {
             None => rec.material.emitted(rec),
             Some(scatter_record) => {

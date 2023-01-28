@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::sync::mpsc::{Receiver, SendError, Sender};
 
 use image::{ImageBuffer, RgbImage};
@@ -42,7 +43,7 @@ pub struct RenderProgress {
 pub struct Renderer<'a> {
     scene: Scene,
     pub lights: HittableList,
-    output: &'a Sender<RenderProgress>,
+    output: &'a Sender<Result<RenderProgress, Box<dyn Error>>>,
     abort: &'a Receiver<bool>,
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
@@ -57,14 +58,16 @@ impl<'a> Renderer<'a> {
     /// Creates a new renderer given a scene and channels for communicating with the caller
     pub fn new(
         scene: Scene,
-        output: &'a Sender<RenderProgress>,
+        output: &'a Sender<Result<RenderProgress, Box<dyn Error>>>,
         abort: &'a Receiver<bool>,
-    ) -> Result<Renderer<'a>, SimpleError> {
+    ) -> Result<Renderer<'a>, Box<dyn Error>> {
         let mut lights = HittableList::new();
         find_lights(&scene.world, &mut lights);
 
         if lights.list.len() == 0 {
-            return Err(SimpleError::new("Scene should have at least one light"));
+            return Err(Box::new(SimpleError::new(
+                "Scene should have at least one light",
+            )));
         }
 
         return Ok(Renderer {
@@ -77,7 +80,7 @@ impl<'a> Renderer<'a> {
         });
     }
 
-    fn ray_color(&self, ray: &Ray, depth: i32) -> (Vec3, Vec3, Vec3) {
+    fn ray_color(&self, ray: &Ray, depth: u32) -> (Vec3, Vec3, Vec3) {
         match self.scene.world.hit(ray, &RAY_INTERVAL) {
             Some(rec) => {
                 let pixel_color = self
@@ -159,8 +162,8 @@ fn create_progress(
     sample: u32,
     samples_per_pixel: u32,
     pixel_colors: Vec<Vec3>,
-    output: &Sender<RenderProgress>,
-) -> Result<(), SendError<RenderProgress>> {
+    output: &Sender<Result<RenderProgress, Box<dyn Error>>>,
+) -> Result<(), SendError<Result<RenderProgress, Box<dyn Error>>>> {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
 
     for y in 0..image_height {
@@ -170,10 +173,10 @@ fn create_progress(
         }
     }
 
-    output.send(RenderProgress {
+    output.send(Ok(RenderProgress {
         progress: sample as f64 / samples_per_pixel as f64,
         render_image: img,
-    })
+    }))
 }
 
 fn find_lights(s: &Hittables, list: &mut HittableList) {

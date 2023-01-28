@@ -4,8 +4,8 @@ use enum_dispatch::enum_dispatch;
 
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
-use crate::material::texture::Texture;
 use crate::material::texture::Textures;
+use crate::material::texture::{SolidColor, Texture};
 use crate::pdf::{CosinePdf, Pdfs};
 
 pub mod texture;
@@ -108,8 +108,10 @@ pub struct DiffuseLight {
 
 impl DiffuseLight {
     /// Creates a new diffuse light material
-    pub fn new(tex: Textures) -> Materials {
-        Materials::DiffuseLight(DiffuseLight { tex })
+    pub fn new(r: f64, g: f64, b: f64) -> Materials {
+        Materials::DiffuseLight(DiffuseLight {
+            tex: SolidColor::new(r, g, b),
+        })
     }
 }
 
