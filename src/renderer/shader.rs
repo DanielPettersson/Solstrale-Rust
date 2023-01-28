@@ -2,6 +2,7 @@ use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::material::HitRecord;
 use crate::material::Material;
+use crate::material::ScatterType::{ScatterPdf, ScatterRay};
 use crate::pdf::{mix_generate, mix_value, HittablePdf};
 use crate::renderer::Renderer;
 use enum_dispatch::enum_dispatch;
@@ -43,17 +44,17 @@ impl Shader for PathTracingShader {
 
         match scatter_res {
             None => emitted_color,
-            Some(scatter_record) => match scatter_record.skip_pdf_ray {
-                Some(skip_pdf_ray) => {
-                    let (rc, _, _) = renderer.ray_color(&skip_pdf_ray, depth + 1);
+            Some(scatter_record) => match scatter_record.scatter_type {
+                ScatterRay(scatter_ray) => {
+                    let (rc, _, _) = renderer.ray_color(&scatter_ray, depth + 1);
                     return scatter_record.attenuation * rc;
                 }
-                None => {
+                ScatterPdf(pdf) => {
                     let light_pdf = HittablePdf::new(&renderer.lights, rec.hit_point);
 
-                    let pdf_direction = mix_generate(&light_pdf, &scatter_record.pdf);
+                    let pdf_direction = mix_generate(&light_pdf, &pdf);
                     let scattered = Ray::new(rec.hit_point, pdf_direction, ray.time);
-                    let pdf_val = mix_value(&light_pdf, &scatter_record.pdf, scattered.direction);
+                    let pdf_val = mix_value(&light_pdf, &pdf, scattered.direction);
                     let scattering_pdf = rec.material.scattering_pdf(rec, &scattered);
                     let (rc, _, _) = renderer.ray_color(&scattered, depth + 1);
                     let scatter_color = scatter_record.attenuation * scattering_pdf * rc / pdf_val;
