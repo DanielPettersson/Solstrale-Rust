@@ -7,6 +7,8 @@ const COLOR_INTENSITY_INTERVAL: Interval = Interval {
     max: 0.999,
 };
 
+const COLOR_SCALE: f64 = 1.0 / 255.;
+
 pub fn to_rgb_color(col: Vec3, samples_per_pixel: u32) -> Rgb<u8> {
     let c = to_float(col, samples_per_pixel);
     Rgb([(256. * c.x) as u8, (256. * c.y) as u8, (256. * c.z) as u8])
@@ -27,4 +29,13 @@ fn to_float(col: Vec3, samples_per_pixel: u32) -> Vec3 {
         COLOR_INTENSITY_INTERVAL.clamp(g),
         COLOR_INTENSITY_INTERVAL.clamp(b),
     )
+}
+
+/// Converts rgb pixel to a Vec3 color
+pub fn rgb_to_vec3(pixel: &Rgb<u8>) -> Vec3 {
+    return Vec3::new(
+        pixel[0] as f64 * COLOR_SCALE,
+        pixel[1] as f64 * COLOR_SCALE,
+        pixel[2] as f64 * COLOR_SCALE,
+    );
 }

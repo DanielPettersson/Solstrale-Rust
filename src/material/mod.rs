@@ -34,7 +34,7 @@ pub enum ScatterType<'a> {
     ScatterRay(Ray),
 }
 
-/// The traut for types that describe how
+/// The trait for types that describe how
 /// a ray behaves when hitting an object.
 #[enum_dispatch]
 pub trait Material {
