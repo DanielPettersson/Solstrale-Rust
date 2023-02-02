@@ -13,6 +13,7 @@ pub mod texture;
 
 /// A collection of all interesting properties from
 /// when a ray hits a hittable object
+#[derive(Clone)]
 pub struct HitRecord<'a> {
     pub hit_point: Vec3,
     pub normal: Vec3,

@@ -2,13 +2,19 @@
 //! Some of these hittable objects are containers for other objects
 //! Some others are used to translate or rotate other objects
 
+pub mod constant_medium;
 pub mod hittable_list;
+pub mod motion_blur;
+pub mod quad;
 pub mod sphere;
 
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::constant_medium::ConstantMedium;
 use crate::hittable::hittable_list::HittableList;
+use crate::hittable::motion_blur::MotionBlur;
+use crate::hittable::quad::Quad;
 use crate::hittable::sphere::Sphere;
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -40,13 +46,19 @@ pub trait Hittable {
 pub enum Hittables {
     HittableList(HittableList),
     Sphere(Sphere),
+    ConstantMedium(ConstantMedium),
+    MotionBlur(MotionBlur),
+    Quad(Quad),
 }
 
 impl Clone for Hittables {
     fn clone(&self) -> Self {
         match self {
             Hittables::HittableList(_) => panic!("Should not clone HittableList"),
-            Hittables::Sphere(s) => Hittables::Sphere(s.clone()),
+            Hittables::Sphere(h) => Hittables::Sphere(h.clone()),
+            Hittables::ConstantMedium(h) => Hittables::ConstantMedium(h.clone()),
+            Hittables::MotionBlur(h) => Hittables::MotionBlur(h.clone()),
+            Hittables::Quad(h) => Hittables::Quad(h.clone()),
         }
     }
 }

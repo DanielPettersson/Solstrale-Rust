@@ -119,7 +119,7 @@ impl Aabb {
     }
 }
 
-impl Add<Vec3> for Aabb {
+impl Add<Vec3> for &Aabb {
     type Output = Aabb;
 
     fn add(self, rhs: Vec3) -> Self::Output {

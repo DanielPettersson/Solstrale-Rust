@@ -35,7 +35,10 @@ pub struct SolidColor(Vec3);
 
 impl SolidColor {
     pub fn new(r: f64, g: f64, b: f64) -> Textures {
-        Textures::SolidColor(SolidColor(Vec3::new(r, g, b)))
+        SolidColor::from_vec3(Vec3::new(r, g, b))
+    }
+    pub fn from_vec3(color: Vec3) -> Textures {
+        Textures::SolidColor(SolidColor(color))
     }
 }
 
