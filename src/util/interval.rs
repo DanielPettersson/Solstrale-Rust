@@ -17,6 +17,11 @@ pub const UNIVERSE_INTERVAL: Interval = Interval {
     min: f64::NEG_INFINITY,
     max: f64::INFINITY,
 };
+/// Default start interval for a ray
+pub const RAY_INTERVAL: Interval = Interval {
+    min: 0.001,
+    max: f64::INFINITY,
+};
 
 /// creates a new interval that is the union of the two given.
 /// If there is a gap between the intervals, that is included in the returned interval.

@@ -5,8 +5,7 @@ use crate::hittable::HittableList;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
-use crate::util::interval::Interval;
-use std::sync::Arc;
+use crate::util::interval::{Interval, RAY_INTERVAL};
 
 #[derive(Clone)]
 pub struct Quad {
@@ -16,7 +15,7 @@ pub struct Quad {
     normal: Vec3,
     d: f64,
     w: Vec3,
-    mat: Arc<Materials>,
+    mat: Materials,
     b_box: Aabb,
     area: f64,
 }
@@ -35,7 +34,7 @@ impl Quad {
             normal,
             d: normal.dot(q),
             w: n / n.dot(n),
-            mat: Arc::new(mat),
+            mat,
             b_box,
             area: n.length(),
         });
@@ -97,7 +96,7 @@ impl Hittable for Quad {
     fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
         let ray = Ray::new(origin, direction, 0.);
 
-        match self.hit(&ray, &Interval::new(0.001, f64::INFINITY)) {
+        match self.hit(&ray, &RAY_INTERVAL) {
             None => 0.,
             Some(rec) => {
                 let distance_squared = rec.ray_length * rec.ray_length * direction.length_squared();

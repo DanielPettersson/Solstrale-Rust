@@ -12,7 +12,7 @@ use crate::hittable::{Hittable, Hittables};
 use crate::post::PostProcessors;
 use crate::random::random_normal_float;
 use crate::renderer::shader::{AlbedoShader, NormalShader, Shader, Shaders};
-use crate::util::interval::Interval;
+use crate::util::interval::RAY_INTERVAL;
 use crate::util::rgb_color::to_rgb_color;
 
 pub mod shader;
@@ -48,11 +48,6 @@ pub struct Renderer<'a> {
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
 }
-
-const RAY_INTERVAL: Interval = Interval {
-    min: 0.001,
-    max: f64::INFINITY,
-};
 
 impl<'a> Renderer<'a> {
     /// Creates a new renderer given a scene and channels for communicating with the caller

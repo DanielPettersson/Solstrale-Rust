@@ -6,7 +6,10 @@ pub mod constant_medium;
 pub mod hittable_list;
 pub mod motion_blur;
 pub mod quad;
+pub mod rotation_y;
 pub mod sphere;
+pub mod translation;
+pub mod triangle;
 
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
@@ -15,7 +18,10 @@ use crate::hittable::constant_medium::ConstantMedium;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::motion_blur::MotionBlur;
 use crate::hittable::quad::Quad;
+use crate::hittable::rotation_y::RotationY;
 use crate::hittable::sphere::Sphere;
+use crate::hittable::translation::Translation;
+use crate::hittable::triangle::Triangle;
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 use enum_dispatch::enum_dispatch;
@@ -49,6 +55,9 @@ pub enum Hittables {
     ConstantMedium(ConstantMedium),
     MotionBlur(MotionBlur),
     Quad(Quad),
+    RotationY(RotationY),
+    Translation(Translation),
+    Triangle(Triangle),
 }
 
 impl Clone for Hittables {
@@ -59,6 +68,9 @@ impl Clone for Hittables {
             Hittables::ConstantMedium(h) => Hittables::ConstantMedium(h.clone()),
             Hittables::MotionBlur(h) => Hittables::MotionBlur(h.clone()),
             Hittables::Quad(h) => Hittables::Quad(h.clone()),
+            Hittables::RotationY(h) => Hittables::RotationY(h.clone()),
+            Hittables::Translation(h) => Hittables::Translation(h.clone()),
+            Hittables::Triangle(h) => Hittables::Triangle(h.clone()),
         }
     }
 }

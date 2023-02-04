@@ -8,9 +8,9 @@ const PAD_DELTA: f64 = 0.0001;
 /// Axis Aligned Bounding Box
 #[derive(Clone)]
 pub struct Aabb {
-    x: Interval,
-    y: Interval,
-    z: Interval,
+    pub x: Interval,
+    pub y: Interval,
+    pub z: Interval,
 }
 
 impl Aabb {

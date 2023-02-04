@@ -5,7 +5,7 @@ use crate::geo::vec3::Vec3;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
-use crate::util::interval::Interval;
+use crate::util::interval::{Interval, RAY_INTERVAL};
 use std::f64::consts::PI;
 
 pub struct Sphere {
@@ -34,7 +34,7 @@ impl Hittable for Sphere {
     fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
         let ray = Ray::new(origin, direction, 0.);
 
-        let hit = self.hit(&ray, &Interval::new(0.001, f64::INFINITY));
+        let hit = self.hit(&ray, &RAY_INTERVAL);
 
         match hit {
             None => 0.,
