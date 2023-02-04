@@ -2,6 +2,7 @@
 //! Some of these hittable objects are containers for other objects
 //! Some others are used to translate or rotate other objects
 
+pub mod bvh;
 pub mod constant_medium;
 pub mod hittable_list;
 pub mod motion_blur;
@@ -14,6 +15,7 @@ pub mod triangle;
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::bvh::Bvh;
 use crate::hittable::constant_medium::ConstantMedium;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::motion_blur::MotionBlur;
@@ -58,6 +60,7 @@ pub enum Hittables {
     RotationY(RotationY),
     Translation(Translation),
     Triangle(Triangle),
+    Bvh(Bvh),
 }
 
 impl Clone for Hittables {
@@ -71,6 +74,7 @@ impl Clone for Hittables {
             Hittables::RotationY(h) => Hittables::RotationY(h.clone()),
             Hittables::Translation(h) => Hittables::Translation(h.clone()),
             Hittables::Triangle(h) => Hittables::Triangle(h.clone()),
+            Hittables::Bvh(_) => panic!("Should not clone Bvh"),
         }
     }
 }
