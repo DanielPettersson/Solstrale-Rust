@@ -6,6 +6,7 @@ pub mod bvh;
 pub mod constant_medium;
 pub mod hittable_list;
 pub mod motion_blur;
+pub mod obj_model;
 pub mod quad;
 pub mod rotation_y;
 pub mod sphere;
