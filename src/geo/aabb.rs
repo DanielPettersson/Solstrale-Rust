@@ -88,7 +88,7 @@ impl Aabb {
         };
     }
 
-    pub fn hit(&self, r: Ray) -> bool {
+    pub fn hit(&self, r: &Ray) -> bool {
         let mut t1 = (self.x.min - r.origin.x) * r.direction_inverted.x;
         let mut t2 = (self.x.max - r.origin.x) * r.direction_inverted.x;
 

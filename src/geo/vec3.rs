@@ -259,6 +259,26 @@ impl Vec3 {
         let r_out_parallel = n * (-(1. - r_out_perpendicular.length_squared()).abs().sqrt());
         r_out_perpendicular + r_out_parallel
     }
+
+    /// Returns value of a numbered axis, where x is 0, y is 1 and other is z
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let v = Vec3::new(1., 2., 3.);
+    /// assert_eq!(1., v.axis(0));
+    /// assert_eq!(2., v.axis(1));
+    /// assert_eq!(3., v.axis(2));
+    /// ```
+    ///
+    pub fn axis(&self, a: u8) -> f64 {
+        if a == 0 {
+            self.x
+        } else if a == 1 {
+            self.y
+        } else {
+            self.z
+        }
+    }
 }
 
 /// Creates a random Vec3 within the given interval

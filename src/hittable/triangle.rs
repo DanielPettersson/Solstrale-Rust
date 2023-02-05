@@ -68,6 +68,11 @@ impl Triangle {
             center,
         })
     }
+
+    /// returns the center point for the triangle on the given axis
+    pub fn center(&self, axis: u8) -> f64 {
+        self.center.axis(axis)
+    }
 }
 
 impl Hittable for Triangle {
