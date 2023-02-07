@@ -16,7 +16,7 @@ pub fn to_rgb_color(col: Vec3, samples_per_pixel: u32) -> Rgb<u8> {
 
 // Converts a color in a Vec3 that is the sum of a given of amounts of samples
 // to a float color. Applies gamma correction to the output color.
-fn to_float(col: Vec3, samples_per_pixel: u32) -> Vec3 {
+pub fn to_float(col: Vec3, samples_per_pixel: u32) -> Vec3 {
     // Divide the color by the number of samples
     // and gamma-correct for gamma=2.0
     let scale = 1.0 / samples_per_pixel as f64;
