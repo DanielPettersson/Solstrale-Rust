@@ -1,28 +1,34 @@
-use crate::scenes::simple_test_scene;
+use crate::scenes::create_obj_scene;
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
 use solstrale::ray_trace;
 use solstrale::renderer::shader::PathTracingShader;
-use solstrale::renderer::RenderConfig;
+use solstrale::renderer::{RenderConfig, Scene};
 use std::sync::mpsc::channel;
 use std::thread;
 
 mod scenes;
 
+const IMAGE_COMPARISON_SCORE_THRESHOLD: f64 = 0.95;
+
 #[test]
-fn test_render_simple_scene() {
+fn test_render_obj_with_textures() {
     let render_config = RenderConfig {
-        samples_per_pixel: 50,
+        samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
         post_processor: None,
     };
-    let scene = simple_test_scene(render_config, true);
+    let scene = create_obj_scene(render_config);
 
+    render_and_compare_output(scene, "obj", 200, 100);
+}
+
+fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
     let (output_sender, output_receiver) = channel();
     let (_, abort_receiver) = channel();
 
     thread::spawn(move || {
-        ray_trace(200, 100, scene, &output_sender, &abort_receiver).unwrap();
+        ray_trace(width, height, scene, &output_sender, &abort_receiver).unwrap();
     });
 
     let mut image = RgbImage::new(200, 100);
@@ -30,7 +36,7 @@ fn test_render_simple_scene() {
         image = render_output.render_image
     }
 
-    compare_output("simple", &image);
+    compare_output(name, &image);
 }
 
 fn compare_output(name: &str, actual_image: &RgbImage) {
@@ -44,5 +50,15 @@ fn compare_output(name: &str, actual_image: &RgbImage) {
             .expect("Failed to compare images")
             .score;
 
-    assert!(score > 0.95, "Comparison score is: {}", score)
+    if score <= IMAGE_COMPARISON_SCORE_THRESHOLD {
+        actual_image
+            .save(format!("tests/output/out_actual_{}.jpg", name))
+            .unwrap();
+    }
+
+    assert!(
+        score > IMAGE_COMPARISON_SCORE_THRESHOLD,
+        "Comparison score is: {}",
+        score
+    )
 }
