@@ -1,13 +1,130 @@
 use solstrale::camera::CameraConfig;
 use solstrale::geo::vec3::Vec3;
+use solstrale::hittable::bvh::Bvh;
+use solstrale::hittable::constant_medium::ConstantMedium;
 use solstrale::hittable::hittable_list::HittableList;
+use solstrale::hittable::motion_blur::MotionBlur;
 use solstrale::hittable::obj_model::new_obj_model;
 use solstrale::hittable::quad::Quad;
+use solstrale::hittable::rotation_y::RotationY;
 use solstrale::hittable::sphere::Sphere;
-use solstrale::hittable::Hittable;
+use solstrale::hittable::translation::Translation;
+use solstrale::hittable::triangle::Triangle;
+use solstrale::hittable::{Hittable, Hittables};
 use solstrale::material::texture::{ImageTexture, SolidColor};
-use solstrale::material::{DiffuseLight, Lambertian};
+use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
+
+pub fn create_test_scene(render_config: RenderConfig) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 20.,
+        aperture_size: 0.1,
+        focus_distance: 10.,
+        look_from: Vec3::new(-5., 3., 6.),
+        look_at: Vec3::new(0.25, 1., 0.),
+    };
+
+    let mut world = HittableList::new();
+
+    let image_tex = ImageTexture::load("tests/textures/tex.jpg").unwrap();
+
+    let ground_material = Lambertian::new(image_tex);
+    let glass_mat = Dielectric::new(SolidColor::new(1., 1., 1.), 1.5);
+    let light_mat = DiffuseLight::new(10., 10., 10.);
+    let red_mat = Lambertian::new(SolidColor::new(1., 0., 0.));
+
+    world.add(Quad::new(
+        Vec3::new(-5., 0., -15.),
+        Vec3::new(20., 0., 0.),
+        Vec3::new(0., 0., 20.),
+        ground_material,
+    ));
+    world.add(Sphere::new(Vec3::new(-1., 1., 0.), 1., glass_mat));
+    world.add(RotationY::new(
+        Quad::new_box(
+            Vec3::new(0., 0., -0.5),
+            Vec3::new(1., 2., 0.5),
+            red_mat.clone(),
+        ),
+        15.,
+    ));
+    world.add(ConstantMedium::new(
+        Translation::new(
+            Quad::new_box(
+                Vec3::new(0., 0., -0.5),
+                Vec3::new(1., 2., 0.5),
+                red_mat.clone(),
+            ),
+            Vec3::new(0., 0., 1.),
+        ),
+        0.1,
+        Vec3::new(1., 1., 1.),
+    ));
+    world.add(MotionBlur::new(
+        Quad::new_box(
+            Vec3::new(-1., 2., 0.),
+            Vec3::new(-0.5, 2.5, 0.5),
+            red_mat.clone(),
+        ),
+        Vec3::new(0., 1., 0.),
+    ));
+
+    let mut balls = Vec::new();
+    for ii in (0..10).step_by(2) {
+        let i = ii as f64 * 0.1;
+        for jj in (0..10).step_by(2) {
+            let j = jj as f64 * 0.1;
+            for kk in (0..10).step_by(2) {
+                let k = kk as f64 * 0.1;
+                if let Hittables::Triangle(t) = Triangle::new(
+                    Vec3::new(i, j + 0.05, k + 0.8),
+                    Vec3::new(i, j, k + 0.8),
+                    Vec3::new(i, j + 0.05, k),
+                    red_mat.clone(),
+                ) {
+                    balls.push(t)
+                }
+            }
+        }
+    }
+    world.add(Bvh::new(balls.as_mut_slice()));
+
+    world.add(Triangle::new(
+        Vec3::new(1., 0.1, 2.),
+        Vec3::new(3., 0.1, 2.),
+        Vec3::new(2., 0.1, 1.),
+        red_mat,
+    ));
+
+    // Lights
+
+    world.add(Sphere::new(Vec3::new(10., 5., 10.), 10., light_mat.clone()));
+    world.add(Translation::new(
+        RotationY::new(
+            Quad::new(
+                Vec3::new(0., 0., 0.),
+                Vec3::new(2., 0., 0.),
+                Vec3::new(0., 0., 2.),
+                light_mat.clone(),
+            ),
+            45.,
+        ),
+        Vec3::new(-1., 10., -1.),
+    ));
+    world.add(Triangle::new(
+        Vec3::new(-2., 1., -3.),
+        Vec3::new(0., 1., -3.),
+        Vec3::new(-1., 2., -3.),
+        light_mat,
+    ));
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0.2, 0.3, 0.5),
+        render_config,
+    }
+}
 
 pub fn simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene {
     let camera = CameraConfig {

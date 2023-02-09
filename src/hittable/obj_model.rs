@@ -54,7 +54,7 @@ pub fn new_obj_model_with_default_material(
 
     let mut triangles = Vec::new();
 
-    for (_, m) in models.iter().enumerate() {
+    for m in models {
         let mesh = &m.mesh;
         for i in (0..mesh.indices.len()).step_by(3) {
             let mut pos_offset = (mesh.indices[i] * 3) as usize;
@@ -81,9 +81,9 @@ pub fn new_obj_model_with_default_material(
             let (tu0, tv0, tu1, tv1, tu2, tv2) = if mesh.texcoords.is_empty() {
                 (0., 0., 0., 0., 0., 0.)
             } else {
-                let tex_offset1 = (mesh.indices[i] * 2) as usize;
-                let tex_offset2 = (mesh.indices[i + 1] * 2) as usize;
-                let tex_offset3 = (mesh.indices[i + 2] * 2) as usize;
+                let tex_offset1 = (mesh.texcoord_indices[i] * 2) as usize;
+                let tex_offset2 = (mesh.texcoord_indices[i + 1] * 2) as usize;
+                let tex_offset3 = (mesh.texcoord_indices[i + 2] * 2) as usize;
                 (
                     mesh.texcoords[tex_offset1] as f64,
                     mesh.texcoords[tex_offset1 + 1] as f64,

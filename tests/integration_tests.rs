@@ -1,9 +1,10 @@
-use crate::scenes::create_obj_scene;
+use crate::scenes::{create_obj_scene, create_test_scene};
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
 use solstrale::ray_trace;
-use solstrale::renderer::shader::PathTracingShader;
+use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
+use std::collections::HashMap;
 use std::sync::mpsc::channel;
 use std::thread;
 
@@ -21,6 +22,25 @@ fn test_render_obj_with_textures() {
     let scene = create_obj_scene(render_config);
 
     render_and_compare_output(scene, "obj", 200, 100);
+}
+
+#[test]
+fn test_render_scene() {
+    let shaders: HashMap<&str, Shaders> = HashMap::from([
+        ("pathTracing", PathTracingShader::new(50)),
+        ("simple", SimpleShader::new()),
+    ]);
+
+    for (shader_name, shader) in shaders {
+        let render_config = RenderConfig {
+            samples_per_pixel: 25,
+            shader,
+            post_processor: None,
+        };
+        let scene = create_test_scene(render_config);
+
+        render_and_compare_output(scene, shader_name, 200, 100)
+    }
 }
 
 fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
