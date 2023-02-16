@@ -4,7 +4,7 @@ use solstrale::hittable::bvh::Bvh;
 use solstrale::hittable::constant_medium::ConstantMedium;
 use solstrale::hittable::hittable_list::HittableList;
 use solstrale::hittable::motion_blur::MotionBlur;
-use solstrale::hittable::obj_model::new_obj_model;
+use solstrale::hittable::obj_model::{new_obj_model, new_obj_model_with_default_material};
 use solstrale::hittable::quad::Quad;
 use solstrale::hittable::rotation_y::RotationY;
 use solstrale::hittable::sphere::Sphere;
@@ -126,7 +126,55 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
     }
 }
 
-pub fn simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene {
+pub fn create_bvh_test_scene(
+    render_config: RenderConfig,
+    use_bvh: bool,
+    num_spheres: u32,
+) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 20.,
+        aperture_size: 0.1,
+        focus_distance: 10.,
+        look_from: Vec3::new(-0.5, 0., 4.),
+        look_at: Vec3::new(-0.5, 0., 0.),
+    };
+
+    let mut world = HittableList::new();
+    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.));
+    let light = DiffuseLight::new(10., 10., 10.);
+    world.add(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
+
+    let mut triangles = Vec::new();
+    for x in 0..num_spheres {
+        let cx = x as f64 - num_spheres as f64 / 2.;
+        let t = Triangle::new(
+            Vec3::new(cx, -0.5, 0.),
+            Vec3::new(cx + 1., -0.5, 0.),
+            Vec3::new(cx + 0.5, 0.5, 0.),
+            yellow.clone(),
+        );
+        if use_bvh {
+            if let Hittables::Triangle(tri) = t {
+                triangles.push(tri);
+            }
+        } else {
+            world.add(t);
+        }
+    }
+
+    if use_bvh {
+        world.add(Bvh::new(triangles.as_mut_slice()))
+    }
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0.2, 0.3, 0.5),
+        render_config,
+    }
+}
+
+pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
@@ -142,6 +190,44 @@ pub fn simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene 
         world.add(Sphere::new(Vec3::new(0., 100., 0.), 20., light))
     }
     world.add(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0.2, 0.3, 0.5),
+        render_config,
+    }
+}
+
+pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 20.,
+        aperture_size: 0.,
+        focus_distance: 1.,
+        look_from: Vec3::new(0., 1., 5.),
+        look_at: Vec3::new(0., 1., 0.),
+    };
+
+    let mut world = HittableList::new();
+    let light = DiffuseLight::new(10., 10., 10.);
+
+    world.add(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
+
+    let tex = ImageTexture::load("tests/textures/checker.jpg").unwrap();
+    let checker_mat = Lambertian::new(tex);
+
+    world.add(Triangle::new_with_tex_coords(
+        Vec3::new(-1., 0., 0.),
+        Vec3::new(1., 0., 0.),
+        Vec3::new(0., 2., 0.),
+        -1.,
+        -1.,
+        2.,
+        -1.,
+        0.,
+        2.,
+        checker_mat,
+    ));
 
     Scene {
         world,
@@ -175,6 +261,30 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
         Vec3::new(0., 0., 400.),
         ground_material,
     ));
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0.2, 0.3, 0.5),
+        render_config,
+    }
+}
+
+pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &str) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 30.,
+        aperture_size: 0.,
+        focus_distance: 1.,
+        look_from: Vec3::new(2., 1., 3.),
+        look_at: Vec3::new(0., 0., 0.),
+    };
+
+    let mut world = HittableList::new();
+    let light = DiffuseLight::new(15., 15., 15.);
+    let red = Lambertian::new(SolidColor::new(1., 0., 0.));
+
+    world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
+    world.add(new_obj_model_with_default_material(path, filename, 1., red).unwrap());
 
     Scene {
         world,

@@ -9,7 +9,7 @@ use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::{Hittable, Hittables};
-use crate::post::PostProcessors;
+use crate::post::{PostProcessor, PostProcessors};
 use crate::random::random_normal_float;
 use crate::renderer::shader::{AlbedoShader, NormalShader, Shader, Shaders};
 use crate::util::interval::RAY_INTERVAL;
@@ -108,7 +108,7 @@ impl<'a> Renderer<'a> {
     }
 
     /// Executes the rendering of the image
-    pub fn render(&self, image_width: u32, image_height: u32) {
+    pub fn render(&self, image_width: u32, image_height: u32) -> Result<(), Box<dyn Error>> {
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
 
@@ -119,8 +119,9 @@ impl<'a> Renderer<'a> {
         let camera = Camera::new(image_width, image_height, &self.scene.camera);
 
         for sample in 1..=samples_per_pixel {
-            if let Some(_) = self.abort.iter().peekable().peek() {
-                return;
+            match self.abort.try_recv() {
+                Ok(_) => return Ok(()),
+                _ => {}
             }
 
             for y in 0..image_height {
@@ -140,18 +141,40 @@ impl<'a> Renderer<'a> {
                     }
                 }
             }
-            if create_progress(
+            create_progress(
                 image_width,
                 image_height,
                 sample,
                 samples_per_pixel,
                 pixel_colors.clone(),
                 self.output,
-            )
-            .is_err()
-            {
-                return;
-            }
+            )?
+        }
+
+        match &self.scene.render_config.post_processor {
+            Some(p) => match self.abort.try_recv() {
+                Ok(_) => Ok(()),
+                _ => {
+                    match p.post_process(
+                        pixel_colors,
+                        albedo_colors,
+                        normal_colors,
+                        image_width,
+                        image_height,
+                        samples_per_pixel,
+                    ) {
+                        Ok(img) => {
+                            self.output.send(RenderProgress {
+                                progress: 1.,
+                                render_image: img,
+                            })?;
+                            Ok(())
+                        }
+                        Err(e) => Err(e),
+                    }
+                }
+            },
+            None => Ok(()),
         }
     }
 }

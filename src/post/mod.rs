@@ -26,6 +26,12 @@ pub enum PostProcessors {
 
 pub struct OidnPostProcessor();
 
+impl OidnPostProcessor {
+    pub fn new() -> PostProcessors {
+        PostProcessors::OidnPostProcessor(OidnPostProcessor())
+    }
+}
+
 impl PostProcessor for OidnPostProcessor {
     fn post_process(
         &self,
@@ -43,6 +49,7 @@ impl PostProcessor for OidnPostProcessor {
 
         let device = oidn::Device::new();
         oidn::RayTracing::new(&device)
+            .image_dimensions(width as usize, height as usize)
             .albedo_normal(&albedo_rgb, &normal_rgb)
             .srgb(true)
             .hdr(false)
