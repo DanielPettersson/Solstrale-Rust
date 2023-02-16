@@ -186,7 +186,7 @@ impl Material for Dielectric {
 fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
     let mut r0 = (1. - index_of_refraction) / (1. + index_of_refraction);
     r0 = r0 * r0;
-    return r0 + (1. - r0) * f64::powi(1. - cosine, 5);
+    return r0 + (1. - r0) * (1. - cosine).powi(5);
 }
 
 /// A material used for emitting light

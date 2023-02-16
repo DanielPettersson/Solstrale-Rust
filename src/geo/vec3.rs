@@ -255,7 +255,7 @@ impl Vec3 {
     /// ```
     pub fn refract(&self, n: Vec3, index_of_refraction: f64) -> Vec3 {
         let cos_theta = self.neg().dot(n).min(1.);
-        let r_out_perpendicular = n * cos_theta + *self * index_of_refraction;
+        let r_out_perpendicular = (n * cos_theta + *self) * index_of_refraction;
         let r_out_parallel = n * (-(1. - r_out_perpendicular.length_squared()).abs().sqrt());
         r_out_perpendicular + r_out_parallel
     }
