@@ -21,7 +21,7 @@ pub const ZERO_VECTOR: Vec3 = Vec3 {
 
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ x: {}, y: {}, z: {} }}", self.x, self.y, self.z)
+        write!(f, "{{ x: {:.4}, y: {:.4}, z: {:.4} }}", self.x, self.y, self.z)
     }
 }
 

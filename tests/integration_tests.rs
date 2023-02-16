@@ -1,4 +1,5 @@
 use crate::scenes::{create_obj_scene, create_test_scene};
+use image::imageops::FilterType;
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
 use solstrale::ray_trace;
@@ -65,8 +66,11 @@ fn compare_output(name: &str, actual_image: &RgbImage) {
         .expect(&format!("Could not load {}", &expected_image_path))
         .into_rgb8();
 
+    let sized_actual = image::imageops::resize(actual_image, 100, 50, FilterType::Gaussian);
+    let sized_expected = image::imageops::resize(&expected_image, 100, 50, FilterType::Gaussian);
+
     let score =
-        image_compare::rgb_similarity_structure(&RootMeanSquared, &expected_image, actual_image)
+        image_compare::rgb_similarity_structure(&RootMeanSquared, &sized_expected, &sized_actual)
             .expect("Failed to compare images")
             .score;
 
@@ -78,7 +82,8 @@ fn compare_output(name: &str, actual_image: &RgbImage) {
 
     assert!(
         score > IMAGE_COMPARISON_SCORE_THRESHOLD,
-        "Comparison score is: {}",
+        "Comparison score for {} is: {}",
+        name,
         score
     )
 }

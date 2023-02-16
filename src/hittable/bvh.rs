@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::hittable::triangle::Triangle;
@@ -12,9 +14,37 @@ pub struct Bvh {
     b_box: Aabb,
 }
 
+impl fmt::Debug for Bvh {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{{\"left\": {:?}, \"right\": {:?}}}",
+            self.left, self.right
+        )
+    }
+}
+
 enum BvhItem {
     Node(Bvh),
     Leaf(Triangle),
+}
+
+impl fmt::Debug for BvhItem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BvhItem::Node(b) => write!(f, "{:?}", b),
+            BvhItem::Leaf(t) => write!(f, "{}", t.center),
+        }
+    }
+}
+
+impl BvhItem {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+        match self {
+            BvhItem::Node(i) => i.hit(r, ray_length),
+            BvhItem::Leaf(i) => i.hit(r, ray_length),
+        }
+    }
 }
 
 impl Bvh {
@@ -27,20 +57,6 @@ impl Bvh {
             panic!("Cannot create a Bvh with empty list of objects")
         }
         Hittables::Bvh(create_bvh(list))
-    }
-
-    fn left_hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
-        match self.left.as_ref() {
-            BvhItem::Node(i) => i.hit(r, ray_length),
-            BvhItem::Leaf(i) => i.hit(r, ray_length),
-        }
-    }
-
-    fn right_hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
-        match self.right.as_ref() {
-            BvhItem::Node(i) => i.hit(r, ray_length),
-            BvhItem::Leaf(i) => i.hit(r, ray_length),
-        }
     }
 }
 
@@ -59,17 +75,17 @@ fn create_bvh(list: &mut [Triangle]) -> Bvh {
         )
     } else {
         let mid = sort_hittables_slice_by_most_spread_axis(list);
-        let left = create_bvh(&mut list[..mid]);
-        let right = create_bvh(&mut list[mid..]);
-        let b_box = Aabb::combine_aabbs(&left.b_box, &right.b_box);
-        (BvhItem::Node(left), BvhItem::Node(right), b_box)
+        let l = create_bvh(&mut list[..mid]);
+        let r = create_bvh(&mut list[mid..]);
+        let b_box = Aabb::combine_aabbs(&l.b_box, &r.b_box);
+        (BvhItem::Node(l), BvhItem::Node(r), b_box)
     };
 
-    return Bvh {
+    Bvh {
         left: Box::new(left),
         right: Box::new(right),
         b_box,
-    };
+    }
 }
 
 fn sort_hittables_slice_by_most_spread_axis(list: &mut [Triangle]) -> usize {
@@ -121,11 +137,14 @@ impl Hittable for Bvh {
             return None;
         }
 
-        match self.left_hit(r, ray_length) {
-            None => self.right_hit(r, ray_length),
-            Some(rec) => {
-                let new_ray_length = Interval::new(ray_length.min, rec.ray_length);
-                self.right_hit(r, &new_ray_length)
+        match self.left.hit(r, ray_length) {
+            None => self.right.hit(r, ray_length),
+            Some(left_rec) => {
+                let new_ray_length = Interval::new(ray_length.min, left_rec.ray_length);
+                match self.right.hit(r, &new_ray_length) {
+                    Some(right_rec) => Some(right_rec),
+                    None => Some(left_rec),
+                }
             }
         }
     }
