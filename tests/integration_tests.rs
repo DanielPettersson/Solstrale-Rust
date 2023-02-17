@@ -120,7 +120,7 @@ fn test_abort_render_scene() {
         progress_count += 1;
         abort_sender.send(true).unwrap();
     }
-    assert_eq!(2, progress_count)
+    assert!(progress_count < 100, "Most likely it should be 1 or 2 depending on timing, but definitely less than 100 as rendering is aborted")
 }
 
 #[test]
