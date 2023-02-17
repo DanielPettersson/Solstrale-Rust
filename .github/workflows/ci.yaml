@@ -8,4 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+      - name: Update apt
+        run: sudo apt-get update
+      - name: Install libtbb
+        run: sudo apt-get install -y libtbb-dev
       - run: cargo test --all-features
