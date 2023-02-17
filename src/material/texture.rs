@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::sync::Arc;
 
 use enum_dispatch::enum_dispatch;
 use image::RgbImage;
@@ -50,7 +51,7 @@ impl Texture for SolidColor {
 
 #[derive(Clone)]
 pub struct ImageTexture {
-    image: RgbImage,
+    image: Arc<RgbImage>,
     mirror: bool,
     max_x: f64,
     max_y: f64,
@@ -62,11 +63,11 @@ impl ImageTexture {
         let image = image::open(path)
             .expect(&format!("Failed to load image texture {}", path))
             .into_rgb8();
-        Ok(Self::new(image, false))
+        Ok(Self::new(Arc::new(image), false))
     }
 
     /// Creates a texture that uses image data for color
-    pub fn new(image: RgbImage, mirror: bool) -> Textures {
+    pub fn new(image: Arc<RgbImage>, mirror: bool) -> Textures {
         let w = image.width();
         let h = image.height();
         Textures::ImageTexture(ImageTexture {
