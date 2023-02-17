@@ -10,6 +10,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Update apt
         run: sudo apt-get update
-      - name: Install libtbb
-        run: sudo apt-get install -y libtbb-dev
+      - name: Install libtbb2
+        run: sudo apt-get install -y libtbb2
+      - name: Copy Oidn lib
+        run: sudo cp oidn/lib/libOpenImageDenoise.so* /usr/lib
       - run: cargo test --all-features
