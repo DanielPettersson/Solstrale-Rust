@@ -10,9 +10,9 @@ use std::error::Error;
 pub trait PostProcessor {
     fn post_process(
         &self,
-        pixel_colors: Vec<Vec3>,
-        albedo_colors: Vec<Vec3>,
-        normal_colors: Vec<Vec3>,
+        pixel_colors: &Vec<Vec3>,
+        albedo_colors: &Vec<Vec3>,
+        normal_colors: &Vec<Vec3>,
         width: u32,
         height: u32,
         num_samples: u32,
@@ -35,9 +35,9 @@ impl OidnPostProcessor {
 impl PostProcessor for OidnPostProcessor {
     fn post_process(
         &self,
-        pixel_colors: Vec<Vec3>,
-        albedo_colors: Vec<Vec3>,
-        normal_colors: Vec<Vec3>,
+        pixel_colors: &Vec<Vec3>,
+        albedo_colors: &Vec<Vec3>,
+        normal_colors: &Vec<Vec3>,
         width: u32,
         height: u32,
         num_samples: u32,
@@ -81,7 +81,7 @@ impl PostProcessor for OidnPostProcessor {
     }
 }
 
-fn to_rgb_vec(vec: Vec<Vec3>, num_samples: u32) -> Vec<f32> {
+fn to_rgb_vec(vec: &Vec<Vec3>, num_samples: u32) -> Vec<f32> {
     vec.iter()
         .flat_map(|v| {
             let c = rgb_color::to_float(*v, num_samples);

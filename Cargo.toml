@@ -11,6 +11,7 @@ enum_dispatch = "0.3.11"
 tobj = "3.2.4"
 oidn = "1.4.3"
 derive_more = "0.99.17"
+rayon = "1.6.1"
 
 [dev-dependencies]
 image-compare = "0.2.4"

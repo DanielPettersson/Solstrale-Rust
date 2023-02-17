@@ -1,7 +1,7 @@
 use crate::random;
 use derive_more::{Constructor, Display};
 use std::f64::consts::PI;
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, Sub};
 
 /// Vec3 is a 3 dimensional vector
 #[derive(Copy, Clone, PartialEq, Debug, Default, Constructor, Display)]
@@ -32,6 +32,24 @@ impl Add for Vec3 {
     /// ```
     fn add(self, v: Self) -> Self::Output {
         Vec3 {
+            x: self.x + v.x,
+            y: self.y + v.y,
+            z: self.z + v.z,
+        }
+    }
+}
+
+impl AddAssign for Vec3 {
+    /// returns a Vec3 that has all values added with corresponding value in given Vec3
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let mut res = Vec3::new(1., 2., 3.);
+    /// res += Vec3::new(4., 5., 6.);
+    /// assert_eq!(Vec3::new(5., 7., 9.), res)
+    /// ```
+    fn add_assign(&mut self, v: Self) {
+        *self = Self {
             x: self.x + v.x,
             y: self.y + v.y,
             z: self.z + v.z,

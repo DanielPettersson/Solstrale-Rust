@@ -1,5 +1,7 @@
 use std::error::Error;
+use std::ops::Deref;
 use std::sync::mpsc::{Receiver, SendError, Sender};
+use std::sync::{Arc, Mutex};
 
 use image::{ImageBuffer, RgbImage};
 use simple_error::SimpleError;
@@ -40,22 +42,16 @@ pub struct RenderProgress {
 
 /// Renderer is a central part of the raytracer responsible for controlling the
 /// process reporting back progress to the caller
-pub struct Renderer<'a> {
+pub struct Renderer {
     scene: Scene,
     pub lights: Hittables,
-    output: &'a Sender<RenderProgress>,
-    abort: &'a Receiver<bool>,
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
 }
 
-impl<'a> Renderer<'a> {
+impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
-    pub fn new(
-        scene: Scene,
-        output: &'a Sender<RenderProgress>,
-        abort: &'a Receiver<bool>,
-    ) -> Result<Renderer<'a>, Box<dyn Error>> {
+    pub fn new(scene: Scene) -> Result<Renderer, Box<dyn Error>> {
         let mut lights = HittableList::new();
         find_lights(&scene.world, &mut lights);
 
@@ -73,8 +69,6 @@ impl<'a> Renderer<'a> {
         return Ok(Renderer {
             scene,
             lights,
-            output,
-            abort,
             albedo_shader: AlbedoShader {},
             normal_shader: NormalShader {},
         });
@@ -108,63 +102,107 @@ impl<'a> Renderer<'a> {
     }
 
     /// Executes the rendering of the image
-    pub fn render(&self, image_width: u32, image_height: u32) -> Result<(), Box<dyn Error>> {
+    pub fn render(
+        &self,
+        image_width: usize,
+        image_height: usize,
+        output: &Sender<RenderProgress>,
+        abort: &Receiver<bool>,
+    ) -> Result<(), Box<dyn Error>> {
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
 
-        let mut pixel_colors: Vec<Vec3> = vec![ZERO_VECTOR; pixel_count as usize];
-        let mut albedo_colors: Vec<Vec3> = vec![ZERO_VECTOR; pixel_count as usize];
-        let mut normal_colors: Vec<Vec3> = vec![ZERO_VECTOR; pixel_count as usize];
+        let pixel_colors: Arc<Mutex<Vec<Vec3>>> =
+            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
+        let albedo_colors: Arc<Mutex<Vec<Vec3>>> =
+            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
+        let normal_colors: Arc<Mutex<Vec<Vec3>>> =
+            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
 
-        let camera = Camera::new(image_width, image_height, &self.scene.camera);
+        let camera = Arc::new(Camera::new(image_width, image_height, &self.scene.camera));
+
+        let pool = rayon::ThreadPoolBuilder::new()
+            .build()
+            .expect("Failed to create thread pool");
 
         for sample in 1..=samples_per_pixel {
-            match self.abort.try_recv() {
+            match abort.try_recv() {
                 Ok(_) => return Ok(()),
                 _ => {}
             }
 
-            for y in 0..image_height {
-                for x in 0..image_width {
-                    let i = (((image_height - 1) - y) * image_width + x) as usize;
+            pool.scope(|s| {
+                for y in 0..image_height {
+                    let cam = camera.clone();
+                    let cloned_pixel_colors = pixel_colors.clone();
+                    let cloned_albedo_colors = albedo_colors.clone();
+                    let cloned_normal_colors = normal_colors.clone();
 
-                    let u = (x as f64 + random_normal_float()) / (image_width - 1) as f64;
-                    let v = (y as f64 + random_normal_float()) / (image_height - 1) as f64;
-                    let ray = camera.get_ray(u, v);
-                    let (pixel_color, albedo_color, normal_color) = self.ray_color(&ray, 0);
+                    s.spawn(move |_| {
+                        let mut row_pixel_colors: Vec<Vec3> =
+                            vec![ZERO_VECTOR; image_width as usize];
+                        let mut row_albedo_colors: Vec<Vec3> =
+                            vec![ZERO_VECTOR; image_width as usize];
+                        let mut row_normal_colors: Vec<Vec3> =
+                            vec![ZERO_VECTOR; image_width as usize];
 
-                    pixel_colors[i] = pixel_colors[i] + pixel_color;
+                        let yi = ((image_height - 1) - y) * image_width;
+                        for x in 0..image_width {
+                            let u = (x as f64 + random_normal_float()) / (image_width - 1) as f64;
+                            let v = (y as f64 + random_normal_float()) / (image_height - 1) as f64;
+                            let ray = cam.get_ray(u, v);
+                            let (pixel_color, albedo_color, normal_color) = self.ray_color(&ray, 0);
 
-                    if let Some(_) = self.scene.render_config.post_processor {
-                        albedo_colors[i] = albedo_colors[i] + albedo_color;
-                        normal_colors[i] = normal_colors[i] + normal_color;
-                    }
+                            row_pixel_colors[x] = pixel_color;
+
+                            if let Some(_) = self.scene.render_config.post_processor {
+                                row_albedo_colors[x] = albedo_color;
+                                row_normal_colors[x] = normal_color;
+                            }
+                        }
+
+                        let mut pc = cloned_pixel_colors.lock().unwrap();
+                        for (x, c) in row_pixel_colors.iter().enumerate() {
+                            pc[yi + x] += *c;
+                        }
+
+                        let mut pc = cloned_albedo_colors.lock().unwrap();
+                        for (x, c) in row_albedo_colors.iter().enumerate() {
+                            pc[yi + x] += *c;
+                        }
+
+                        let mut pc = cloned_normal_colors.lock().unwrap();
+                        for (x, c) in row_normal_colors.iter().enumerate() {
+                            pc[yi + x] += *c;
+                        }
+                    });
                 }
-            }
+            });
+
             create_progress(
-                image_width,
-                image_height,
+                image_width as u32,
+                image_height as u32,
                 sample,
                 samples_per_pixel,
-                pixel_colors.clone(),
-                self.output,
+                pixel_colors.lock().unwrap().deref(),
+                output,
             )?
         }
 
         match &self.scene.render_config.post_processor {
-            Some(p) => match self.abort.try_recv() {
+            Some(p) => match abort.try_recv() {
                 Ok(_) => Ok(()),
                 _ => {
                     match p.post_process(
-                        pixel_colors,
-                        albedo_colors,
-                        normal_colors,
-                        image_width,
-                        image_height,
+                        pixel_colors.lock().unwrap().deref(),
+                        albedo_colors.lock().unwrap().deref(),
+                        normal_colors.lock().unwrap().deref(),
+                        image_width as u32,
+                        image_height as u32,
                         samples_per_pixel,
                     ) {
                         Ok(img) => {
-                            self.output.send(RenderProgress {
+                            output.send(RenderProgress {
                                 progress: 1.,
                                 render_image: img,
                             })?;
@@ -184,7 +222,7 @@ fn create_progress(
     image_height: u32,
     sample: u32,
     samples_per_pixel: u32,
-    pixel_colors: Vec<Vec3>,
+    pixel_colors: &Vec<Vec3>,
     output: &Sender<RenderProgress>,
 ) -> Result<(), SendError<RenderProgress>> {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
