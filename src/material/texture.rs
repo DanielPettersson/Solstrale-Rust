@@ -16,6 +16,7 @@ pub trait Texture {
 }
 
 #[enum_dispatch(Texture)]
+#[derive(Debug)]
 pub enum Textures {
     SolidColor(SolidColor),
     ImageTexture(ImageTexture),
@@ -31,7 +32,7 @@ impl Clone for Textures {
 }
 
 /// A texture with just the same color everywhere
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SolidColor(Vec3);
 
 impl SolidColor {
@@ -49,7 +50,7 @@ impl Texture for SolidColor {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ImageTexture {
     image: Arc<RgbImage>,
     mirror: bool,

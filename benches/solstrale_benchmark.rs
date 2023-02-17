@@ -88,8 +88,8 @@ pub fn scene_benchmark(c: &mut Criterion) {
 
                 thread::spawn(move || {
                     ray_trace(
-                        black_box(20),
-                        black_box(10),
+                        black_box(100),
+                        black_box(50),
                         scene,
                         &output_sender,
                         &abort_receiver,

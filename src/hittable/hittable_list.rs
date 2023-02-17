@@ -10,6 +10,7 @@ use std::slice::Iter;
 /// A special type of hittable that is a container
 /// for a list of other hittable objects. Used to be able to have many
 /// objects in a scene
+#[derive(Debug)]
 pub struct HittableList {
     pub list: Vec<Hittables>,
     b_box: Aabb,

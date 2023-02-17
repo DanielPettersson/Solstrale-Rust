@@ -8,6 +8,7 @@ use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 use std::f64::consts::PI;
 
+#[derive(Debug)]
 pub struct Sphere {
     center: Vec3,
     radius: f64,

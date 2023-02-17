@@ -5,7 +5,7 @@ use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MotionBlur {
     blurred_hittable: Box<Hittables>,
     blur_direction: Vec3,

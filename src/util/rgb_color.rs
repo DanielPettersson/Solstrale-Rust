@@ -39,3 +39,22 @@ pub fn rgb_to_vec3(pixel: &Rgb<u8>) -> Vec3 {
         pixel[2] as f64 * COLOR_SCALE,
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rgb_to_vec3() {
+        assert_eq!(
+            Vec3::new(0., 0.39215686274509803, 1.),
+            rgb_to_vec3(&Rgb([0, 100, 255]))
+        )
+    }
+
+    #[test]
+    fn test_to_rgb_color() {
+        assert_eq!(Rgb([0, 140, 255]), to_rgb_color(Vec3::new(0., 0.3, 1.), 1));
+        assert_eq!(Rgb([0, 99, 181]), to_rgb_color(Vec3::new(0., 0.3, 1.), 2));
+    }
+}

@@ -7,7 +7,7 @@ use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Quad {
     q: Vec3,
     u: Vec3,

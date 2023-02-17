@@ -5,7 +5,7 @@ use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Translation {
     object: Box<Hittables>,
     offset: Vec3,

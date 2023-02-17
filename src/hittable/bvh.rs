@@ -10,7 +10,7 @@ use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
 /// Bounding Volume Hierarchy
-#[derive(Display)]
+#[derive(Display, Debug)]
 #[display(fmt = "{{\"left\": {}, \"right\": {}}}", left, right)]
 pub struct Bvh {
     left: Box<BvhItem>,
@@ -18,6 +18,7 @@ pub struct Bvh {
     b_box: Aabb,
 }
 
+#[derive(Debug)]
 enum BvhItem {
     Node(Bvh),
     Leaf(Triangle),
@@ -149,5 +150,21 @@ impl Hittable for Bvh {
 
     fn is_light(&self) -> bool {
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use panic_message::panic_message;
+    use std::panic::catch_unwind;
+
+    #[test]
+    fn bvh_with_empty_list() {
+        let res = catch_unwind(|| Bvh::new(&mut ([] as [Triangle; 0]))).unwrap_err();
+        assert_eq!(
+            "Cannot create a Bvh with empty list of objects",
+            panic_message(&res)
+        )
     }
 }

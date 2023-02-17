@@ -13,7 +13,7 @@ pub mod texture;
 
 /// A collection of all interesting properties from
 /// when a ray hits a hittable object
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HitRecord<'a> {
     pub hit_point: Vec3,
     pub normal: Vec3,
@@ -54,6 +54,7 @@ pub trait Material {
 }
 
 #[enum_dispatch(Material)]
+#[derive(Debug)]
 pub enum Materials {
     Lambertian(Lambertian),
     Metal(Metal),
@@ -75,7 +76,7 @@ impl Clone for Materials {
 }
 
 /// A typical matte material
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Lambertian {
     tex: Textures,
 }
@@ -108,7 +109,7 @@ impl Material for Lambertian {
 }
 
 /// Metal is a material that is reflective
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Metal {
     tex: Textures,
     fuzz: f64,
@@ -139,7 +140,7 @@ impl Material for Metal {
 }
 
 /// A glass type material with an index of refraction
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Dielectric {
     tex: Textures,
     index_of_refraction: f64,
@@ -190,7 +191,7 @@ fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
 }
 
 /// A material used for emitting light
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DiffuseLight {
     tex: Textures,
 }
@@ -219,7 +220,7 @@ impl Material for DiffuseLight {
 
 /// Isotropic is a fog type material
 /// Should not be used directly, but is used internally by ConstantMedium hittable
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Isotropic {
     tex: Textures,
 }

@@ -18,3 +18,42 @@ pub fn random_uint32(max: u32) -> u32 {
 pub fn random_element_index<T>(v: &Vec<T>) -> usize {
     fastrand::usize(..v.len())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_random_normal_float() {
+        for _ in 0..100 {
+            let r = random_normal_float();
+            assert!(r >= 0. && r < 1.)
+        }
+    }
+
+    #[test]
+    fn test_random_float() {
+        for _ in 0..100 {
+            let r = random_float(-2., 2.);
+            assert!(r >= -2. && r < 2.)
+        }
+    }
+
+    #[test]
+    fn test_random_uint32() {
+        for _ in 0..100 {
+            let r = random_uint32(100);
+            assert!(r < 100)
+        }
+    }
+
+    #[test]
+    fn test_random_element_index() {
+        let list = vec![1, 2, 3, 4, 5];
+
+        for _ in 0..100 {
+            let r = random_element_index(&list);
+            assert!(r < list.len())
+        }
+    }
+}

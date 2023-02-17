@@ -6,7 +6,7 @@ use crate::material::HitRecord;
 use crate::util::degrees_to_radians;
 use crate::util::interval::Interval;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RotationY {
     object: Box<Hittables>,
     sin_theta: f64,

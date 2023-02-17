@@ -35,7 +35,7 @@ pub fn new_obj_model_with_default_material(
 
     let (models, materials) = tobj::load_obj(format!("{}{}", path, filename), &load_options)
         .expect("failed to load obj model");
-    let materials = materials.expect("Failed to load MTL file");
+    let materials = materials.expect("failed to load MTL file");
 
     let mut mat_map = HashMap::from([(-1, default_material.clone())]);
     for (i, m) in materials.iter().enumerate() {
@@ -112,4 +112,45 @@ pub fn new_obj_model_with_default_material(
     }
 
     Ok(Bvh::new(triangles.as_mut_slice()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use panic_message::panic_message;
+    use std::panic::catch_unwind;
+
+    #[test]
+    fn missing_file() {
+        let res = catch_unwind(|| new_obj_model("tests/obj/", "missing.obj", 1.)).unwrap_err();
+        assert_eq!(
+            "failed to load obj model: OpenFileFailed",
+            panic_message(&res)
+        );
+    }
+
+    #[test]
+    fn missing_material_file() {
+        let res =
+            catch_unwind(|| new_obj_model("tests/obj/", "missingMaterialLib.obj", 1.)).unwrap_err();
+        assert_eq!(
+            "failed to load MTL file: OpenFileFailed",
+            panic_message(&res)
+        );
+    }
+
+    #[test]
+    fn missing_image_file() {
+        let res = catch_unwind(|| new_obj_model("tests/obj/", "missingImage.obj", 1.)).unwrap_err();
+        assert!(panic_message(&res).contains("Failed to load image texture tests/obj/missing.jpg"));
+    }
+
+    #[test]
+    fn invalid_image_file() {
+        let res = catch_unwind(|| new_obj_model("tests/obj/", "invalidImage.obj", 1.)).unwrap_err();
+        assert!(
+            panic_message(&res).contains("Failed to load image texture tests/obj/invalidImage.mtl")
+        );
+        assert!(panic_message(&res).contains("format"));
+    }
 }

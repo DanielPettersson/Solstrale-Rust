@@ -8,7 +8,7 @@ use crate::material::{HitRecord, Isotropic};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, UNIVERSE_INTERVAL};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ConstantMedium {
     boundary: Box<Hittables>,
     negative_inverse_density: f64,

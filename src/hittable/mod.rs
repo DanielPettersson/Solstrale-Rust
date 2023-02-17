@@ -52,6 +52,7 @@ pub trait Hittable {
 }
 
 #[enum_dispatch(Hittable)]
+#[derive(Debug)]
 pub enum Hittables {
     HittableList(HittableList),
     Sphere(Sphere),

@@ -6,7 +6,7 @@ use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Triangle {
     v0: Vec3,
     v0v1: Vec3,
