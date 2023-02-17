@@ -126,54 +126,6 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
     }
 }
 
-pub fn create_bvh_test_scene(
-    render_config: RenderConfig,
-    use_bvh: bool,
-    num_spheres: u32,
-) -> Scene {
-    let camera = CameraConfig {
-        vertical_fov_degrees: 20.,
-        aperture_size: 0.1,
-        focus_distance: 10.,
-        look_from: Vec3::new(-0.5, 0., 4.),
-        look_at: Vec3::new(-0.5, 0., 0.),
-    };
-
-    let mut world = HittableList::new();
-    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.));
-    let light = DiffuseLight::new(10., 10., 10.);
-    world.add(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
-
-    let mut triangles = Vec::new();
-    for x in 0..num_spheres {
-        let cx = x as f64 - num_spheres as f64 / 2.;
-        let t = Triangle::new(
-            Vec3::new(cx, -0.5, 0.),
-            Vec3::new(cx + 1., -0.5, 0.),
-            Vec3::new(cx + 0.5, 0.5, 0.),
-            yellow.clone(),
-        );
-        if use_bvh {
-            if let Hittables::Triangle(tri) = t {
-                triangles.push(tri);
-            }
-        } else {
-            world.add(t);
-        }
-    }
-
-    if use_bvh {
-        world.add(Bvh::new(triangles.as_mut_slice()))
-    }
-
-    Scene {
-        world,
-        camera,
-        background_color: Vec3::new(0.2, 0.3, 0.5),
-        render_config,
-    }
-}
-
 pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,

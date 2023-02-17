@@ -1,4 +1,6 @@
+use derive_more::Display;
 use std::fmt;
+use std::fmt::Display;
 
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
@@ -8,20 +10,12 @@ use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
 /// Bounding Volume Hierarchy
+#[derive(Display)]
+#[display(fmt = "{{\"left\": {}, \"right\": {}}}", left, right)]
 pub struct Bvh {
     left: Box<BvhItem>,
     right: Box<BvhItem>,
     b_box: Aabb,
-}
-
-impl fmt::Debug for Bvh {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{{\"left\": {:?}, \"right\": {:?}}}",
-            self.left, self.right
-        )
-    }
 }
 
 enum BvhItem {
@@ -29,10 +23,10 @@ enum BvhItem {
     Leaf(Triangle),
 }
 
-impl fmt::Debug for BvhItem {
+impl Display for BvhItem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            BvhItem::Node(b) => write!(f, "{:?}", b),
+            BvhItem::Node(b) => write!(f, "{}", b),
             BvhItem::Leaf(t) => write!(f, "{}", t.center),
         }
     }

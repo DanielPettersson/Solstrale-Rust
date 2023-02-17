@@ -10,6 +10,12 @@ simple-error = "0.2.3"
 enum_dispatch = "0.3.11"
 tobj = "3.2.4"
 oidn = "1.4.3"
+derive_more = "0.99.17"
 
 [dev-dependencies]
 image-compare = "0.2.4"
+criterion = "0.4.0"
+
+[[bench]]
+name = "solstrale_benchmark"
+harness = false

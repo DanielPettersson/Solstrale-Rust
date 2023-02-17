@@ -1,7 +1,8 @@
+use derive_more::Constructor;
 use std::ops::{Add, Sub};
 
 /// Defines a range between min and max inclusive
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
+#[derive(Copy, Clone, PartialEq, Debug, Default, Constructor)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -59,10 +60,6 @@ impl Sub<f64> for Interval {
 }
 
 impl Interval {
-    /// Creates a new Interval
-    pub fn new(min: f64, max: f64) -> Interval {
-        Interval { min, max }
-    }
     /// Checks if the interval contains a given value
     pub fn contains(&self, x: f64) -> bool {
         self.min <= x && x <= self.max

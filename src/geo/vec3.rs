@@ -1,10 +1,11 @@
 use crate::random;
+use derive_more::{Constructor, Display};
 use std::f64::consts::PI;
-use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 
 /// Vec3 is a 3 dimensional vector
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
+#[derive(Copy, Clone, PartialEq, Debug, Default, Constructor, Display)]
+#[display(fmt = "{{ x: {:.4}, y: {:.4}, z: {:.4} }}", x, y, z)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -18,12 +19,6 @@ pub const ZERO_VECTOR: Vec3 = Vec3 {
     y: 0.,
     z: 0.,
 };
-
-impl fmt::Display for Vec3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ x: {:.4}, y: {:.4}, z: {:.4} }}", self.x, self.y, self.z)
-    }
-}
 
 impl Add for Vec3 {
     type Output = Vec3;
@@ -140,11 +135,6 @@ impl Div<f64> for Vec3 {
 }
 
 impl Vec3 {
-    /// Creates a new Vec3
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
-        Vec3 { x, y, z }
-    }
-
     /// returns a Vec3 that has all values negated
     /// # Examples:
     /// ```
