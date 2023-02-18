@@ -111,6 +111,7 @@ impl Renderer {
     ) -> Result<(), Box<dyn Error>> {
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
+        let has_post_processor = self.scene.render_config.post_processor.is_some();
 
         let pixel_colors: Arc<Mutex<Vec<Vec3>>> =
             Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
@@ -141,10 +142,16 @@ impl Renderer {
                     s.spawn(move |_| {
                         let mut row_pixel_colors: Vec<Vec3> =
                             vec![ZERO_VECTOR; image_width as usize];
-                        let mut row_albedo_colors: Vec<Vec3> =
-                            vec![ZERO_VECTOR; image_width as usize];
-                        let mut row_normal_colors: Vec<Vec3> =
-                            vec![ZERO_VECTOR; image_width as usize];
+                        let mut row_albedo_colors: Vec<Vec3> = if has_post_processor {
+                            vec![ZERO_VECTOR; image_width as usize]
+                        } else {
+                            Vec::new()
+                        };
+                        let mut row_normal_colors: Vec<Vec3> = if has_post_processor {
+                            vec![ZERO_VECTOR; image_width as usize]
+                        } else {
+                            Vec::new()
+                        };
 
                         let yi = ((image_height - 1) - y) * image_width;
                         for x in 0..image_width {
@@ -155,7 +162,7 @@ impl Renderer {
 
                             row_pixel_colors[x] = pixel_color;
 
-                            if let Some(_) = self.scene.render_config.post_processor {
+                            if has_post_processor {
                                 row_albedo_colors[x] = albedo_color;
                                 row_normal_colors[x] = normal_color;
                             }
@@ -166,14 +173,16 @@ impl Renderer {
                             pc[yi + x] += *c;
                         }
 
-                        let mut pc = cloned_albedo_colors.lock().unwrap();
-                        for (x, c) in row_albedo_colors.iter().enumerate() {
-                            pc[yi + x] += *c;
-                        }
+                        if has_post_processor {
+                            let mut pc = cloned_albedo_colors.lock().unwrap();
+                            for (x, c) in row_albedo_colors.iter().enumerate() {
+                                pc[yi + x] += *c;
+                            }
 
-                        let mut pc = cloned_normal_colors.lock().unwrap();
-                        for (x, c) in row_normal_colors.iter().enumerate() {
-                            pc[yi + x] += *c;
+                            let mut pc = cloned_normal_colors.lock().unwrap();
+                            for (x, c) in row_normal_colors.iter().enumerate() {
+                                pc[yi + x] += *c;
+                            }
                         }
                     });
                 }
