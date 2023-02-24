@@ -5,7 +5,7 @@ pub mod rgb_color;
 
 /// Converts an angle in degrees to radians
 pub fn degrees_to_radians(degrees: f64) -> f64 {
-    return degrees * (PI / 180.);
+    degrees * (PI / 180.)
 }
 
 #[cfg(test)]

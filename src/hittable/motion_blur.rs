@@ -33,9 +33,9 @@ impl Hittable for MotionBlur {
         let offset = self.blur_direction * r.time;
         let offset_ray = Ray::new(r.origin - offset, r.direction, r.time);
 
-        match self.blurred_hittable.hit(&offset_ray, ray_length) {
-            None => None,
-            Some(rec) => Some(HitRecord {
+        self.blurred_hittable
+            .hit(&offset_ray, ray_length)
+            .map(|rec| HitRecord {
                 hit_point: rec.hit_point + offset,
                 normal: rec.normal,
                 material: rec.material,
@@ -43,8 +43,7 @@ impl Hittable for MotionBlur {
                 u: rec.u,
                 v: rec.v,
                 front_face: rec.front_face,
-            }),
-        }
+            })
     }
 
     fn bounding_box(&self) -> &Aabb {

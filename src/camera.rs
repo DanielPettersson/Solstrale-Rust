@@ -62,6 +62,6 @@ impl Camera {
         let r_dir = self.lower_left_corner + (self.horizontal * u) + (self.vertical * v)
             - self.origin
             - offset;
-        return Ray::new(self.origin + offset, r_dir, random_normal_float());
+        Ray::new(self.origin + offset, r_dir, random_normal_float())
     }
 }

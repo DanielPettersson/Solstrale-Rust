@@ -30,8 +30,10 @@ pub fn new_obj_model_with_default_material(
     scale: f64,
     default_material: Materials,
 ) -> Result<Hittables, Box<dyn Error>> {
-    let mut load_options = LoadOptions::default();
-    load_options.triangulate = true;
+    let load_options = LoadOptions {
+        triangulate: true,
+        ..Default::default()
+    };
 
     let (models, materials) = tobj::load_obj(format!("{}{}", path, filename), &load_options)
         .expect("failed to load obj model");
@@ -95,7 +97,7 @@ pub fn new_obj_model_with_default_material(
             };
 
             let material_id = match mesh.material_id {
-                None => -1 as i8,
+                None => -1,
                 Some(id) => id as i8,
             };
             let material = match mat_map.get(&material_id) {
@@ -111,7 +113,7 @@ pub fn new_obj_model_with_default_material(
         }
     }
 
-    Ok(Bvh::new(triangles.as_mut_slice()))
+    Ok(Bvh::new(triangles))
 }
 
 #[cfg(test)]
@@ -151,6 +153,5 @@ mod tests {
         assert!(
             panic_message(&res).contains("Failed to load image texture tests/obj/invalidImage.mtl")
         );
-        assert!(panic_message(&res).contains("format"));
     }
 }

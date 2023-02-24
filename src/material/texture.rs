@@ -62,7 +62,7 @@ impl ImageTexture {
     /// Creates a texture that uses image data for color by loading the image from the path
     pub fn load(path: &str) -> Result<Textures, Box<dyn Error>> {
         let image = image::open(path)
-            .expect(&format!("Failed to load image texture {}", path))
+            .unwrap_or_else(|_| panic!("Failed to load image texture {}", path))
             .into_rgb8();
         Ok(Self::new(Arc::new(image), false))
     }

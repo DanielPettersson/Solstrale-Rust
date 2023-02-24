@@ -1,6 +1,7 @@
-use derive_more::Display;
 use std::fmt;
 use std::fmt::Display;
+
+use derive_more::Display;
 
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
@@ -47,15 +48,15 @@ impl Bvh {
     /// The bounding Volume Hierarchy sorts the hittables in a binary tree
     /// where each node has a bounding box.
     /// This is to optimize the ray intersection search when having many hittable objects.
-    pub fn new(list: &mut [Triangle]) -> Hittables {
-        if list.len() == 0 {
+    pub fn new(list: Vec<Triangle>) -> Hittables {
+        if list.is_empty() {
             panic!("Cannot create a Bvh with empty list of objects")
         }
         Hittables::Bvh(create_bvh(list))
     }
 }
 
-fn create_bvh(list: &mut [Triangle]) -> Bvh {
+fn create_bvh(mut list: Vec<Triangle>) -> Bvh {
     let (left, right, b_box) = if list.len() == 1 {
         (
             BvhItem::Leaf(list[0].clone()),
@@ -69,9 +70,13 @@ fn create_bvh(list: &mut [Triangle]) -> Bvh {
             Aabb::combine_aabbs(list[0].bounding_box(), list[1].bounding_box()),
         )
     } else {
-        let mid = sort_hittables_slice_by_most_spread_axis(list);
-        let l = create_bvh(&mut list[..mid]);
-        let r = create_bvh(&mut list[mid..]);
+        let mid = sort_hittables_slice_by_most_spread_axis(list.as_mut_slice());
+
+        let (l, r) = rayon::join(
+            || create_bvh(list[..mid].to_vec()),
+            || create_bvh(list[mid..].to_vec()),
+        );
+
         let b_box = Aabb::combine_aabbs(&l.b_box, &r.b_box);
         (BvhItem::Node(l), BvhItem::Node(r), b_box)
     };
@@ -155,13 +160,15 @@ impl Hittable for Bvh {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use panic_message::panic_message;
     use std::panic::catch_unwind;
+
+    use panic_message::panic_message;
+
+    use super::*;
 
     #[test]
     fn bvh_with_empty_list() {
-        let res = catch_unwind(|| Bvh::new(&mut ([] as [Triangle; 0]))).unwrap_err();
+        let res = catch_unwind(|| Bvh::new(Vec::new())).unwrap_err();
         assert_eq!(
             "Cannot create a Bvh with empty list of objects",
             panic_message(&res)

@@ -36,9 +36,9 @@ impl Hittable for Translation {
     fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
         let offset_ray = Ray::new(r.origin - self.offset, r.direction, r.time);
 
-        match self.object.hit(&offset_ray, ray_length) {
-            None => None,
-            Some(rec) => Some(HitRecord {
+        self.object
+            .hit(&offset_ray, ray_length)
+            .map(|rec| HitRecord {
                 hit_point: rec.hit_point + self.offset,
                 normal: rec.normal,
                 material: rec.material,
@@ -46,8 +46,7 @@ impl Hittable for Translation {
                 u: rec.u,
                 v: rec.v,
                 front_face: rec.front_face,
-            }),
-        }
+            })
     }
 
     fn bounding_box(&self) -> &Aabb {

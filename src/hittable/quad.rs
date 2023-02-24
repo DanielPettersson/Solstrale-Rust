@@ -27,7 +27,7 @@ impl Quad {
         let n = u.cross(v);
         let normal = n.unit();
 
-        return Hittables::Quad(Quad {
+        Hittables::Quad(Quad {
             q,
             u,
             v,
@@ -37,7 +37,7 @@ impl Quad {
             mat,
             b_box,
             area: n.length(),
-        });
+        })
     }
 
     /// creates a new box shaped hittable object
@@ -81,14 +81,9 @@ impl Quad {
             dz.neg(),
             mat.clone(),
         ));
-        sides.add(Quad::new(
-            Vec3::new(min.x, min.y, min.z),
-            dx,
-            dz,
-            mat.clone(),
-        ));
+        sides.add(Quad::new(Vec3::new(min.x, min.y, min.z), dx, dz, mat));
 
-        return sides;
+        sides
     }
 }
 
@@ -132,7 +127,7 @@ impl Hittable for Quad {
         let beta = self.w.dot(self.u.cross(planar_hit_point_vector));
 
         // Is hit point outside of primitive
-        if (alpha < 0.) || (1. < alpha) || (beta < 0.) || (1. < beta) {
+        if !(0. ..=1.).contains(&alpha) || !(0. ..=1.).contains(&beta) {
             return None;
         }
 

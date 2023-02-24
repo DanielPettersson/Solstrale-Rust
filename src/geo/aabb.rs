@@ -81,11 +81,11 @@ impl Aabb {
             self.z.expand(PAD_DELTA)
         };
 
-        return Aabb {
+        Aabb {
             x: new_x,
             y: new_y,
             z: new_z,
-        };
+        }
     }
 
     pub fn hit(&self, r: &Ray) -> bool {
@@ -107,15 +107,15 @@ impl Aabb {
         tmin = tmin.max(t1.min(t2));
         tmax = tmax.min(t1.max(t2));
 
-        return tmax > tmin.max(0.);
+        tmax > tmin.max(0.)
     }
 
     pub fn center(&self) -> Vec3 {
-        return Vec3::new(
+        Vec3::new(
             self.x.min + self.x.max * 0.5,
             self.y.min + self.y.max * 0.5,
             self.z.min + self.z.max * 0.5,
-        );
+        )
     }
 }
 

@@ -85,7 +85,7 @@ impl Hittable for Triangle {
                 let distance_squared = rec.ray_length * rec.ray_length * direction.length_squared();
                 let cosine = (direction.dot(rec.normal) / direction.length()).abs();
 
-                return distance_squared / (cosine * self.area);
+                distance_squared / (cosine * self.area)
             }
         }
     }
@@ -110,7 +110,7 @@ impl Hittable for Triangle {
 
         // Is hit point outside of primitive
         let u = t_vec.dot(p_vec) * inv_det;
-        if u < 0. || u > 1. {
+        if !(0. ..=1.).contains(&u) {
             return None;
         }
         let v = r.direction.dot(q_vec) * inv_det;

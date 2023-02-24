@@ -47,7 +47,7 @@ impl Shader for PathTracingShader {
             Some(scatter_record) => match scatter_record.scatter_type {
                 ScatterRay(scatter_ray) => {
                     let (rc, _, _) = renderer.ray_color(&scatter_ray, depth + 1);
-                    return scatter_record.attenuation * rc;
+                    scatter_record.attenuation * rc
                 }
                 ScatterPdf(pdf) => {
                     let light_pdf = HittablePdf::new(&renderer.lights, rec.hit_point);

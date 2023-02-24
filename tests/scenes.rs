@@ -87,7 +87,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             }
         }
     }
-    world.add(Bvh::new(balls.as_mut_slice()));
+    world.add(Bvh::new(balls));
 
     world.add(Triangle::new(
         Vec3::new(1., 0.1, 2.),
@@ -164,7 +164,7 @@ pub fn create_bvh_test_scene(
     }
 
     if use_bvh {
-        world.add(Bvh::new(triangles.as_mut_slice()))
+        world.add(Bvh::new(triangles))
     }
 
     Scene {

@@ -102,7 +102,7 @@ fn test_render_uv_mapping() {
 #[test]
 fn test_abort_render_scene() {
     let render_config = RenderConfig {
-        samples_per_pixel: 100,
+        samples_per_pixel: 1000,
         shader: PathTracingShader::new(50),
         post_processor: None,
     };
@@ -112,7 +112,7 @@ fn test_abort_render_scene() {
     let (abort_sender, abort_receiver) = channel();
 
     thread::spawn(move || {
-        ray_trace(20, 10, scene, &output_sender, &abort_receiver).unwrap();
+        ray_trace(200, 100, scene, &output_sender, &abort_receiver).unwrap();
     });
 
     let mut progress_count = 0;
@@ -120,7 +120,7 @@ fn test_abort_render_scene() {
         progress_count += 1;
         abort_sender.send(true).unwrap();
     }
-    assert!(progress_count < 100, "Most likely it should be 1 or 2 depending on timing, but definitely less than 100 as rendering is aborted")
+    assert!(progress_count < 1000, "Most likely it should be 1 or 2 depending on timing, but definitely less than 100 as rendering is aborted")
 }
 
 #[test]

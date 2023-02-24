@@ -66,12 +66,12 @@ impl Renderer {
             )));
         }
 
-        return Ok(Renderer {
+        Ok(Renderer {
             scene,
             lights,
             albedo_shader: AlbedoShader {},
             normal_shader: NormalShader {},
-        });
+        })
     }
 
     fn ray_color(&self, ray: &Ray, depth: u32) -> (Vec3, Vec3, Vec3) {
@@ -83,15 +83,13 @@ impl Renderer {
                     .shader
                     .shade(self, &rec, ray, depth);
 
-                if depth == 0 {
-                    if let Some(_) = &self.scene.render_config.post_processor {
-                        let albedo_color = self.albedo_shader.shade(self, &rec, ray, depth);
-                        let normal_color = self.normal_shader.shade(self, &rec, ray, depth);
-                        return (pixel_color, albedo_color, normal_color);
-                    }
+                if depth == 0 && self.scene.render_config.post_processor.is_some() {
+                    let albedo_color = self.albedo_shader.shade(self, &rec, ray, depth);
+                    let normal_color = self.normal_shader.shade(self, &rec, ray, depth);
+                    return (pixel_color, albedo_color, normal_color);
                 }
 
-                return (pixel_color, ZERO_VECTOR, ZERO_VECTOR);
+                (pixel_color, ZERO_VECTOR, ZERO_VECTOR)
             }
             None => (
                 self.scene.background_color,
@@ -114,11 +112,11 @@ impl Renderer {
         let has_post_processor = self.scene.render_config.post_processor.is_some();
 
         let pixel_colors: Arc<Mutex<Vec<Vec3>>> =
-            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
+            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count]));
         let albedo_colors: Arc<Mutex<Vec<Vec3>>> =
-            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
+            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count]));
         let normal_colors: Arc<Mutex<Vec<Vec3>>> =
-            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count as usize]));
+            Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count]));
 
         let camera = Arc::new(Camera::new(image_width, image_height, &self.scene.camera));
 
@@ -127,9 +125,8 @@ impl Renderer {
             .expect("Failed to create thread pool");
 
         for sample in 1..=samples_per_pixel {
-            match abort.try_recv() {
-                Ok(_) => return Ok(()),
-                _ => {}
+            if abort.try_recv().is_ok() {
+                return Ok(());
             }
 
             pool.scope(|s| {
@@ -140,15 +137,14 @@ impl Renderer {
                     let cloned_normal_colors = normal_colors.clone();
 
                     s.spawn(move |_| {
-                        let mut row_pixel_colors: Vec<Vec3> =
-                            vec![ZERO_VECTOR; image_width as usize];
+                        let mut row_pixel_colors: Vec<Vec3> = vec![ZERO_VECTOR; image_width];
                         let mut row_albedo_colors: Vec<Vec3> = if has_post_processor {
-                            vec![ZERO_VECTOR; image_width as usize]
+                            vec![ZERO_VECTOR; image_width]
                         } else {
                             Vec::new()
                         };
                         let mut row_normal_colors: Vec<Vec3> = if has_post_processor {
-                            vec![ZERO_VECTOR; image_width as usize]
+                            vec![ZERO_VECTOR; image_width]
                         } else {
                             Vec::new()
                         };
@@ -231,7 +227,7 @@ fn create_progress(
     image_height: u32,
     sample: u32,
     samples_per_pixel: u32,
-    pixel_colors: &Vec<Vec3>,
+    pixel_colors: &[Vec3],
     output: &Sender<RenderProgress>,
 ) -> Result<(), SendError<RenderProgress>> {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
@@ -258,7 +254,7 @@ fn find_lights(s: &Hittables, list: &mut Hittables) {
         }
         Some(children) => {
             for child in children {
-                find_lights(&child, list)
+                find_lights(child, list)
             }
         }
     }

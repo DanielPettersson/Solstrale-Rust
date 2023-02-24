@@ -45,7 +45,7 @@ impl Hittable for Sphere {
                 .sqrt();
                 let solid_angle = 2. * PI * (1. - cos_theta_max);
 
-                return 1. / solid_angle;
+                1. / solid_angle
             }
         }
     }
@@ -53,7 +53,7 @@ impl Hittable for Sphere {
     fn random_direction(&self, origin: Vec3) -> Vec3 {
         let direction = self.center - origin;
         let uvw = Onb::new(direction);
-        return uvw.local(random_to_sphere(self.radius, direction.length_squared()));
+        uvw.local(random_to_sphere(self.radius, direction.length_squared()))
     }
 
     fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {

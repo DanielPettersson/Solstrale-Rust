@@ -98,7 +98,7 @@ impl Material for Lambertian {
     }
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.tex.color(&rec);
+        let attenuation = self.tex.color(rec);
         let pdf = CosinePdf::new(rec.normal);
 
         return Some(ScatterRecord {
@@ -187,7 +187,7 @@ impl Material for Dielectric {
 fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
     let mut r0 = (1. - index_of_refraction) / (1. + index_of_refraction);
     r0 = r0 * r0;
-    return r0 + (1. - r0) * (1. - cosine).powi(5);
+    r0 + (1. - r0) * (1. - cosine).powi(5)
 }
 
 /// A material used for emitting light
@@ -210,7 +210,7 @@ impl Material for DiffuseLight {
         if !rec.front_face {
             return ZERO_VECTOR;
         }
-        return self.tex.color(rec);
+        self.tex.color(rec)
     }
 
     fn is_light(&self) -> bool {
