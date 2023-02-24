@@ -151,7 +151,7 @@ fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) 
         ray_trace(width, height, scene, &output_sender, &abort_receiver).unwrap();
     });
 
-    let mut image = RgbImage::new(200, 100);
+    let mut image = RgbImage::new(width, height);
     for render_output in output_receiver {
         image = render_output.render_image
     }
