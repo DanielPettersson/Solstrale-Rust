@@ -11,7 +11,7 @@ pub struct Uv {
 }
 
 impl Uv {
-    pub fn new(u: f64, v: f64) -> Uv {
+    pub fn New(u: f64, v: f64) -> Uv {
         Uv { u, v }
     }
 }

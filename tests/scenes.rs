@@ -229,9 +229,9 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
         Vec3::new(-1., 0., 0.),
         Vec3::new(1., 0., 0.),
         Vec3::new(0., 2., 0.),
-        Uv::new(-1., -1.),
-        Uv::new(2., -1.),
-        Uv::new(0., 2.),
+        Uv::New(-1., -1.),
+        Uv::New(2., -1.),
+        Uv::New(0., 2.),
         checker_mat,
     ));
 
