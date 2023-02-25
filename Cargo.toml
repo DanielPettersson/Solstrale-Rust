@@ -1,11 +1,15 @@
 [package]
 name = "solstrale"
 description = "A Path tracing library"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 license = "GPL-3.0-only"
 repository = "https://github.com/DanielPettersson/solstrale-rust"
 keywords = ["Pathtracing", "Graphics"]
+exclude = [
+    "resources/*",
+    "oidn/*"
+]
 
 [dependencies]
 fastrand = "1.8.0"
