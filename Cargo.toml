@@ -11,6 +11,10 @@ exclude = [
     "oidn/*"
 ]
 
+[profile.release]
+lto = true
+codegen-units = 1
+
 [dependencies]
 fastrand = "1.8.0"
 image = "0.24.5"
