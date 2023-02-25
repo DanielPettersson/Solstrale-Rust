@@ -7,6 +7,7 @@ use enum_dispatch::enum_dispatch;
 use crate::geo::onb::Onb;
 use crate::geo::vec3::{random_cosine_direction, random_unit_vector, Vec3};
 use crate::hittable::{Hittable, Hittables};
+use crate::pdf::Pdfs::{CosinePdfType, HittablePdfType, SpherePdfType};
 use crate::random::random_normal_float;
 
 pub const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -21,9 +22,9 @@ pub trait Pdf {
 
 #[enum_dispatch(Pdf)]
 pub enum Pdfs<'a> {
-    CosinePdf(CosinePdf),
-    HittablePdf(HittablePdf<'a>),
-    SpherePdf(SpherePdf),
+    CosinePdfType(CosinePdf),
+    HittablePdfType(HittablePdf<'a>),
+    SpherePdfType(SpherePdf),
 }
 
 /// Returns the pdf value for a given vector for the pdfs.
@@ -50,7 +51,7 @@ pub struct CosinePdf {
 impl<'a> CosinePdf {
     /// Creates a new instance of a CosinePdf
     pub fn new(w: Vec3) -> Pdfs<'a> {
-        Pdfs::CosinePdf(CosinePdf { uvw: Onb::new(w) })
+        CosinePdfType(CosinePdf { uvw: Onb::new(w) })
     }
 }
 
@@ -74,7 +75,7 @@ pub struct HittablePdf<'a> {
 impl<'a> HittablePdf<'a> {
     /// Creates a new instance of HittablePdf
     pub fn new(objects: &'a Hittables, origin: Vec3) -> Pdfs {
-        Pdfs::HittablePdf(HittablePdf { objects, origin })
+        HittablePdfType(HittablePdf { objects, origin })
     }
 }
 
@@ -94,7 +95,7 @@ pub struct SpherePdf();
 impl<'a> SpherePdf {
     /// Creates a new instance of SpherePdf
     pub fn new() -> Pdfs<'a> {
-        Pdfs::SpherePdf(SpherePdf {})
+        SpherePdfType(SpherePdf {})
     }
 }
 

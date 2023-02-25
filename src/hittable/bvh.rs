@@ -6,6 +6,7 @@ use derive_more::Display;
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::hittable::triangle::Triangle;
+use crate::hittable::Hittables::BvhType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -52,7 +53,7 @@ impl Bvh {
         if list.is_empty() {
             panic!("Cannot create a Bvh with empty list of objects")
         }
-        Hittables::Bvh(create_bvh(list))
+        BvhType(create_bvh(list))
     }
 }
 

@@ -2,6 +2,7 @@ use crate::geo::aabb::Aabb;
 use crate::geo::onb::Onb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::Hittables::SphereType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
@@ -22,7 +23,7 @@ impl Sphere {
         let r_vec = Vec3::new(radius, radius, radius);
         let b_box = Aabb::new_from_2_points(center - r_vec, center + r_vec);
 
-        Hittables::Sphere(Sphere {
+        SphereType(Sphere {
             center,
             radius,
             mat,

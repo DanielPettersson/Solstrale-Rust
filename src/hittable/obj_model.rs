@@ -1,6 +1,7 @@
 use crate::geo::vec3::Vec3;
 use crate::hittable::bvh::Bvh;
 use crate::hittable::Hittables;
+use crate::hittable::Hittables::TriangleType;
 use crate::hittable::Triangle;
 use crate::material::texture::{ImageTexture, SolidColor};
 use crate::material::{Lambertian, Materials};
@@ -105,7 +106,7 @@ pub fn new_obj_model_with_default_material(
                 Some(m) => m.to_owned(),
             };
 
-            if let Hittables::Triangle(t) =
+            if let TriangleType(t) =
                 Triangle::new_with_tex_coords(v0, v1, v2, tu0, tv0, tu1, tv1, tu2, tv2, material)
             {
                 triangles.push(t);

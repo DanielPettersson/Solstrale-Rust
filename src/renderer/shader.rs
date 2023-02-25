@@ -4,6 +4,9 @@ use crate::material::HitRecord;
 use crate::material::Material;
 use crate::material::ScatterType::{ScatterPdf, ScatterRay};
 use crate::pdf::{mix_generate, mix_value, HittablePdf};
+use crate::renderer::shader::Shaders::{
+    AlbedoShaderType, NormalShaderType, PathTracingShaderType, SimpleShaderType,
+};
 use crate::renderer::Renderer;
 use enum_dispatch::enum_dispatch;
 
@@ -15,10 +18,10 @@ pub trait Shader {
 
 #[enum_dispatch(Shader)]
 pub enum Shaders {
-    PathTracingShader(PathTracingShader),
-    AlbedoShader(AlbedoShader),
-    NormalShader(NormalShader),
-    SimpleShader(SimpleShader),
+    PathTracingShaderType(PathTracingShader),
+    AlbedoShaderType(AlbedoShader),
+    NormalShaderType(NormalShader),
+    SimpleShaderType(SimpleShader),
 }
 
 /// A full raytracing shader
@@ -28,7 +31,7 @@ pub struct PathTracingShader {
 
 impl PathTracingShader {
     pub fn new(max_depth: u32) -> Shaders {
-        Shaders::PathTracingShader(PathTracingShader { max_depth })
+        PathTracingShaderType(PathTracingShader { max_depth })
     }
 }
 
@@ -89,7 +92,7 @@ pub struct AlbedoShader {}
 
 impl AlbedoShader {
     pub fn new() -> Shaders {
-        Shaders::AlbedoShader(AlbedoShader {})
+        AlbedoShaderType(AlbedoShader {})
     }
 }
 
@@ -108,7 +111,7 @@ pub struct NormalShader {}
 
 impl NormalShader {
     pub fn new() -> Shaders {
-        Shaders::NormalShader(NormalShader {})
+        NormalShaderType(NormalShader {})
     }
 }
 
@@ -126,7 +129,7 @@ pub struct SimpleShader {
 
 impl SimpleShader {
     pub fn new() -> Shaders {
-        Shaders::SimpleShader(SimpleShader {
+        SimpleShaderType(SimpleShader {
             light_dir: Vec3::new(1., 1., -1.),
         })
     }

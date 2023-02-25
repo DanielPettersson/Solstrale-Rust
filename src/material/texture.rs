@@ -5,6 +5,7 @@ use enum_dispatch::enum_dispatch;
 use image::RgbImage;
 
 use crate::geo::vec3::Vec3;
+use crate::material::texture::Textures::{ImageTextureType, SolidColorType};
 use crate::material::HitRecord;
 use crate::util::rgb_color::rgb_to_vec3;
 
@@ -18,15 +19,15 @@ pub trait Texture {
 #[enum_dispatch(Texture)]
 #[derive(Debug)]
 pub enum Textures {
-    SolidColor(SolidColor),
-    ImageTexture(ImageTexture),
+    SolidColorType(SolidColor),
+    ImageTextureType(ImageTexture),
 }
 
 impl Clone for Textures {
     fn clone(&self) -> Self {
         match self {
-            Textures::SolidColor(t) => Textures::SolidColor(t.clone()),
-            Textures::ImageTexture(t) => Textures::ImageTexture(t.clone()),
+            SolidColorType(t) => SolidColorType(t.clone()),
+            ImageTextureType(t) => ImageTextureType(t.clone()),
         }
     }
 }
@@ -40,7 +41,7 @@ impl SolidColor {
         SolidColor::from_vec3(Vec3::new(r, g, b))
     }
     pub fn from_vec3(color: Vec3) -> Textures {
-        Textures::SolidColor(SolidColor(color))
+        SolidColorType(SolidColor(color))
     }
 }
 
@@ -71,7 +72,7 @@ impl ImageTexture {
     pub fn new(image: Arc<RgbImage>, mirror: bool) -> Textures {
         let w = image.width();
         let h = image.height();
-        Textures::ImageTexture(ImageTexture {
+        ImageTextureType(ImageTexture {
             image,
             mirror,
             max_x: w as f64 - 1.,

@@ -10,7 +10,8 @@ use solstrale::hittable::rotation_y::RotationY;
 use solstrale::hittable::sphere::Sphere;
 use solstrale::hittable::translation::Translation;
 use solstrale::hittable::triangle::Triangle;
-use solstrale::hittable::{Hittable, Hittables};
+use solstrale::hittable::Hittable;
+use solstrale::hittable::Hittables::TriangleType;
 use solstrale::material::texture::{ImageTexture, SolidColor};
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
@@ -76,7 +77,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             let j = jj as f64 * 0.1;
             for kk in (0..10).step_by(2) {
                 let k = kk as f64 * 0.1;
-                if let Hittables::Triangle(t) = Triangle::new(
+                if let TriangleType(t) = Triangle::new(
                     Vec3::new(i, j + 0.05, k + 0.8),
                     Vec3::new(i, j, k + 0.8),
                     Vec3::new(i, j + 0.05, k),
@@ -155,7 +156,7 @@ pub fn create_bvh_test_scene(
             yellow.clone(),
         );
         if use_bvh {
-            if let Hittables::Triangle(tri) = t {
+            if let TriangleType(tri) = t {
                 triangles.push(tri);
             }
         } else {

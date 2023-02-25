@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::Hittables::HittableListType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::random::random_element_index;
@@ -19,7 +20,7 @@ pub struct HittableList {
 impl HittableList {
     /// Creates new empty HittableList
     pub fn new() -> Hittables {
-        Hittables::HittableList(HittableList {
+        HittableListType(HittableList {
             list: Vec::new(),
             b_box: Aabb::new_with_empty_intervals(),
         })

@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
+use crate::hittable::Hittables::TriangleType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
@@ -51,7 +52,7 @@ impl Triangle {
         let area = n.length() / 2.;
         let center = (v0 + v1 + v2) * 0.33333;
 
-        Hittables::Triangle(Triangle {
+        TriangleType(Triangle {
             v0,
             v0v1,
             v0v2,

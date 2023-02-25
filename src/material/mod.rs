@@ -6,6 +6,9 @@ use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
 use crate::material::texture::Textures;
 use crate::material::texture::{SolidColor, Texture};
+use crate::material::Materials::{
+    DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType,
+};
 use crate::pdf::{CosinePdf, Pdfs, SpherePdf, SPHERE_PDF_VALUE};
 use crate::random::random_normal_float;
 
@@ -56,21 +59,21 @@ pub trait Material {
 #[enum_dispatch(Material)]
 #[derive(Debug)]
 pub enum Materials {
-    Lambertian(Lambertian),
-    Metal(Metal),
-    Dielectric(Dielectric),
-    DiffuseLight(DiffuseLight),
-    Isotropic(Isotropic),
+    LambertianType(Lambertian),
+    MetalType(Metal),
+    DielectricType(Dielectric),
+    DiffuseLightType(DiffuseLight),
+    IsotropicType(Isotropic),
 }
 
 impl Clone for Materials {
     fn clone(&self) -> Self {
         match self {
-            Materials::Lambertian(m) => Materials::Lambertian(m.clone()),
-            Materials::Metal(m) => Materials::Metal(m.clone()),
-            Materials::Dielectric(m) => Materials::Dielectric(m.clone()),
-            Materials::DiffuseLight(m) => Materials::DiffuseLight(m.clone()),
-            Materials::Isotropic(m) => Materials::Isotropic(m.clone()),
+            LambertianType(m) => LambertianType(m.clone()),
+            MetalType(m) => MetalType(m.clone()),
+            DielectricType(m) => DielectricType(m.clone()),
+            DiffuseLightType(m) => DiffuseLightType(m.clone()),
+            IsotropicType(m) => IsotropicType(m.clone()),
         }
     }
 }
@@ -83,7 +86,7 @@ pub struct Lambertian {
 
 impl Lambertian {
     pub fn new(tex: Textures) -> Materials {
-        Materials::Lambertian(Lambertian { tex })
+        LambertianType(Lambertian { tex })
     }
 }
 
@@ -118,7 +121,7 @@ pub struct Metal {
 impl Metal {
     /// Creates a metal material
     pub fn new(tex: Textures, fuzz: f64) -> Materials {
-        Materials::Metal(Metal { tex, fuzz })
+        MetalType(Metal { tex, fuzz })
     }
 }
 
@@ -149,7 +152,7 @@ pub struct Dielectric {
 impl Dielectric {
     /// Creates a new dielectric material
     pub fn new(tex: Textures, index_of_refraction: f64) -> Materials {
-        Materials::Dielectric(Dielectric {
+        DielectricType(Dielectric {
             tex,
             index_of_refraction,
         })
@@ -199,7 +202,7 @@ pub struct DiffuseLight {
 impl DiffuseLight {
     /// Creates a new diffuse light material
     pub fn new(r: f64, g: f64, b: f64) -> Materials {
-        Materials::DiffuseLight(DiffuseLight {
+        DiffuseLightType(DiffuseLight {
             tex: SolidColor::new(r, g, b),
         })
     }
@@ -227,7 +230,7 @@ pub struct Isotropic {
 
 impl Isotropic {
     pub fn new(tex: Textures) -> Materials {
-        Materials::Isotropic(Isotropic { tex })
+        IsotropicType(Isotropic { tex })
     }
 }
 

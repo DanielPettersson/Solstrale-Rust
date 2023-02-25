@@ -25,6 +25,10 @@ use crate::hittable::rotation_y::RotationY;
 use crate::hittable::sphere::Sphere;
 use crate::hittable::translation::Translation;
 use crate::hittable::triangle::Triangle;
+use crate::hittable::Hittables::{
+    BvhType, ConstantMediumType, HittableListType, MotionBlurType, QuadType, RotationYType,
+    SphereType, TranslationType, TriangleType,
+};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 use enum_dispatch::enum_dispatch;
@@ -54,29 +58,29 @@ pub trait Hittable {
 #[enum_dispatch(Hittable)]
 #[derive(Debug)]
 pub enum Hittables {
-    HittableList(HittableList),
-    Sphere(Sphere),
-    ConstantMedium(ConstantMedium),
-    MotionBlur(MotionBlur),
-    Quad(Quad),
-    RotationY(RotationY),
-    Translation(Translation),
-    Triangle(Triangle),
-    Bvh(Bvh),
+    HittableListType(HittableList),
+    SphereType(Sphere),
+    ConstantMediumType(ConstantMedium),
+    MotionBlurType(MotionBlur),
+    QuadType(Quad),
+    RotationYType(RotationY),
+    TranslationType(Translation),
+    TriangleType(Triangle),
+    BvhType(Bvh),
 }
 
 impl Clone for Hittables {
     fn clone(&self) -> Self {
         match self {
-            Hittables::HittableList(_) => panic!("Should not clone HittableList"),
-            Hittables::Sphere(h) => Hittables::Sphere(h.clone()),
-            Hittables::ConstantMedium(h) => Hittables::ConstantMedium(h.clone()),
-            Hittables::MotionBlur(h) => Hittables::MotionBlur(h.clone()),
-            Hittables::Quad(h) => Hittables::Quad(h.clone()),
-            Hittables::RotationY(h) => Hittables::RotationY(h.clone()),
-            Hittables::Translation(h) => Hittables::Translation(h.clone()),
-            Hittables::Triangle(h) => Hittables::Triangle(h.clone()),
-            Hittables::Bvh(_) => panic!("Should not clone Bvh"),
+            HittableListType(_) => panic!("Should not clone HittableList"),
+            SphereType(h) => SphereType(h.clone()),
+            ConstantMediumType(h) => ConstantMediumType(h.clone()),
+            MotionBlurType(h) => MotionBlurType(h.clone()),
+            QuadType(h) => QuadType(h.clone()),
+            RotationYType(h) => RotationYType(h.clone()),
+            TranslationType(h) => TranslationType(h.clone()),
+            TriangleType(h) => TriangleType(h.clone()),
+            BvhType(_) => panic!("Should not clone Bvh"),
         }
     }
 }

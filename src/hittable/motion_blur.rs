@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::Hittables::MotionBlurType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -20,7 +21,7 @@ impl MotionBlur {
         let b_box2 = b_box1 + blur_direction;
         let b_box = Aabb::combine_aabbs(b_box1, &b_box2);
 
-        Hittables::MotionBlur(MotionBlur {
+        MotionBlurType(MotionBlur {
             blurred_hittable: Box::new(blurred_hittable),
             blur_direction,
             b_box,

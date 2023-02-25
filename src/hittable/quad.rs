@@ -2,6 +2,7 @@ use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
 use crate::hittable::HittableList;
+use crate::hittable::Hittables::QuadType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
@@ -27,7 +28,7 @@ impl Quad {
         let n = u.cross(v);
         let normal = n.unit();
 
-        Hittables::Quad(Quad {
+        QuadType(Quad {
             q,
             u,
             v,

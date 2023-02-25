@@ -4,6 +4,7 @@ use enum_dispatch::enum_dispatch;
 use image::{ImageBuffer, Rgb, RgbImage};
 use simple_error::SimpleError;
 use std::error::Error;
+use crate::post::PostProcessors::OidnPostProcessorType;
 
 /// Responsible for taking the rendered image and transforming it
 #[enum_dispatch]
@@ -21,14 +22,14 @@ pub trait PostProcessor {
 
 #[enum_dispatch(PostProcessor)]
 pub enum PostProcessors {
-    OidnPostProcessor(OidnPostProcessor),
+    OidnPostProcessorType(OidnPostProcessor),
 }
 
 pub struct OidnPostProcessor();
 
 impl OidnPostProcessor {
     pub fn new() -> PostProcessors {
-        PostProcessors::OidnPostProcessor(OidnPostProcessor())
+        OidnPostProcessorType(OidnPostProcessor())
     }
 }
 

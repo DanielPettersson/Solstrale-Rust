@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::Hittables::RotationYType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::degrees_to_radians;
@@ -49,7 +50,7 @@ impl RotationY {
             }
         }
 
-        Hittables::RotationY(RotationY {
+        RotationYType(RotationY {
             object: Box::new(object),
             sin_theta,
             cos_theta,

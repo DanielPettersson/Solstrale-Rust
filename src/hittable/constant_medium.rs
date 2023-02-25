@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_unit_vector, Vec3};
+use crate::hittable::Hittables::ConstantMediumType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::texture::SolidColor;
 use crate::material::Materials;
@@ -20,7 +21,7 @@ impl ConstantMedium {
     /// at the edge of the object, but at random points inside the object
     /// The material of the boundary hittable is ignored
     pub fn new(boundary: Hittables, density: f64, color: Vec3) -> Hittables {
-        Hittables::ConstantMedium(ConstantMedium {
+        ConstantMediumType(ConstantMedium {
             boundary: Box::new(boundary),
             negative_inverse_density: -1. / density,
             phase_function: Isotropic::new(SolidColor::from_vec3(color)),

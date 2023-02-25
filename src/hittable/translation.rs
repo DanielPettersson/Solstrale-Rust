@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::hittable::Hittables::TranslationType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -16,7 +17,7 @@ impl Translation {
     /// Creates a hittable object that translates the given hittable by the given offset vector
     pub fn new(object: Hittables, offset: Vec3) -> Hittables {
         let object_b_box = object.bounding_box().clone();
-        Hittables::Translation(Translation {
+        TranslationType(Translation {
             object: Box::new(object),
             offset,
             b_box: &object_b_box + offset,
