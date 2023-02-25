@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
+use crate::geo::Uv;
 use crate::hittable::Hittables::TriangleType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
@@ -12,12 +13,9 @@ pub struct Triangle {
     v0: Vec3,
     v0v1: Vec3,
     v0v2: Vec3,
-    tu0: f64,
-    tv0: f64,
-    tu1: f64,
-    tv1: f64,
-    tu2: f64,
-    tv2: f64,
+    uv0: Uv,
+    uv1: Uv,
+    uv2: Uv,
     normal: Vec3,
     mat: Materials,
     b_box: Aabb,
@@ -27,21 +25,26 @@ pub struct Triangle {
 
 impl Triangle {
     /// Creates a new triangle flat hittable object with no texture coordinates
-    pub fn new(v0: Vec3, v1: Vec3, v2: Vec3, mat: Materials) -> Hittables {
-        Triangle::new_with_tex_coords(v0, v1, v2, 0., 0., 0., 0., 0., 0., mat)
+    pub fn create(v0: Vec3, v1: Vec3, v2: Vec3, mat: Materials) -> Hittables {
+        Triangle::create_with_tex_coords(
+            v0,
+            v1,
+            v2,
+            Uv { u: 0.0, v: 0.0 },
+            Uv { u: 0.0, v: 0.0 },
+            Uv { u: 0.0, v: 0.0 },
+            mat,
+        )
     }
 
     /// Creates a new triangle flat hittable objecself. A counter clockwise winding is expected
-    pub fn new_with_tex_coords(
+    pub fn create_with_tex_coords(
         v0: Vec3,
         v1: Vec3,
         v2: Vec3,
-        tu0: f64,
-        tv0: f64,
-        tu1: f64,
-        tv1: f64,
-        tu2: f64,
-        tv2: f64,
+        uv0: Uv,
+        uv1: Uv,
+        uv2: Uv,
         mat: Materials,
     ) -> Hittables {
         let b_box = Aabb::new_from_3_points(v0, v1, v2).pad_if_needed();
@@ -56,12 +59,9 @@ impl Triangle {
             v0,
             v0v1,
             v0v2,
-            tu0,
-            tv0,
-            tu1,
-            tv1,
-            tu2,
-            tv2,
+            uv0,
+            uv1,
+            uv2,
             normal,
             mat,
             b_box,
@@ -128,8 +128,8 @@ impl Hittable for Triangle {
         }
 
         let uv0 = 1. - u - v;
-        let uu = uv0 * self.tu0 + u * self.tu1 + v * self.tu2;
-        let vv = uv0 * self.tv0 + u * self.tv1 + v * self.tv2;
+        let uu = uv0 * self.uv0.u + u * self.uv1.u + v * self.uv2.u;
+        let vv = uv0 * self.uv0.v + u * self.uv1.v + v * self.uv2.v;
 
         let mut normal = self.normal;
         let front_face = r.direction.dot(normal) < 0.;

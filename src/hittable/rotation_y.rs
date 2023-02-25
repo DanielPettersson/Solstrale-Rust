@@ -18,7 +18,7 @@ pub struct RotationY {
 impl RotationY {
     /// Creates a hittable object that rotates the given hittable
     /// around the Y axis with angle in degrees
-    pub fn new(object: Hittables, angle: f64) -> Hittables {
+    pub fn create(object: Hittables, angle: f64) -> Hittables {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();

@@ -23,7 +23,7 @@ pub struct Bvh {
 #[derive(Debug)]
 enum BvhItem {
     Node(Bvh),
-    Leaf(Triangle),
+    Leaf(Box<Triangle>),
 }
 
 impl Display for BvhItem {
@@ -49,7 +49,7 @@ impl Bvh {
     /// The bounding Volume Hierarchy sorts the hittables in a binary tree
     /// where each node has a bounding box.
     /// This is to optimize the ray intersection search when having many hittable objects.
-    pub fn new(list: Vec<Triangle>) -> Hittables {
+    pub fn create(list: Vec<Triangle>) -> Hittables {
         if list.is_empty() {
             panic!("Cannot create a Bvh with empty list of objects")
         }
@@ -60,14 +60,14 @@ impl Bvh {
 fn create_bvh(mut list: Vec<Triangle>) -> Bvh {
     let (left, right, b_box) = if list.len() == 1 {
         (
-            BvhItem::Leaf(list[0].clone()),
-            BvhItem::Leaf(list[0].clone()),
+            BvhItem::Leaf(Box::new(list[0].clone())),
+            BvhItem::Leaf(Box::new(list[0].clone())),
             list[0].bounding_box().clone(),
         )
     } else if list.len() == 2 {
         (
-            BvhItem::Leaf(list[0].clone()),
-            BvhItem::Leaf(list[1].clone()),
+            BvhItem::Leaf(Box::new(list[0].clone())),
+            BvhItem::Leaf(Box::new(list[1].clone())),
             Aabb::combine_aabbs(list[0].bounding_box(), list[1].bounding_box()),
         )
     } else {
@@ -169,7 +169,7 @@ mod tests {
 
     #[test]
     fn bvh_with_empty_list() {
-        let res = catch_unwind(|| Bvh::new(Vec::new())).unwrap_err();
+        let res = catch_unwind(|| Bvh::create(Vec::new())).unwrap_err();
         assert_eq!(
             "Cannot create a Bvh with empty list of objects",
             panic_message(&res)

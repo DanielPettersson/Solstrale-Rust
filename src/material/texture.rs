@@ -37,7 +37,7 @@ impl Clone for Textures {
 pub struct SolidColor(Vec3);
 
 impl SolidColor {
-    pub fn new(r: f64, g: f64, b: f64) -> Textures {
+    pub fn create(r: f64, g: f64, b: f64) -> Textures {
         SolidColor::from_vec3(Vec3::new(r, g, b))
     }
     pub fn from_vec3(color: Vec3) -> Textures {
@@ -65,11 +65,11 @@ impl ImageTexture {
         let image = image::open(path)
             .unwrap_or_else(|_| panic!("Failed to load image texture {}", path))
             .into_rgb8();
-        Ok(Self::new(Arc::new(image), false))
+        Ok(Self::create(Arc::new(image), false))
     }
 
     /// Creates a texture that uses image data for color
-    pub fn new(image: Arc<RgbImage>, mirror: bool) -> Textures {
+    pub fn create(image: Arc<RgbImage>, mirror: bool) -> Textures {
         let w = image.width();
         let h = image.height();
         ImageTextureType(ImageTexture {

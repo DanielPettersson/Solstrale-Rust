@@ -30,7 +30,7 @@ pub struct PathTracingShader {
 }
 
 impl PathTracingShader {
-    pub fn new(max_depth: u32) -> Shaders {
+    pub fn create(max_depth: u32) -> Shaders {
         PathTracingShaderType(PathTracingShader { max_depth })
     }
 }
@@ -53,7 +53,7 @@ impl Shader for PathTracingShader {
                     scatter_record.attenuation * rc
                 }
                 ScatterPdf(pdf) => {
-                    let light_pdf = HittablePdf::new(&renderer.lights, rec.hit_point);
+                    let light_pdf = HittablePdf::create(&renderer.lights, rec.hit_point);
 
                     let pdf_direction = mix_generate(&light_pdf, &pdf);
                     let scattered = Ray::new(rec.hit_point, pdf_direction, ray.time);
@@ -91,7 +91,7 @@ fn filter_color_value(val: f64) -> f64 {
 pub struct AlbedoShader {}
 
 impl AlbedoShader {
-    pub fn new() -> Shaders {
+    pub fn create() -> Shaders {
         AlbedoShaderType(AlbedoShader {})
     }
 }
@@ -110,7 +110,7 @@ impl Shader for AlbedoShader {
 pub struct NormalShader {}
 
 impl NormalShader {
-    pub fn new() -> Shaders {
+    pub fn create() -> Shaders {
         NormalShaderType(NormalShader {})
     }
 }
@@ -128,7 +128,7 @@ pub struct SimpleShader {
 }
 
 impl SimpleShader {
-    pub fn new() -> Shaders {
+    pub fn create() -> Shaders {
         SimpleShaderType(SimpleShader {
             light_dir: Vec3::new(1., 1., -1.),
         })

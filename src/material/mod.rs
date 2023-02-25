@@ -85,7 +85,7 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(tex: Textures) -> Materials {
+    pub fn create(tex: Textures) -> Materials {
         LambertianType(Lambertian { tex })
     }
 }
@@ -102,7 +102,7 @@ impl Material for Lambertian {
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.color(rec);
-        let pdf = CosinePdf::new(rec.normal);
+        let pdf = CosinePdf::create(rec.normal);
 
         return Some(ScatterRecord {
             attenuation,
@@ -120,7 +120,7 @@ pub struct Metal {
 
 impl Metal {
     /// Creates a metal material
-    pub fn new(tex: Textures, fuzz: f64) -> Materials {
+    pub fn create(tex: Textures, fuzz: f64) -> Materials {
         MetalType(Metal { tex, fuzz })
     }
 }
@@ -151,7 +151,7 @@ pub struct Dielectric {
 
 impl Dielectric {
     /// Creates a new dielectric material
-    pub fn new(tex: Textures, index_of_refraction: f64) -> Materials {
+    pub fn create(tex: Textures, index_of_refraction: f64) -> Materials {
         DielectricType(Dielectric {
             tex,
             index_of_refraction,
@@ -201,9 +201,9 @@ pub struct DiffuseLight {
 
 impl DiffuseLight {
     /// Creates a new diffuse light material
-    pub fn new(r: f64, g: f64, b: f64) -> Materials {
+    pub fn create(r: f64, g: f64, b: f64) -> Materials {
         DiffuseLightType(DiffuseLight {
-            tex: SolidColor::new(r, g, b),
+            tex: SolidColor::create(r, g, b),
         })
     }
 }
@@ -229,7 +229,7 @@ pub struct Isotropic {
 }
 
 impl Isotropic {
-    pub fn new(tex: Textures) -> Materials {
+    pub fn create(tex: Textures) -> Materials {
         IsotropicType(Isotropic { tex })
     }
 }
@@ -244,7 +244,7 @@ impl Material for Isotropic {
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.color(rec);
 
-        let pdf = SpherePdf::new();
+        let pdf = SpherePdf::create();
 
         Some(ScatterRecord {
             attenuation,

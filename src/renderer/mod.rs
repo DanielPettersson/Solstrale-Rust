@@ -52,7 +52,7 @@ pub struct Renderer {
 impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
     pub fn new(scene: Scene) -> Result<Renderer, Box<dyn Error>> {
-        let mut lights = HittableList::new();
+        let mut lights = HittableList::create();
         find_lights(&scene.world, &mut lights);
 
         let has_lights = match lights.children() {

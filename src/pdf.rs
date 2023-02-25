@@ -50,7 +50,7 @@ pub struct CosinePdf {
 
 impl<'a> CosinePdf {
     /// Creates a new instance of a CosinePdf
-    pub fn new(w: Vec3) -> Pdfs<'a> {
+    pub fn create(w: Vec3) -> Pdfs<'a> {
         CosinePdfType(CosinePdf { uvw: Onb::new(w) })
     }
 }
@@ -74,7 +74,7 @@ pub struct HittablePdf<'a> {
 
 impl<'a> HittablePdf<'a> {
     /// Creates a new instance of HittablePdf
-    pub fn new(objects: &'a Hittables, origin: Vec3) -> Pdfs {
+    pub fn create(objects: &'a Hittables, origin: Vec3) -> Pdfs {
         HittablePdfType(HittablePdf { objects, origin })
     }
 }
@@ -94,7 +94,7 @@ pub struct SpherePdf();
 
 impl<'a> SpherePdf {
     /// Creates a new instance of SpherePdf
-    pub fn new() -> Pdfs<'a> {
+    pub fn create() -> Pdfs<'a> {
         SpherePdfType(SpherePdf {})
     }
 }

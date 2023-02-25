@@ -1,4 +1,5 @@
 use crate::geo::vec3::Vec3;
+use crate::geo::Uv;
 use crate::hittable::bvh::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Hittables::TriangleType;
@@ -12,12 +13,12 @@ use tobj::LoadOptions;
 /// Reads a Wavefront .obj file and creates a bvh containing
 /// all triangles. It also read materials from the referred .mat file.
 /// Support for colored and textured lambertian materials.
-pub fn new_obj_model(path: &str, filename: &str, scale: f64) -> Result<Hittables, Box<dyn Error>> {
-    new_obj_model_with_default_material(
+pub fn load_obj_model(path: &str, filename: &str, scale: f64) -> Result<Hittables, Box<dyn Error>> {
+    load_obj_model_with_default_material(
         path,
         filename,
         scale,
-        Lambertian::new(SolidColor::new(1., 1., 1.)),
+        Lambertian::create(SolidColor::create(1., 1., 1.)),
     )
 }
 
@@ -25,7 +26,7 @@ pub fn new_obj_model(path: &str, filename: &str, scale: f64) -> Result<Hittables
 /// all triangles. It also read materials from the referred .mat file.
 /// Support for colored and textured lambertian materials.
 /// Applies supplied default material if none in model
-pub fn new_obj_model_with_default_material(
+pub fn load_obj_model_with_default_material(
     path: &str,
     filename: &str,
     scale: f64,
@@ -43,15 +44,15 @@ pub fn new_obj_model_with_default_material(
     let mut mat_map = HashMap::from([(-1, default_material.clone())]);
     for (i, m) in materials.iter().enumerate() {
         if m.diffuse_texture.is_empty() {
-            let color = SolidColor::new(
+            let color = SolidColor::create(
                 m.diffuse[0] as f64,
                 m.diffuse[1] as f64,
                 m.diffuse[2] as f64,
             );
-            mat_map.insert(i as i8, Lambertian::new(color));
+            mat_map.insert(i as i8, Lambertian::create(color));
         } else {
             let texture = ImageTexture::load(&format!("{}{}", path, m.diffuse_texture))?;
-            mat_map.insert(i as i8, Lambertian::new(texture));
+            mat_map.insert(i as i8, Lambertian::create(texture));
         }
     }
 
@@ -81,19 +82,29 @@ pub fn new_obj_model_with_default_material(
                 mesh.positions[pos_offset + 2] as f64,
             ) * scale;
 
-            let (tu0, tv0, tu1, tv1, tu2, tv2) = if mesh.texcoords.is_empty() {
-                (0., 0., 0., 0., 0., 0.)
+            let (uv0, uv1, uv2) = if mesh.texcoords.is_empty() {
+                (
+                    Uv { u: 0.0, v: 0.0 },
+                    Uv { u: 0.0, v: 0.0 },
+                    Uv { u: 0.0, v: 0.0 },
+                )
             } else {
                 let tex_offset1 = (mesh.texcoord_indices[i] * 2) as usize;
                 let tex_offset2 = (mesh.texcoord_indices[i + 1] * 2) as usize;
                 let tex_offset3 = (mesh.texcoord_indices[i + 2] * 2) as usize;
                 (
-                    mesh.texcoords[tex_offset1] as f64,
-                    mesh.texcoords[tex_offset1 + 1] as f64,
-                    mesh.texcoords[tex_offset2] as f64,
-                    mesh.texcoords[tex_offset2 + 1] as f64,
-                    mesh.texcoords[tex_offset3] as f64,
-                    mesh.texcoords[tex_offset3 + 1] as f64,
+                    Uv {
+                        u: mesh.texcoords[tex_offset1] as f64,
+                        v: mesh.texcoords[tex_offset1 + 1] as f64,
+                    },
+                    Uv {
+                        u: mesh.texcoords[tex_offset2] as f64,
+                        v: mesh.texcoords[tex_offset2 + 1] as f64,
+                    },
+                    Uv {
+                        u: mesh.texcoords[tex_offset3] as f64,
+                        v: mesh.texcoords[tex_offset3 + 1] as f64,
+                    },
                 )
             };
 
@@ -107,14 +118,14 @@ pub fn new_obj_model_with_default_material(
             };
 
             if let TriangleType(t) =
-                Triangle::new_with_tex_coords(v0, v1, v2, tu0, tv0, tu1, tv1, tu2, tv2, material)
+                Triangle::create_with_tex_coords(v0, v1, v2, uv0, uv1, uv2, material)
             {
                 triangles.push(t);
             }
         }
     }
 
-    Ok(Bvh::new(triangles))
+    Ok(Bvh::create(triangles))
 }
 
 #[cfg(test)]
@@ -125,7 +136,7 @@ mod tests {
 
     #[test]
     fn missing_file() {
-        let res = catch_unwind(|| new_obj_model("resources/obj/", "missing.obj", 1.)).unwrap_err();
+        let res = catch_unwind(|| load_obj_model("resources/obj/", "missing.obj", 1.)).unwrap_err();
         assert_eq!(
             "failed to load obj model: OpenFileFailed",
             panic_message(&res)
@@ -134,7 +145,7 @@ mod tests {
 
     #[test]
     fn missing_material_file() {
-        let res = catch_unwind(|| new_obj_model("resources/obj/", "missingMaterialLib.obj", 1.))
+        let res = catch_unwind(|| load_obj_model("resources/obj/", "missingMaterialLib.obj", 1.))
             .unwrap_err();
         assert_eq!(
             "failed to load MTL file: OpenFileFailed",
@@ -145,7 +156,7 @@ mod tests {
     #[test]
     fn missing_image_file() {
         let res =
-            catch_unwind(|| new_obj_model("resources/obj/", "missingImage.obj", 1.)).unwrap_err();
+            catch_unwind(|| load_obj_model("resources/obj/", "missingImage.obj", 1.)).unwrap_err();
         assert!(
             panic_message(&res).contains("Failed to load image texture resources/obj/missing.jpg")
         );
@@ -154,7 +165,7 @@ mod tests {
     #[test]
     fn invalid_image_file() {
         let res =
-            catch_unwind(|| new_obj_model("resources/obj/", "invalidImage.obj", 1.)).unwrap_err();
+            catch_unwind(|| load_obj_model("resources/obj/", "invalidImage.obj", 1.)).unwrap_err();
         assert!(panic_message(&res)
             .contains("Failed to load image texture resources/obj/invalidImage.mtl"));
     }

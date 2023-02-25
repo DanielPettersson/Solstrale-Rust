@@ -38,7 +38,7 @@ pub fn bvh_benchmark(c: &mut Criterion) {
                     || {
                         let render_config = RenderConfig {
                             samples_per_pixel: 1,
-                            shader: PathTracingShader::new(50),
+                            shader: PathTracingShader::create(50),
                             post_processor: None,
                         };
                         create_bvh_test_scene(
@@ -77,7 +77,7 @@ pub fn scene_benchmark(c: &mut Criterion) {
             || {
                 let render_config = RenderConfig {
                     samples_per_pixel: 1,
-                    shader: PathTracingShader::new(50),
+                    shader: PathTracingShader::create(50),
                     post_processor: None,
                 };
                 create_test_scene(render_config)

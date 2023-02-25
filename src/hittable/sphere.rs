@@ -19,7 +19,7 @@ pub struct Sphere {
 
 impl Sphere {
     ///Creates a new sphere shaped hittable object
-    pub fn new(center: Vec3, radius: f64, mat: Materials) -> Hittables {
+    pub fn create(center: Vec3, radius: f64, mat: Materials) -> Hittables {
         let r_vec = Vec3::new(radius, radius, radius);
         let b_box = Aabb::new_from_2_points(center - r_vec, center + r_vec);
 

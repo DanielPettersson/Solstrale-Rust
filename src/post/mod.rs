@@ -1,10 +1,10 @@
 use crate::geo::vec3::Vec3;
+use crate::post::PostProcessors::OidnPostProcessorType;
 use crate::util::rgb_color;
 use enum_dispatch::enum_dispatch;
 use image::{ImageBuffer, Rgb, RgbImage};
 use simple_error::SimpleError;
 use std::error::Error;
-use crate::post::PostProcessors::OidnPostProcessorType;
 
 /// Responsible for taking the rendered image and transforming it
 #[enum_dispatch]
@@ -28,7 +28,7 @@ pub enum PostProcessors {
 pub struct OidnPostProcessor();
 
 impl OidnPostProcessor {
-    pub fn new() -> PostProcessors {
+    pub fn create() -> PostProcessors {
         OidnPostProcessorType(OidnPostProcessor())
     }
 }

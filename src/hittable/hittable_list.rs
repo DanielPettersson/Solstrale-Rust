@@ -19,7 +19,7 @@ pub struct HittableList {
 
 impl HittableList {
     /// Creates new empty HittableList
-    pub fn new() -> Hittables {
+    pub fn create() -> Hittables {
         HittableListType(HittableList {
             list: Vec::new(),
             b_box: Aabb::new_with_empty_intervals(),

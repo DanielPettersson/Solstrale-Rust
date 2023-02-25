@@ -15,7 +15,7 @@ pub struct Translation {
 
 impl Translation {
     /// Creates a hittable object that translates the given hittable by the given offset vector
-    pub fn new(object: Hittables, offset: Vec3) -> Hittables {
+    pub fn create(object: Hittables, offset: Vec3) -> Hittables {
         let object_b_box = object.bounding_box().clone();
         TranslationType(Translation {
             object: Box::new(object),

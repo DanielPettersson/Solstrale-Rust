@@ -2,7 +2,7 @@ use image::RgbImage;
 use solstrale::camera::CameraConfig;
 use solstrale::geo::vec3::Vec3;
 use solstrale::hittable::hittable_list::HittableList;
-use solstrale::hittable::obj_model::new_obj_model;
+use solstrale::hittable::obj_model::load_obj_model;
 use solstrale::hittable::sphere::Sphere;
 use solstrale::hittable::Hittable;
 use solstrale::material::DiffuseLight;
@@ -17,7 +17,7 @@ fn main() {
 
     let render_config = RenderConfig {
         samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
+        shader: PathTracingShader::create(50),
         post_processor: None,
     };
     let scene = create_obj_scene(render_config, obj_path);
@@ -46,11 +46,11 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
         look_at: Vec3::new(0., 0.05, 0.),
     };
 
-    let mut world = HittableList::new();
-    let light = DiffuseLight::new(15., 15., 15.);
+    let mut world = HittableList::create();
+    let light = DiffuseLight::create(15., 15., 15.);
 
-    world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
-    world.add(new_obj_model("", obj_path, 1.).unwrap());
+    world.add(Sphere::create(Vec3::new(100., 100., 100.), 35., light));
+    world.add(load_obj_model("", obj_path, 1.).unwrap());
 
     Scene {
         world,

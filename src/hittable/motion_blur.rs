@@ -16,7 +16,7 @@ pub struct MotionBlur {
 impl MotionBlur {
     /// Creates a new hittable object that adds linear interpolated translation to
     /// its hittable based on the time of the ray. This gives the appearance of the object moving.
-    pub fn new(blurred_hittable: Hittables, blur_direction: Vec3) -> Hittables {
+    pub fn create(blurred_hittable: Hittables, blur_direction: Vec3) -> Hittables {
         let b_box1 = blurred_hittable.bounding_box();
         let b_box2 = b_box1 + blur_direction;
         let b_box = Aabb::combine_aabbs(b_box1, &b_box2);
