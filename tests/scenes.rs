@@ -26,7 +26,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
 
     let mut world = HittableList::new();
 
-    let image_tex = ImageTexture::load("tests/textures/tex.jpg").unwrap();
+    let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
 
     let ground_material = Lambertian::new(image_tex);
     let glass_mat = Dielectric::new(SolidColor::new(1., 1., 1.), 1.5);
@@ -216,7 +216,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
 
     world.add(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
 
-    let tex = ImageTexture::load("tests/textures/checker.jpg").unwrap();
+    let tex = ImageTexture::load("resources/textures/checker.jpg").unwrap();
     let checker_mat = Lambertian::new(tex);
 
     world.add(Triangle::new_with_tex_coords(
@@ -254,10 +254,10 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let light = DiffuseLight::new(15., 15., 15.);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    let model = new_obj_model("tests/spider/", "spider.obj", 1.).unwrap();
+    let model = new_obj_model("resources/spider/", "spider.obj", 1.).unwrap();
     world.add(model);
 
-    let image_tex = ImageTexture::load("tests/textures/tex.jpg").unwrap();
+    let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
     let ground_material = Lambertian::new(image_tex);
     world.add(Quad::new(
         Vec3::new(-200., -30., -200.),

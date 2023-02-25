@@ -70,7 +70,7 @@ fn test_render_obj_with_default_material() {
         shader: PathTracingShader::new(50),
         post_processor: None,
     };
-    let scene = create_obj_with_box(render_config, "tests/obj/", "box.obj");
+    let scene = create_obj_with_box(render_config, "resources/obj/", "box.obj");
 
     render_and_compare_output(scene, "obj_default", 200, 100);
 }
@@ -82,7 +82,7 @@ fn test_render_obj_with_diffuse_material() {
         shader: PathTracingShader::new(50),
         post_processor: None,
     };
-    let scene = create_obj_with_box(render_config, "tests/obj/", "boxWithMat.obj");
+    let scene = create_obj_with_box(render_config, "resources/obj/", "boxWithMat.obj");
 
     render_and_compare_output(scene, "obj_diffuse", 200, 100);
 }

@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn missing_file() {
-        let res = catch_unwind(|| new_obj_model("tests/obj/", "missing.obj", 1.)).unwrap_err();
+        let res = catch_unwind(|| new_obj_model("resources/obj/", "missing.obj", 1.)).unwrap_err();
         assert_eq!(
             "failed to load obj model: OpenFileFailed",
             panic_message(&res)
@@ -133,8 +133,8 @@ mod tests {
 
     #[test]
     fn missing_material_file() {
-        let res =
-            catch_unwind(|| new_obj_model("tests/obj/", "missingMaterialLib.obj", 1.)).unwrap_err();
+        let res = catch_unwind(|| new_obj_model("resources/obj/", "missingMaterialLib.obj", 1.))
+            .unwrap_err();
         assert_eq!(
             "failed to load MTL file: OpenFileFailed",
             panic_message(&res)
@@ -143,15 +143,18 @@ mod tests {
 
     #[test]
     fn missing_image_file() {
-        let res = catch_unwind(|| new_obj_model("tests/obj/", "missingImage.obj", 1.)).unwrap_err();
-        assert!(panic_message(&res).contains("Failed to load image texture tests/obj/missing.jpg"));
+        let res =
+            catch_unwind(|| new_obj_model("resources/obj/", "missingImage.obj", 1.)).unwrap_err();
+        assert!(
+            panic_message(&res).contains("Failed to load image texture resources/obj/missing.jpg")
+        );
     }
 
     #[test]
     fn invalid_image_file() {
-        let res = catch_unwind(|| new_obj_model("tests/obj/", "invalidImage.obj", 1.)).unwrap_err();
-        assert!(
-            panic_message(&res).contains("Failed to load image texture tests/obj/invalidImage.mtl")
-        );
+        let res =
+            catch_unwind(|| new_obj_model("resources/obj/", "invalidImage.obj", 1.)).unwrap_err();
+        assert!(panic_message(&res)
+            .contains("Failed to load image texture resources/obj/invalidImage.mtl"));
     }
 }

@@ -10,15 +10,17 @@ use solstrale::ray_trace;
 use solstrale::renderer::shader::PathTracingShader;
 use solstrale::renderer::{RenderConfig, Scene};
 use std::sync::mpsc::channel;
-use std::thread;
+use std::{env, thread};
 
 fn main() {
+    let obj_path = &env::args().nth(1).expect("Object path argument required");
+
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
         post_processor: None,
     };
-    let scene = create_obj_scene(render_config);
+    let scene = create_obj_scene(render_config, obj_path);
 
     let (output_sender, output_receiver) = channel();
     let (_, abort_receiver) = channel();
@@ -35,7 +37,7 @@ fn main() {
     image.save("out.jpg").unwrap();
 }
 
-fn create_obj_scene(render_config: RenderConfig) -> Scene {
+fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 0.,
@@ -48,7 +50,7 @@ fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let light = DiffuseLight::new(15., 15., 15.);
 
     world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
-    world.add(new_obj_model("", "dragon.obj", 1.).unwrap());
+    world.add(new_obj_model("", obj_path, 1.).unwrap());
 
     Scene {
         world,
