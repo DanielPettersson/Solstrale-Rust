@@ -1,0 +1,1 @@
+perf record -F99 --call-graph dwarf target/release/profiling /home/daniel/dragon.obj

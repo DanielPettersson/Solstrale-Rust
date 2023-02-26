@@ -110,11 +110,11 @@ impl Hittable for Triangle {
         let q_vec = t_vec.cross(self.v0v1);
 
         // Is hit point outside of primitive
-        let u = t_vec.dot(p_vec) * inv_det;
+        let u = (t_vec.dot(p_vec) * inv_det) as f32;
         if !(0. ..=1.).contains(&u) {
             return None;
         }
-        let v = r.direction.dot(q_vec) * inv_det;
+        let v = (r.direction.dot(q_vec) * inv_det) as f32;
         if v < 0. || u + v > 1. {
             return None;
         }
@@ -128,8 +128,10 @@ impl Hittable for Triangle {
         }
 
         let uv0 = 1. - u - v;
-        let uu = uv0 * self.uv0.u + u * self.uv1.u + v * self.uv2.u;
-        let vv = uv0 * self.uv0.v + u * self.uv1.v + v * self.uv2.v;
+        let uv = Uv::new(
+            uv0 * self.uv0.u + u * self.uv1.u + v * self.uv2.u,
+            uv0 * self.uv0.v + u * self.uv1.v + v * self.uv2.v,
+        );
 
         let mut normal = self.normal;
         let front_face = r.direction.dot(normal) < 0.;
@@ -141,8 +143,7 @@ impl Hittable for Triangle {
             normal,
             material: &self.mat,
             ray_length: tt,
-            u: uu,
-            v: vv,
+            uv,
             front_face,
         })
     }

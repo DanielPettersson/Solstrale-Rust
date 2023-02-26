@@ -2,6 +2,7 @@ use crate::geo::aabb::Aabb;
 use crate::geo::onb::Onb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::geo::Uv;
 use crate::hittable::Hittables::SphereType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
@@ -79,7 +80,7 @@ impl Hittable for Sphere {
 
         let hit_point = r.at(root);
         let mut normal = (hit_point - self.center) / self.radius;
-        let (u, v) = calculate_sphere_uv(normal);
+        let uv = calculate_sphere_uv(normal);
 
         let front_face = r.direction.dot(normal) < 0.;
         if !front_face {
@@ -90,8 +91,7 @@ impl Hittable for Sphere {
             normal,
             material: &self.mat,
             ray_length: root,
-            u,
-            v,
+            uv,
             front_face,
         })
     }
@@ -116,12 +116,12 @@ impl Clone for Sphere {
     }
 }
 
-fn calculate_sphere_uv(point_on_sphere: Vec3) -> (f64, f64) {
+fn calculate_sphere_uv(point_on_sphere: Vec3) -> Uv {
     let theta = -point_on_sphere.y.acos();
     let phi = -point_on_sphere.z.atan2(point_on_sphere.x) + PI;
     let u = phi / (2. * PI);
     let v = theta / PI;
-    (u, v)
+    Uv::new(u as f32, v as f32)
 }
 
 fn random_to_sphere(radius: f64, distance_squared: f64) -> Vec3 {

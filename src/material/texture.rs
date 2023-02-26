@@ -54,9 +54,8 @@ impl Texture for SolidColor {
 #[derive(Clone, Debug)]
 pub struct ImageTexture {
     image: Arc<RgbImage>,
-    mirror: bool,
-    max_x: f64,
-    max_y: f64,
+    max_x: f32,
+    max_y: f32,
 }
 
 impl ImageTexture {
@@ -65,18 +64,17 @@ impl ImageTexture {
         let image = image::open(path)
             .unwrap_or_else(|_| panic!("Failed to load image texture {}", path))
             .into_rgb8();
-        Ok(Self::create(Arc::new(image), false))
+        Ok(Self::create(Arc::new(image)))
     }
 
     /// Creates a texture that uses image data for color
-    pub fn create(image: Arc<RgbImage>, mirror: bool) -> Textures {
+    pub fn create(image: Arc<RgbImage>) -> Textures {
         let w = image.width();
         let h = image.height();
         ImageTextureType(ImageTexture {
             image,
-            mirror,
-            max_x: w as f64 - 1.,
-            max_y: h as f64 - 1.,
+            max_x: w as f32 - 1.,
+            max_y: h as f32 - 1.,
         })
     }
 }
@@ -85,11 +83,8 @@ impl Texture for ImageTexture {
     /// Returns the color in the image data that corresponds to the UV coordinate of the hittable
     /// If UV coordinates from hit record is <0 or >1 texture wraps
     fn color(&self, rec: &HitRecord) -> Vec3 {
-        let mut u = rec.u.abs() % 1.;
-        if self.mirror {
-            u = 1. - u
-        }
-        let v = 1. - rec.v.abs() % 1.;
+        let u = rec.uv.u.abs() % 1.;
+        let v = 1. - rec.uv.v.abs() % 1.;
 
         let x = u * self.max_x;
         let y = v * self.max_y;

@@ -4,6 +4,7 @@ use enum_dispatch::enum_dispatch;
 
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
+use crate::geo::Uv;
 use crate::material::texture::Textures;
 use crate::material::texture::{SolidColor, Texture};
 use crate::material::Materials::{
@@ -22,8 +23,7 @@ pub struct HitRecord<'a> {
     pub normal: Vec3,
     pub material: &'a Materials,
     pub ray_length: f64,
-    pub u: f64,
-    pub v: f64,
+    pub uv: Uv,
     pub front_face: bool,
 }
 

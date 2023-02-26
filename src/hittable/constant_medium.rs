@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_unit_vector, Vec3};
+use crate::geo::Uv;
 use crate::hittable::Hittables::ConstantMediumType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::texture::SolidColor;
@@ -63,8 +64,7 @@ impl Hittable for ConstantMedium {
                             normal: random_unit_vector(),
                             material: &self.phase_function,
                             ray_length: t,
-                            u: 0.0,
-                            v: 0.0,
+                            uv: Uv::new(0.0, 0.0),
                             front_face: false,
                         })
                     }

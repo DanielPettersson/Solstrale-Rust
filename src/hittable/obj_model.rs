@@ -94,16 +94,16 @@ pub fn load_obj_model_with_default_material(
                 let tex_offset3 = (mesh.texcoord_indices[i + 2] * 2) as usize;
                 (
                     Uv {
-                        u: mesh.texcoords[tex_offset1] as f64,
-                        v: mesh.texcoords[tex_offset1 + 1] as f64,
+                        u: mesh.texcoords[tex_offset1],
+                        v: mesh.texcoords[tex_offset1 + 1],
                     },
                     Uv {
-                        u: mesh.texcoords[tex_offset2] as f64,
-                        v: mesh.texcoords[tex_offset2 + 1] as f64,
+                        u: mesh.texcoords[tex_offset2],
+                        v: mesh.texcoords[tex_offset2 + 1],
                     },
                     Uv {
-                        u: mesh.texcoords[tex_offset3] as f64,
-                        v: mesh.texcoords[tex_offset3 + 1] as f64,
+                        u: mesh.texcoords[tex_offset3],
+                        v: mesh.texcoords[tex_offset3 + 1],
                     },
                 )
             };

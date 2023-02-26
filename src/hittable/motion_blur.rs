@@ -41,8 +41,7 @@ impl Hittable for MotionBlur {
                 normal: rec.normal,
                 material: rec.material,
                 ray_length: rec.ray_length,
-                u: rec.u,
-                v: rec.v,
+                uv: rec.uv,
                 front_face: rec.front_face,
             })
     }

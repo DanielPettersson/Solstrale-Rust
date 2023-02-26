@@ -1,6 +1,7 @@
 use crate::geo::aabb::Aabb;
 use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
+use crate::geo::Uv;
 use crate::hittable::HittableList;
 use crate::hittable::Hittables::QuadType;
 use crate::hittable::{Hittable, Hittables};
@@ -124,8 +125,8 @@ impl Hittable for Quad {
         // Determine the hit point lies within the planar shape using its plane coordinates.
         let hit_point = r.at(t);
         let planar_hit_point_vector = hit_point - self.q;
-        let alpha = self.w.dot(planar_hit_point_vector.cross(self.v));
-        let beta = self.w.dot(self.u.cross(planar_hit_point_vector));
+        let alpha = self.w.dot(planar_hit_point_vector.cross(self.v)) as f32;
+        let beta = self.w.dot(self.u.cross(planar_hit_point_vector)) as f32;
 
         // Is hit point outside of primitive
         if !(0. ..=1.).contains(&alpha) || !(0. ..=1.).contains(&beta) {
@@ -142,8 +143,7 @@ impl Hittable for Quad {
             normal,
             material: &self.mat,
             ray_length: t,
-            u: alpha,
-            v: beta,
+            uv: Uv::new(alpha, beta),
             front_face,
         })
     }

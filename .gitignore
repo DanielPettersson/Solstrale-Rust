@@ -18,3 +18,5 @@ Cargo.lock
 
 
 **/out_actual*.jpg
+/out.jpg
+/perf.data
