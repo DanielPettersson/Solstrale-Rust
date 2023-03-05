@@ -43,7 +43,7 @@ pub struct RenderProgress {
 /// Renderer is a central part of the raytracer responsible for controlling the
 /// process reporting back progress to the caller
 pub struct Renderer {
-    scene: Scene,
+    scene: Arc<Scene>,
     pub lights: Hittables,
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
@@ -51,7 +51,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
-    pub fn new(scene: Scene) -> Result<Renderer, Box<dyn Error>> {
+    pub fn new(scene: Arc<Scene>) -> Result<Renderer, Box<dyn Error>> {
         let mut lights = HittableList::create();
         find_lights(&scene.world, &mut lights);
 

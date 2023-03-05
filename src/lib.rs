@@ -1,6 +1,7 @@
 use crate::renderer::{RenderProgress, Renderer, Scene};
 use std::error::Error;
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::Arc;
 
 pub mod camera;
 pub mod geo;
@@ -18,6 +19,16 @@ pub fn ray_trace<'a>(
     width: u32,
     height: u32,
     scene: Scene,
+    output: &'a Sender<RenderProgress>,
+    abort: &'a Receiver<bool>,
+) -> Result<(), Box<dyn Error>> {
+    Renderer::new(Arc::new(scene))?.render(width as usize, height as usize, output, abort)
+}
+
+pub fn ray_trace_arc<'a>(
+    width: u32,
+    height: u32,
+    scene: Arc<Scene>,
     output: &'a Sender<RenderProgress>,
     abort: &'a Receiver<bool>,
 ) -> Result<(), Box<dyn Error>> {
