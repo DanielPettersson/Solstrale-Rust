@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::mpsc::channel;
+use std::sync::Arc;
 use std::thread;
 
 use image::imageops::FilterType;
@@ -143,7 +144,7 @@ fn test_render_scene_without_light() {
     }
 }
 
-fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
+fn render_and_compare_output(scene: Arc<Scene>, name: &str, width: u32, height: u32) {
     let (output_sender, output_receiver) = channel();
     let (_, abort_receiver) = channel();
 

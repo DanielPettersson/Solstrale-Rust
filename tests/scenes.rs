@@ -16,8 +16,9 @@ use solstrale::hittable::Hittables::TriangleType;
 use solstrale::material::texture::{ImageTexture, SolidColor};
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
+use std::sync::Arc;
 
-pub fn create_test_scene(render_config: RenderConfig) -> Scene {
+pub fn create_test_scene(render_config: RenderConfig) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
@@ -124,12 +125,12 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         light_mat,
     ));
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }
 
 #[allow(dead_code)]
@@ -137,7 +138,7 @@ pub fn create_bvh_test_scene(
     render_config: RenderConfig,
     use_bvh: bool,
     num_triangles: u32,
-) -> Scene {
+) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
@@ -173,16 +174,16 @@ pub fn create_bvh_test_scene(
         world.add(Bvh::create(triangles))
     }
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }
 
 #[allow(dead_code)]
-pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) -> Scene {
+pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
@@ -199,16 +200,16 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
     }
     world.add(Sphere::create(Vec3::new(0., 0., 0.), 0.5, yellow));
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }
 
 #[allow(dead_code)]
-pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
+pub fn create_uv_scene(render_config: RenderConfig) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.,
@@ -235,16 +236,16 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
         checker_mat,
     ));
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }
 
 #[allow(dead_code)]
-pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
+pub fn create_obj_scene(render_config: RenderConfig) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 20.,
@@ -269,16 +270,16 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
         ground_material,
     ));
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }
 
 #[allow(dead_code)]
-pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &str) -> Scene {
+pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &str) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 0.,
@@ -294,10 +295,10 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     world.add(Sphere::create(Vec3::new(-100., 100., 40.), 35., light));
     world.add(load_obj_model_with_default_material(path, filename, 1., red).unwrap());
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }

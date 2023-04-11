@@ -10,6 +10,7 @@ use solstrale::ray_trace;
 use solstrale::renderer::shader::PathTracingShader;
 use solstrale::renderer::{RenderConfig, Scene};
 use std::sync::mpsc::channel;
+use std::sync::Arc;
 use std::{env, thread};
 
 fn main() {
@@ -37,7 +38,7 @@ fn main() {
     image.save("out.jpg").unwrap();
 }
 
-fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
+fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Arc<Scene> {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 0.,
@@ -52,10 +53,10 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
     world.add(Sphere::create(Vec3::new(100., 100., 100.), 35., light));
     world.add(load_obj_model("", obj_path, 1.).unwrap());
 
-    Scene {
+    Arc::new(Scene {
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
-    }
+    })
 }
