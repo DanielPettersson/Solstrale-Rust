@@ -1,3 +1,5 @@
+//! The renderer takes a [`Scene`] as input, renders it and reports [`RenderProgress`]
+
 use std::error::Error;
 use std::ops::Deref;
 use std::sync::mpsc::{Receiver, SendError, Sender};
@@ -7,8 +9,8 @@ use image::{ImageBuffer, RgbImage};
 use simple_error::SimpleError;
 
 use crate::camera::{Camera, CameraConfig};
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
+use crate::geo::Ray;
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::{Hittable, Hittables};
 use crate::post::{PostProcessor, PostProcessors};
@@ -21,22 +23,31 @@ pub mod shader;
 
 ///Input to the ray tracer for how the image should be rendered
 pub struct RenderConfig {
+    /// Number of times each pixel should be sampled
     pub samples_per_pixel: u32,
+    /// Shader to use when rendering the image
     pub shader: Shaders,
+    /// Post processor to apply to the rendered image
     pub post_processor: Option<PostProcessors>,
 }
 
 /// Contains all information needed to render an image
 pub struct Scene {
+    /// World is the hittable objects in the scene
     pub world: Hittables,
+    /// A camera for defining the view of the world
     pub camera: CameraConfig,
+    /// Background color of the scene
     pub background_color: Vec3,
+    /// Render configuration
     pub render_config: RenderConfig,
 }
 
 /// progress reported back to the caller of the raytrace function
 pub struct RenderProgress {
+    /// progress is reported between 0 -> 1 and represents a percentage of completion
     pub progress: f64,
+    /// Output image so far, will be final when progress is 1
     pub render_image: RgbImage,
 }
 
@@ -44,6 +55,7 @@ pub struct RenderProgress {
 /// process reporting back progress to the caller
 pub struct Renderer {
     scene: Arc<Scene>,
+    /// All the light hittables in the world
     pub lights: Hittables,
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
@@ -52,7 +64,7 @@ pub struct Renderer {
 impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
     pub fn new(scene: Arc<Scene>) -> Result<Renderer, Box<dyn Error>> {
-        let mut lights = HittableList::create();
+        let mut lights = HittableList::new();
         find_lights(&scene.world, &mut lights);
 
         let has_lights = match lights.children() {

@@ -9,13 +9,14 @@ const COLOR_INTENSITY_INTERVAL: Interval = Interval {
 
 const COLOR_SCALE: f64 = 1.0 / 255.;
 
+/// Convert a color and a given number of samples used to generate that color to an rgb color
 pub fn to_rgb_color(col: Vec3, samples_per_pixel: u32) -> Rgb<u8> {
     let c = to_float(col, samples_per_pixel);
     Rgb([(256. * c.x) as u8, (256. * c.y) as u8, (256. * c.z) as u8])
 }
 
-// Converts a color in a Vec3 that is the sum of a given of amounts of samples
-// to a float color. Applies gamma correction to the output color.
+/// Converts a color in a Vec3 that is the sum of a given of amounts of samples
+/// to a float color. Applies gamma correction to the output color.
 pub fn to_float(col: Vec3, samples_per_pixel: u32) -> Vec3 {
     // Divide the color by the number of samples
     // and gamma-correct for gamma=2.0

@@ -1,18 +1,19 @@
-//! Package pdf provides probability density functions
+//! Probability density functions
 
 use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::onb::Onb;
 use crate::geo::vec3::{random_cosine_direction, random_unit_vector, Vec3};
+use crate::geo::Onb;
 use crate::hittable::{Hittable, Hittables};
 use crate::pdf::Pdfs::{CosinePdfType, HittablePdfType, SpherePdfType};
 use crate::random::random_normal_float;
 
-pub const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
+const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
 
 #[enum_dispatch]
+/// Probability density function
 pub trait Pdf {
     /// Returns the pdf value for a given vector
     fn value(&self, direction: Vec3) -> f64;
@@ -21,6 +22,7 @@ pub trait Pdf {
 }
 
 #[enum_dispatch(Pdf)]
+/// Probability density functions
 pub enum Pdfs<'a> {
     CosinePdfType(CosinePdf),
     HittablePdfType(HittablePdf<'a>),
@@ -49,8 +51,9 @@ pub struct CosinePdf {
 }
 
 impl<'a> CosinePdf {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of a CosinePdf
-    pub fn create(w: Vec3) -> Pdfs<'a> {
+    pub fn new(w: Vec3) -> Pdfs<'a> {
         CosinePdfType(CosinePdf { uvw: Onb::new(w) })
     }
 }
@@ -73,8 +76,9 @@ pub struct HittablePdf<'a> {
 }
 
 impl<'a> HittablePdf<'a> {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of HittablePdf
-    pub fn create(objects: &'a Hittables, origin: Vec3) -> Pdfs {
+    pub fn new(objects: &'a Hittables, origin: Vec3) -> Pdfs {
         HittablePdfType(HittablePdf { objects, origin })
     }
 }
@@ -93,8 +97,9 @@ impl<'a> Pdf for HittablePdf<'a> {
 pub struct SpherePdf();
 
 impl<'a> SpherePdf {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of SpherePdf
-    pub fn create() -> Pdfs<'a> {
+    pub fn new() -> Pdfs<'a> {
         SpherePdfType(SpherePdf {})
     }
 }

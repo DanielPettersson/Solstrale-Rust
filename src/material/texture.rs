@@ -13,11 +13,13 @@ use crate::util::rgb_color::rgb_to_vec3;
 /// The color can vary by the uv coordinates of the hittable
 #[enum_dispatch]
 pub trait Texture {
+    /// Return the color of the texture at a given hit
     fn color(&self, rec: &HitRecord) -> Vec3;
 }
 
 #[enum_dispatch(Texture)]
 #[derive(Debug)]
+/// An enum of textures
 pub enum Textures {
     SolidColorType(SolidColor),
     ImageTextureType(ImageTexture),
@@ -37,9 +39,12 @@ impl Clone for Textures {
 pub struct SolidColor(Vec3);
 
 impl SolidColor {
-    pub fn create(r: f64, g: f64, b: f64) -> Textures {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new solid color texture
+    pub fn new(r: f64, g: f64, b: f64) -> Textures {
         SolidColor::from_vec3(Vec3::new(r, g, b))
     }
+    /// Create a new solid color texture from a [`Vec3`]
     pub fn from_vec3(color: Vec3) -> Textures {
         SolidColorType(SolidColor(color))
     }
@@ -51,6 +56,7 @@ impl Texture for SolidColor {
     }
 }
 
+/// Texture that uses image data for color by loading the image from the path
 #[derive(Clone, Debug)]
 pub struct ImageTexture {
     image: Arc<RgbImage>,
@@ -59,16 +65,17 @@ pub struct ImageTexture {
 }
 
 impl ImageTexture {
-    /// Creates a texture that uses image data for color by loading the image from the path
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new image texture from a file path
     pub fn load(path: &str) -> Result<Textures, Box<dyn Error>> {
         let image = image::open(path)
             .unwrap_or_else(|_| panic!("Failed to load image texture {}", path))
             .into_rgb8();
-        Ok(Self::create(Arc::new(image)))
+        Ok(Self::new(Arc::new(image)))
     }
 
     /// Creates a texture that uses image data for color
-    pub fn create(image: Arc<RgbImage>) -> Textures {
+    pub fn new(image: Arc<RgbImage>) -> Textures {
         let w = image.width();
         let h = image.height();
         ImageTextureType(ImageTexture {

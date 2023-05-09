@@ -1,6 +1,6 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_unit_vector, Vec3};
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::hittable::Hittables::ConstantMediumType;
 use crate::hittable::{Hittable, Hittables};
@@ -10,6 +10,9 @@ use crate::material::{HitRecord, Isotropic};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, UNIVERSE_INTERVAL};
 
+/// A fog type hittable object where rays not only scatter
+/// at the edge of the object, but at random points inside the object
+/// The material of the boundary hittable is ignored
 #[derive(Clone, Debug)]
 pub struct ConstantMedium {
     boundary: Box<Hittables>,
@@ -18,14 +21,13 @@ pub struct ConstantMedium {
 }
 
 impl ConstantMedium {
-    /// Creates a fog type hittable object where rays not only scatter
-    /// at the edge of the object, but at random points inside the object
-    /// The material of the boundary hittable is ignored
-    pub fn create(boundary: Hittables, density: f64, color: Vec3) -> Hittables {
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new instance of the constant medium
+    pub fn new(boundary: Hittables, density: f64, color: Vec3) -> Hittables {
         ConstantMediumType(ConstantMedium {
             boundary: Box::new(boundary),
             negative_inverse_density: -1. / density,
-            phase_function: Isotropic::create(SolidColor::from_vec3(color)),
+            phase_function: Isotropic::new(SolidColor::from_vec3(color)),
         })
     }
 }

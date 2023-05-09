@@ -1,11 +1,13 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::hittable::Hittables::MotionBlurType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
+/// A hittable object that adds linear interpolated translation to
+/// its hittable based on the time of the ray. This gives the appearance of the object moving.
 #[derive(Clone, Debug)]
 pub struct MotionBlur {
     blurred_hittable: Box<Hittables>,
@@ -14,9 +16,9 @@ pub struct MotionBlur {
 }
 
 impl MotionBlur {
-    /// Creates a new hittable object that adds linear interpolated translation to
-    /// its hittable based on the time of the ray. This gives the appearance of the object moving.
-    pub fn create(blurred_hittable: Hittables, blur_direction: Vec3) -> Hittables {
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new instance of motion blur
+    pub fn new(blurred_hittable: Hittables, blur_direction: Vec3) -> Hittables {
         let b_box1 = blurred_hittable.bounding_box();
         let b_box2 = b_box1 + blur_direction;
         let b_box = Aabb::combine_aabbs(b_box1, &b_box2);

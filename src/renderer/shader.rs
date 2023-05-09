@@ -1,5 +1,5 @@
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
+use crate::geo::Ray;
 use crate::material::HitRecord;
 use crate::material::Material;
 use crate::material::ScatterType::{ScatterPdf, ScatterRay};
@@ -13,10 +13,12 @@ use enum_dispatch::enum_dispatch;
 /// shader calculates the color from a ray hitting a hittable object
 #[enum_dispatch]
 pub trait Shader {
+    /// Calculate the color of the pixel
     fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, depth: u32) -> Vec3;
 }
 
 #[enum_dispatch(Shader)]
+/// An enum of shaders
 pub enum Shaders {
     PathTracingShaderType(PathTracingShader),
     AlbedoShaderType(AlbedoShader),
@@ -30,7 +32,9 @@ pub struct PathTracingShader {
 }
 
 impl PathTracingShader {
-    pub fn create(max_depth: u32) -> Shaders {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new path tracing shader
+    pub fn new(max_depth: u32) -> Shaders {
         PathTracingShaderType(PathTracingShader { max_depth })
     }
 }
@@ -53,7 +57,7 @@ impl Shader for PathTracingShader {
                     scatter_record.attenuation * rc
                 }
                 ScatterPdf(pdf) => {
-                    let light_pdf = HittablePdf::create(&renderer.lights, rec.hit_point);
+                    let light_pdf = HittablePdf::new(&renderer.lights, rec.hit_point);
 
                     let pdf_direction = mix_generate(&light_pdf, &pdf);
                     let scattered = Ray::new(rec.hit_point, pdf_direction, ray.time);
@@ -91,7 +95,9 @@ fn filter_color_value(val: f64) -> f64 {
 pub struct AlbedoShader {}
 
 impl AlbedoShader {
-    pub fn create() -> Shaders {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new albedo shader
+    pub fn new() -> Shaders {
         AlbedoShaderType(AlbedoShader {})
     }
 }
@@ -110,7 +116,9 @@ impl Shader for AlbedoShader {
 pub struct NormalShader {}
 
 impl NormalShader {
-    pub fn create() -> Shaders {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new normal shader
+    pub fn new() -> Shaders {
         NormalShaderType(NormalShader {})
     }
 }
@@ -128,7 +136,9 @@ pub struct SimpleShader {
 }
 
 impl SimpleShader {
-    pub fn create() -> Shaders {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new simple shader
+    pub fn new() -> Shaders {
         SimpleShaderType(SimpleShader {
             light_dir: Vec3::new(1., 1., -1.),
         })

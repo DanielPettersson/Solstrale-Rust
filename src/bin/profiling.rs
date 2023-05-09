@@ -18,7 +18,7 @@ fn main() {
 
     let render_config = RenderConfig {
         samples_per_pixel: 50,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_obj_scene(render_config, obj_path);
@@ -47,10 +47,10 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Arc<Scene> {
         look_at: Vec3::new(0., 0.05, 0.),
     };
 
-    let mut world = HittableList::create();
-    let light = DiffuseLight::create(15., 15., 15.);
+    let mut world = HittableList::new();
+    let light = DiffuseLight::new(15., 15., 15.);
 
-    world.add(Sphere::create(Vec3::new(100., 100., 100.), 35., light));
+    world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
     world.add(load_obj_model("", obj_path, 1.).unwrap());
 
     Arc::new(Scene {

@@ -1,3 +1,5 @@
+//! Various small helpers used by the raytracer
+
 use std::f64::consts::PI;
 
 pub mod interval;

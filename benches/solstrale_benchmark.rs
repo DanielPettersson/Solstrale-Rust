@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
-use crate::scenes::{create_bvh_test_scene, create_test_scene};
+use crate::scenes::{create_test_scene, new_bvh_test_scene};
 use derive_more::{Constructor, Display};
 use solstrale::ray_trace;
 use solstrale::renderer::shader::PathTracingShader;
@@ -38,10 +38,10 @@ pub fn bvh_benchmark(c: &mut Criterion) {
                     || {
                         let render_config = RenderConfig {
                             samples_per_pixel: 1,
-                            shader: PathTracingShader::create(50),
+                            shader: PathTracingShader::new(50),
                             post_processor: None,
                         };
-                        create_bvh_test_scene(
+                        new_bvh_test_scene(
                             render_config,
                             bvh_input.use_bvh,
                             bvh_input.num_triangles,
@@ -77,7 +77,7 @@ pub fn scene_benchmark(c: &mut Criterion) {
             || {
                 let render_config = RenderConfig {
                     samples_per_pixel: 1,
-                    shader: PathTracingShader::create(50),
+                    shader: PathTracingShader::new(50),
                     post_processor: None,
                 };
                 create_test_scene(render_config)

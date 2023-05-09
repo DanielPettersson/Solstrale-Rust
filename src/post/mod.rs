@@ -1,3 +1,5 @@
+//! Post processors for applying effects to the raw rendered image
+
 use crate::geo::vec3::Vec3;
 use crate::post::PostProcessors::OidnPostProcessorType;
 use crate::util::rgb_color;
@@ -9,6 +11,7 @@ use std::error::Error;
 /// Responsible for taking the rendered image and transforming it
 #[enum_dispatch]
 pub trait PostProcessor {
+    /// Execute postprocessing of the rendered image
     fn post_process(
         &self,
         pixel_colors: &[Vec3],
@@ -21,14 +24,18 @@ pub trait PostProcessor {
 }
 
 #[enum_dispatch(PostProcessor)]
+/// An enum of post processors
 pub enum PostProcessors {
     OidnPostProcessorType(OidnPostProcessor),
 }
 
+/// A post processor that uses Intel Open Image DeNoise on the image
 pub struct OidnPostProcessor();
 
 impl OidnPostProcessor {
-    pub fn create() -> PostProcessors {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new oidn post processor
+    pub fn new() -> PostProcessors {
         OidnPostProcessorType(OidnPostProcessor())
     }
 }

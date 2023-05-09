@@ -18,7 +18,7 @@ pub fn load_obj_model(path: &str, filename: &str, scale: f64) -> Result<Hittable
         path,
         filename,
         scale,
-        Lambertian::create(SolidColor::create(1., 1., 1.)),
+        Lambertian::new(SolidColor::new(1., 1., 1.)),
     )
 }
 
@@ -44,15 +44,15 @@ pub fn load_obj_model_with_default_material(
     let mut mat_map = HashMap::from([(-1, default_material.clone())]);
     for (i, m) in materials.iter().enumerate() {
         if m.diffuse_texture.is_empty() {
-            let color = SolidColor::create(
+            let color = SolidColor::new(
                 m.diffuse[0] as f64,
                 m.diffuse[1] as f64,
                 m.diffuse[2] as f64,
             );
-            mat_map.insert(i as i8, Lambertian::create(color));
+            mat_map.insert(i as i8, Lambertian::new(color));
         } else {
             let texture = ImageTexture::load(&format!("{}{}", path, m.diffuse_texture))?;
-            mat_map.insert(i as i8, Lambertian::create(texture));
+            mat_map.insert(i as i8, Lambertian::new(texture));
         }
     }
 
@@ -118,14 +118,14 @@ pub fn load_obj_model_with_default_material(
             };
 
             if let TriangleType(t) =
-                Triangle::create_with_tex_coords(v0, v1, v2, uv0, uv1, uv2, material)
+                Triangle::new_with_tex_coords(v0, v1, v2, uv0, uv1, uv2, material)
             {
                 triangles.push(t);
             }
         }
     }
 
-    Ok(Bvh::create(triangles))
+    Ok(Bvh::new(triangles))
 }
 
 #[cfg(test)]

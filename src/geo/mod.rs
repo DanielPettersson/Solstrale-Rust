@@ -1,17 +1,244 @@
-//! Package geo provides basic geometric constructs
-pub mod aabb;
-pub mod onb;
-pub mod ray;
+//! Basic geometric constructs
 pub mod vec3;
 
+use crate::geo::vec3::Vec3;
+use crate::util::interval::{combine_intervals, Interval, EMPTY_INTERVAL};
+use std::ops::Add;
+
+const PAD_DELTA: f64 = 0.0001;
+
+/// Texture map coordinates
 #[derive(Copy, Clone, Debug)]
 pub struct Uv {
+    /// U coordinate
     pub u: f32,
+    /// V coordinate
     pub v: f32,
 }
 
 impl Uv {
+    /// Create a new instance of Uv
     pub fn new(u: f32, v: f32) -> Uv {
         Uv { u, v }
+    }
+}
+
+/// Axis Aligned Bounding Box
+#[derive(Clone, Debug)]
+pub struct Aabb {
+    /// X axis interval
+    pub x: Interval,
+    /// y axis interval
+    pub y: Interval,
+    /// z axis interval
+    pub z: Interval,
+}
+
+impl Aabb {
+    /// Create a new aabb having empty intervals in each axis
+    pub fn new_with_empty_intervals() -> Aabb {
+        Aabb {
+            x: EMPTY_INTERVAL,
+            y: EMPTY_INTERVAL,
+            z: EMPTY_INTERVAL,
+        }
+    }
+
+    /// Create a new aabb exactly encapsulating the two given points
+    pub fn new_from_2_points(a: Vec3, b: Vec3) -> Aabb {
+        Aabb {
+            x: Interval {
+                min: a.x.min(b.x),
+                max: a.x.max(b.x),
+            },
+            y: Interval {
+                min: a.y.min(b.y),
+                max: a.y.max(b.y),
+            },
+            z: Interval {
+                min: a.z.min(b.z),
+                max: a.z.max(b.z),
+            },
+        }
+    }
+
+    /// Create a new aabb exactly encapsulating the three given points
+    pub fn new_from_3_points(a: Vec3, b: Vec3, c: Vec3) -> Aabb {
+        Aabb {
+            x: Interval {
+                min: a.x.min(b.x).min(c.x),
+                max: a.x.max(b.x).max(c.x),
+            },
+            y: Interval {
+                min: a.y.min(b.y).min(c.y),
+                max: a.y.max(b.y).max(c.y),
+            },
+            z: Interval {
+                min: a.z.min(b.z).min(c.z),
+                max: a.z.max(b.z).max(c.z),
+            },
+        }
+    }
+
+    /// Create a new aabb that is the sum of the two given aabb's
+    pub fn combine_aabbs(a: &Aabb, b: &Aabb) -> Aabb {
+        Aabb {
+            x: combine_intervals(a.x, b.x),
+            y: combine_intervals(a.y, b.y),
+            z: combine_intervals(a.z, b.z),
+        }
+    }
+
+    /// Create a new aabb the same size as self.
+    /// Except for axis that are very small, these are padded a bit
+    pub fn pad_if_needed(&self) -> Aabb {
+        let new_x = if self.x.size() >= PAD_DELTA {
+            self.x
+        } else {
+            self.x.expand(PAD_DELTA)
+        };
+        let new_y = if self.y.size() >= PAD_DELTA {
+            self.y
+        } else {
+            self.y.expand(PAD_DELTA)
+        };
+        let new_z = if self.z.size() >= PAD_DELTA {
+            self.z
+        } else {
+            self.z.expand(PAD_DELTA)
+        };
+
+        Aabb {
+            x: new_x,
+            y: new_y,
+            z: new_z,
+        }
+    }
+
+    /// Checks if the given ray hits the aabb
+    pub fn hit(&self, r: &Ray) -> bool {
+        let mut t1 = (self.x.min - r.origin.x) * r.direction_inverted.x;
+        let mut t2 = (self.x.max - r.origin.x) * r.direction_inverted.x;
+
+        let mut tmin = t1.min(t2);
+        let mut tmax = t1.max(t2);
+
+        t1 = (self.y.min - r.origin.y) * r.direction_inverted.y;
+        t2 = (self.y.max - r.origin.y) * r.direction_inverted.y;
+
+        tmin = tmin.max(t1.min(t2));
+        tmax = tmax.min(t1.max(t2));
+
+        t1 = (self.z.min - r.origin.z) * r.direction_inverted.z;
+        t2 = (self.z.max - r.origin.z) * r.direction_inverted.z;
+
+        tmin = tmin.max(t1.min(t2));
+        tmax = tmax.min(t1.max(t2));
+
+        tmax > tmin.max(0.)
+    }
+
+    /// return the center point of the aabb
+    pub fn center(&self) -> Vec3 {
+        Vec3::new(
+            self.x.min + self.x.max * 0.5,
+            self.y.min + self.y.max * 0.5,
+            self.z.min + self.z.max * 0.5,
+        )
+    }
+}
+
+impl Add<Vec3> for &Aabb {
+    type Output = Aabb;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        Aabb {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+/// Orthonormal Basis
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
+pub struct Onb {
+    u: Vec3,
+    v: Vec3,
+    pub(crate) w: Vec3,
+}
+
+impl Onb {
+    /// Creates a new Orthonormal Basis from the given vector
+    pub fn new(w: Vec3) -> Onb {
+        let unit_w = w.unit();
+
+        let a = if unit_w.x.abs() > 0.9 {
+            Vec3::new(0., 1., 0.)
+        } else {
+            Vec3::new(1., 0., 0.)
+        };
+        let v = unit_w.cross(a).unit();
+        let u = unit_w.cross(v);
+
+        Onb { u, v, w: unit_w }
+    }
+
+    /// Translates the given vector to the Orthonormal Basis
+    pub fn local(&self, a: Vec3) -> Vec3 {
+        self.u * a.x + self.v * a.y + self.w * a.z
+    }
+}
+
+/// Defines a ray of light used by the ray tracer
+#[derive(PartialEq, Debug, Default)]
+pub struct Ray {
+    /// Point where the ray starts
+    pub origin: Vec3,
+    /// Direction of the ray
+    pub direction: Vec3,
+    direction_inverted: Vec3,
+    /// A unit-less point in time for the ray
+    pub time: f64,
+}
+
+impl Ray {
+    /// Create a new ray instance
+    pub fn new(origin: Vec3, direction: Vec3, time: f64) -> Ray {
+        let dir = direction.unit();
+        let dir_inv = Vec3::new(1. / dir.x, 1. / dir.y, 1. / dir.z);
+
+        Ray {
+            origin,
+            direction: dir,
+            direction_inverted: dir_inv,
+            time,
+        }
+    }
+
+    /// returns the position at a given length of the ray
+    pub fn at(&self, distance: f64) -> Vec3 {
+        self.origin + self.direction * distance
+    }
+}
+
+#[cfg(test)]
+mod ray_tests {
+    use crate::geo::vec3::Vec3;
+    use crate::geo::Ray;
+    use crate::random;
+
+    #[test]
+    fn test_at() {
+        let origin = Vec3::new(1., 2., 3.);
+        let direction = Vec3::new(4., 5., 6.);
+        let l = direction.length();
+
+        let r = Ray::new(origin, direction, random::random_normal_float());
+
+        assert_eq!(r.at(0.), origin);
+        assert!((r.at(l) - origin - direction).near_zero());
+        assert!((r.at(-l) - origin + direction).near_zero());
+        assert!((r.at(l * 3.) - Vec3::new(13., 17., 21.)).near_zero());
     }
 }

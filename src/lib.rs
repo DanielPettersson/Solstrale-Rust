@@ -1,3 +1,10 @@
+//! A path tracer library
+//!
+//! A port of the Go Solstrale library
+//! See [Go Solstrale library][go_solstrale].
+//!
+//! [go_solstrale]: https://github.com/DanielPettersson/solstrale
+
 use crate::renderer::{RenderProgress, Renderer, Scene};
 use std::error::Error;
 use std::sync::mpsc::{Receiver, Sender};
@@ -13,8 +20,8 @@ pub mod random;
 pub mod renderer;
 pub mod util;
 
-// Executes the ray tracing with the given scene and reports progress on
-// the output channel. Listens to abort channel for aborting a started ray trace operation
+/// Executes the ray tracing with the given [`Scene`] and reports [`RenderProgress`] on
+/// the output [`Sender`]. Listens to abort [`Receiver`] for aborting a started ray trace operation
 pub fn ray_trace<'a>(
     width: u32,
     height: u32,

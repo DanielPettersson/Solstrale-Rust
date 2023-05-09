@@ -1,12 +1,14 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::hittable::Hittables::RotationYType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::degrees_to_radians;
 use crate::util::interval::Interval;
 
+/// A hittable object that rotates the given hittable
+/// around the Y axis with angle in degrees
 #[derive(Clone, Debug)]
 pub struct RotationY {
     object: Box<Hittables>,
@@ -16,9 +18,9 @@ pub struct RotationY {
 }
 
 impl RotationY {
-    /// Creates a hittable object that rotates the given hittable
-    /// around the Y axis with angle in degrees
-    pub fn create(object: Hittables, angle: f64) -> Hittables {
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new rotation y
+    pub fn new(object: Hittables, angle: f64) -> Hittables {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();

@@ -1,6 +1,6 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::hittable::HittableList;
 use crate::hittable::Hittables::QuadType;
@@ -9,6 +9,7 @@ use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
+/// A rectangular flat hittable object
 #[derive(Clone, Debug)]
 pub struct Quad {
     q: Vec3,
@@ -23,8 +24,9 @@ pub struct Quad {
 }
 
 impl Quad {
-    /// Creates a new rectangular flat hittable object
-    pub fn create(q: Vec3, u: Vec3, v: Vec3, mat: Materials) -> Hittables {
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new quad
+    pub fn new(q: Vec3, u: Vec3, v: Vec3, mat: Materials) -> Hittables {
         let b_box = Aabb::new_from_2_points(q, q + u + v).pad_if_needed();
         let n = u.cross(v);
         let normal = n.unit();
@@ -43,8 +45,8 @@ impl Quad {
     }
 
     /// creates a new box shaped hittable object
-    pub fn create_box(a: Vec3, b: Vec3, mat: Materials) -> Hittables {
-        let mut sides = HittableList::create();
+    pub fn new_box(a: Vec3, b: Vec3, mat: Materials) -> Hittables {
+        let mut sides = HittableList::new();
 
         let min = Vec3::new(a.x.min(b.x), a.y.min(b.y), a.z.min(b.z));
         let max = Vec3::new(a.x.max(b.x), a.y.max(b.y), a.z.max(b.z));
@@ -53,37 +55,37 @@ impl Quad {
         let dy = Vec3::new(0., max.y - min.y, 0.);
         let dz = Vec3::new(0., 0., max.z - min.z);
 
-        sides.add(Quad::create(
+        sides.add(Quad::new(
             Vec3::new(min.x, min.y, max.z),
             dx,
             dy,
             mat.clone(),
         ));
-        sides.add(Quad::create(
+        sides.add(Quad::new(
             Vec3::new(max.x, min.y, max.z),
             dz.neg(),
             dy,
             mat.clone(),
         ));
-        sides.add(Quad::create(
+        sides.add(Quad::new(
             Vec3::new(max.x, min.y, min.z),
             dx.neg(),
             dy,
             mat.clone(),
         ));
-        sides.add(Quad::create(
+        sides.add(Quad::new(
             Vec3::new(min.x, min.y, min.z),
             dz,
             dy,
             mat.clone(),
         ));
-        sides.add(Quad::create(
+        sides.add(Quad::new(
             Vec3::new(min.x, max.y, max.z),
             dx,
             dz.neg(),
             mat.clone(),
         ));
-        sides.add(Quad::create(Vec3::new(min.x, min.y, min.z), dx, dz, mat));
+        sides.add(Quad::new(Vec3::new(min.x, min.y, min.z), dx, dz, mat));
 
         sides
     }

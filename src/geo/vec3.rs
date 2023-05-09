@@ -7,13 +7,18 @@ use std::ops::{Add, AddAssign, Div, Mul, Sub};
 #[derive(Copy, Clone, PartialEq, Debug, Default, Constructor, Display)]
 #[display(fmt = "{{ x: {:.4}, y: {:.4}, z: {:.4} }}", x, y, z)]
 pub struct Vec3 {
+    /// x position
     pub x: f64,
+    /// y position
     pub y: f64,
+    /// z position
     pub z: f64,
 }
 
 /// A value that is so small as to be almost zero
 pub const ALMOST_ZERO: f64 = 1e-8;
+
+/// Vector at exactly zero in all axis
 pub const ZERO_VECTOR: Vec3 = Vec3 {
     x: 0.,
     y: 0.,

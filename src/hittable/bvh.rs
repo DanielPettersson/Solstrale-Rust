@@ -3,8 +3,8 @@ use std::fmt::Display;
 
 use derive_more::Display;
 
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::hittable::triangle::Triangle;
 use crate::hittable::Hittables::BvhType;
 use crate::hittable::{Hittable, Hittables};
@@ -45,19 +45,20 @@ impl BvhItem {
 }
 
 impl Bvh {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a new hittable object from the given hittable list
     /// The bounding Volume Hierarchy sorts the hittables in a binary tree
     /// where each node has a bounding box.
     /// This is to optimize the ray intersection search when having many hittable objects.
-    pub fn create(list: Vec<Triangle>) -> Hittables {
+    pub fn new(list: Vec<Triangle>) -> Hittables {
         if list.is_empty() {
             panic!("Cannot create a Bvh with empty list of objects")
         }
-        BvhType(create_bvh(list))
+        BvhType(new_bvh(list))
     }
 }
 
-fn create_bvh(mut list: Vec<Triangle>) -> Bvh {
+fn new_bvh(mut list: Vec<Triangle>) -> Bvh {
     let (left, right, b_box) = if list.len() == 1 {
         (
             BvhItem::Leaf(Box::new(list[0].clone())),
@@ -74,8 +75,8 @@ fn create_bvh(mut list: Vec<Triangle>) -> Bvh {
         let mid = sort_hittables_slice_by_most_spread_axis(list.as_mut_slice());
 
         let (l, r) = rayon::join(
-            || create_bvh(list[..mid].to_vec()),
-            || create_bvh(list[mid..].to_vec()),
+            || new_bvh(list[..mid].to_vec()),
+            || new_bvh(list[mid..].to_vec()),
         );
 
         let b_box = Aabb::combine_aabbs(&l.b_box, &r.b_box);
@@ -169,7 +170,7 @@ mod tests {
 
     #[test]
     fn bvh_with_empty_list() {
-        let res = catch_unwind(|| Bvh::create(Vec::new())).unwrap_err();
+        let res = catch_unwind(|| Bvh::new(Vec::new())).unwrap_err();
         assert_eq!(
             "Cannot create a Bvh with empty list of objects",
             panic_message(&res)

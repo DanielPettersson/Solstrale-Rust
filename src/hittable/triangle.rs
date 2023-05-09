@@ -1,6 +1,6 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::hittable::Hittables::TriangleType;
 use crate::hittable::{Hittable, Hittables};
@@ -8,6 +8,7 @@ use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
+/// A triangle shaped hittable object
 #[derive(Clone, Debug)]
 pub struct Triangle {
     v0: Vec3,
@@ -20,13 +21,15 @@ pub struct Triangle {
     mat: Materials,
     b_box: Aabb,
     area: f64,
+    /// Center point of the triangle
     pub center: Vec3,
 }
 
 impl Triangle {
-    /// Creates a new triangle flat hittable object with no texture coordinates
-    pub fn create(v0: Vec3, v1: Vec3, v2: Vec3, mat: Materials) -> Hittables {
-        Triangle::create_with_tex_coords(
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new triangle hittable object with no texture coordinates
+    pub fn new(v0: Vec3, v1: Vec3, v2: Vec3, mat: Materials) -> Hittables {
+        Triangle::new_with_tex_coords(
             v0,
             v1,
             v2,
@@ -37,8 +40,8 @@ impl Triangle {
         )
     }
 
-    /// Creates a new triangle flat hittable objecself. A counter clockwise winding is expected
-    pub fn create_with_tex_coords(
+    /// Creates a new triangle flat hittable object. A counter clockwise winding is expected
+    pub fn new_with_tex_coords(
         v0: Vec3,
         v1: Vec3,
         v2: Vec3,

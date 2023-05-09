@@ -24,8 +24,8 @@ const IMAGE_COMPARISON_SCORE_THRESHOLD: f64 = 0.95;
 #[test]
 fn test_render_scene() {
     let shaders: HashMap<&str, Shaders> = HashMap::from([
-        ("pathTracing", PathTracingShader::create(50)),
-        ("simple", SimpleShader::create()),
+        ("pathTracing", PathTracingShader::new(50)),
+        ("simple", SimpleShader::new()),
     ]);
 
     for (shader_name, shader) in shaders {
@@ -44,8 +44,8 @@ fn test_render_scene() {
 fn test_render_scene_with_oidn() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
-        shader: PathTracingShader::create(50),
-        post_processor: Some(OidnPostProcessor::create()),
+        shader: PathTracingShader::new(50),
+        post_processor: Some(OidnPostProcessor::new()),
     };
 
     let scene = create_simple_test_scene(render_config, true);
@@ -56,7 +56,7 @@ fn test_render_scene_with_oidn() {
 fn test_render_obj_with_textures() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_obj_scene(render_config);
@@ -68,7 +68,7 @@ fn test_render_obj_with_textures() {
 fn test_render_obj_with_default_material() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_obj_with_box(render_config, "resources/obj/", "box.obj");
@@ -80,7 +80,7 @@ fn test_render_obj_with_default_material() {
 fn test_render_obj_with_diffuse_material() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_obj_with_box(render_config, "resources/obj/", "boxWithMat.obj");
@@ -92,7 +92,7 @@ fn test_render_obj_with_diffuse_material() {
 fn test_render_uv_mapping() {
     let render_config = RenderConfig {
         samples_per_pixel: 5,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_uv_scene(render_config);
@@ -104,7 +104,7 @@ fn test_render_uv_mapping() {
 fn test_abort_render_scene() {
     let render_config = RenderConfig {
         samples_per_pixel: 1000,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_test_scene(render_config);
@@ -128,7 +128,7 @@ fn test_abort_render_scene() {
 fn test_render_scene_without_light() {
     let render_config = RenderConfig {
         samples_per_pixel: 100,
-        shader: PathTracingShader::create(50),
+        shader: PathTracingShader::new(50),
         post_processor: None,
     };
     let scene = create_simple_test_scene(render_config, false);

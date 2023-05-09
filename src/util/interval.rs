@@ -4,7 +4,9 @@ use std::ops::{Add, Sub};
 /// Defines a range between min and max inclusive
 #[derive(Copy, Clone, PartialEq, Debug, Default, Constructor)]
 pub struct Interval {
+    /// Minimum value of the interval
     pub min: f64,
+    /// Maximum value of the interval
     pub max: f64,
 }
 

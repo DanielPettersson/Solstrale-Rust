@@ -1,16 +1,21 @@
-//! Package camera provides a camera used by raytracer to shoot rays into the scene
+//! Provides a camera used by raytracer to shoot rays into the scene
 
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_in_unit_disc, Vec3};
+use crate::geo::Ray;
 use crate::random::random_normal_float;
 use crate::util::degrees_to_radians;
 
 /// Contains all needed parameters for constructing a camera
 pub struct CameraConfig {
+    /// Vertical field of view in degrees
     pub vertical_fov_degrees: f64,
+    /// Radius of the lens of the camera, affects the depth of field
     pub aperture_size: f64,
+    /// Distance where the lens is focused
     pub focus_distance: f64,
+    /// Point where the camera is located
     pub look_from: Vec3,
+    /// Point where the camera is looking
     pub look_at: Vec3,
 }
 
@@ -27,6 +32,7 @@ pub struct Camera {
 }
 
 impl Camera {
+    /// Create a new camera instance
     pub fn new(image_width: usize, image_height: usize, c: &CameraConfig) -> Camera {
         let aspect_ratio = image_width as f64 / image_height as f64;
         let theta = degrees_to_radians(c.vertical_fov_degrees);

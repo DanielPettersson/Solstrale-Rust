@@ -1,16 +1,18 @@
+//! Materials to be applied to [`hittable::Hittable`] objects
+
 use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::ray::Ray;
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
+use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::material::texture::Textures;
 use crate::material::texture::{SolidColor, Texture};
 use crate::material::Materials::{
     DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType,
 };
-use crate::pdf::{CosinePdf, Pdfs, SpherePdf, SPHERE_PDF_VALUE};
+use crate::pdf::{CosinePdf, Pdfs, SpherePdf};
 use crate::random::random_normal_float;
 
 pub mod texture;
@@ -19,20 +21,29 @@ pub mod texture;
 /// when a ray hits a hittable object
 #[derive(Clone, Debug)]
 pub struct HitRecord<'a> {
+    /// Hit point for the ray on a hittable
     pub hit_point: Vec3,
+    /// Normal vector of the hittable at the hit point
     pub normal: Vec3,
+    /// Material of the hittable that the ray hit
     pub material: &'a Materials,
+    /// The length of the ray from origin to hit point
     pub ray_length: f64,
+    /// Texture coordinate at the hit point
     pub uv: Uv,
+    /// Whether the hit point is inside or outside the hittable
     pub front_face: bool,
 }
 
 /// A collection of attributes from the scattering of a ray with a material
 pub struct ScatterRecord<'a> {
+    /// The attenuation color from the ray hit
     pub attenuation: Vec3,
+    /// The type of scattering to do for the ray, depends on the material
     pub scatter_type: ScatterType<'a>,
 }
 
+/// An enum of scatter types
 pub enum ScatterType<'a> {
     ScatterPdf(Pdfs<'a>),
     ScatterRay(Ray),
@@ -42,15 +53,22 @@ pub enum ScatterType<'a> {
 /// a ray behaves when hitting an object.
 #[enum_dispatch]
 pub trait Material {
+    /// Return the pdf to use for ray scattering
     fn scattering_pdf(&self, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.
     }
+
+    /// Color emitted from the material
     fn emitted(&self, _rec: &HitRecord) -> Vec3 {
         ZERO_VECTOR
     }
+
+    /// Is the material emitting light
     fn is_light(&self) -> bool {
         false
     }
+
+    /// Calculate scattering of the ray
     fn scatter(&self, _ray: &Ray, _rec: &HitRecord) -> Option<ScatterRecord> {
         None
     }
@@ -58,6 +76,7 @@ pub trait Material {
 
 #[enum_dispatch(Material)]
 #[derive(Debug)]
+/// An enum of materials
 pub enum Materials {
     LambertianType(Lambertian),
     MetalType(Metal),
@@ -85,7 +104,9 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn create(tex: Textures) -> Materials {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new lambertian material
+    pub fn new(tex: Textures) -> Materials {
         LambertianType(Lambertian { tex })
     }
 }
@@ -102,7 +123,7 @@ impl Material for Lambertian {
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.color(rec);
-        let pdf = CosinePdf::create(rec.normal);
+        let pdf = CosinePdf::new(rec.normal);
 
         return Some(ScatterRecord {
             attenuation,
@@ -119,8 +140,9 @@ pub struct Metal {
 }
 
 impl Metal {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
-    pub fn create(tex: Textures, fuzz: f64) -> Materials {
+    pub fn new(tex: Textures, fuzz: f64) -> Materials {
         MetalType(Metal { tex, fuzz })
     }
 }
@@ -150,8 +172,9 @@ pub struct Dielectric {
 }
 
 impl Dielectric {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a new dielectric material
-    pub fn create(tex: Textures, index_of_refraction: f64) -> Materials {
+    pub fn new(tex: Textures, index_of_refraction: f64) -> Materials {
         DielectricType(Dielectric {
             tex,
             index_of_refraction,
@@ -200,10 +223,11 @@ pub struct DiffuseLight {
 }
 
 impl DiffuseLight {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates a new diffuse light material
-    pub fn create(r: f64, g: f64, b: f64) -> Materials {
+    pub fn new(r: f64, g: f64, b: f64) -> Materials {
         DiffuseLightType(DiffuseLight {
-            tex: SolidColor::create(r, g, b),
+            tex: SolidColor::new(r, g, b),
         })
     }
 }
@@ -229,10 +253,14 @@ pub struct Isotropic {
 }
 
 impl Isotropic {
-    pub fn create(tex: Textures) -> Materials {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new isotropic material
+    pub fn new(tex: Textures) -> Materials {
         IsotropicType(Isotropic { tex })
     }
 }
+
+const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
 
 impl Material for Isotropic {
     /// returns the pdf value for a given rays for the isotropic material
@@ -244,7 +272,7 @@ impl Material for Isotropic {
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.tex.color(rec);
 
-        let pdf = SpherePdf::create();
+        let pdf = SpherePdf::new();
 
         Some(ScatterRecord {
             attenuation,

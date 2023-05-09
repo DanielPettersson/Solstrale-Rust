@@ -1,6 +1,6 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::hittable::Hittables::HittableListType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
@@ -13,13 +13,15 @@ use std::slice::Iter;
 /// objects in a scene
 #[derive(Debug)]
 pub struct HittableList {
+    /// list of child hittables
     pub list: Vec<Hittables>,
     b_box: Aabb,
 }
 
 impl HittableList {
+    #![allow(clippy::new_ret_no_self)]
     /// Creates new empty HittableList
-    pub fn create() -> Hittables {
+    pub fn new() -> Hittables {
         HittableListType(HittableList {
             list: Vec::new(),
             b_box: Aabb::new_with_empty_intervals(),

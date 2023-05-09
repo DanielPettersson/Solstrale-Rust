@@ -1,11 +1,12 @@
-use crate::geo::aabb::Aabb;
-use crate::geo::ray::Ray;
 use crate::geo::vec3::Vec3;
+use crate::geo::Aabb;
+use crate::geo::Ray;
 use crate::hittable::Hittables::TranslationType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
+/// A hittable object that translates the given hittable by the given offset vector
 #[derive(Clone, Debug)]
 pub struct Translation {
     object: Box<Hittables>,
@@ -14,8 +15,9 @@ pub struct Translation {
 }
 
 impl Translation {
-    /// Creates a hittable object that translates the given hittable by the given offset vector
-    pub fn create(object: Hittables, offset: Vec3) -> Hittables {
+    #![allow(clippy::new_ret_no_self)]
+    /// Creates a new translation hittable
+    pub fn new(object: Hittables, offset: Vec3) -> Hittables {
         let object_b_box = object.bounding_box().clone();
         TranslationType(Translation {
             object: Box::new(object),
