@@ -230,6 +230,13 @@ impl DiffuseLight {
             tex: SolidColor::new(r, g, b),
         })
     }
+
+    /// Creates a new diffuse light material from a [´Vec3´] color
+    pub fn new_from_vec3(v: Vec3) -> Materials {
+        DiffuseLightType(DiffuseLight {
+            tex: SolidColor::new_from_vec3(v),
+        })
+    }
 }
 
 impl Material for DiffuseLight {
