@@ -43,16 +43,18 @@ pub fn load_obj_model_with_default_material(
 
     let mut mat_map = HashMap::from([(-1, default_material.clone())]);
     for (i, m) in materials.iter().enumerate() {
-        if m.diffuse_texture.is_empty() {
-            let color = SolidColor::new(
-                m.diffuse[0] as f64,
-                m.diffuse[1] as f64,
-                m.diffuse[2] as f64,
-            );
-            mat_map.insert(i as i8, Lambertian::new(color));
-        } else {
-            let texture = ImageTexture::load(&format!("{}{}", path, m.diffuse_texture))?;
-            mat_map.insert(i as i8, Lambertian::new(texture));
+        match &m.diffuse_texture {
+            None => {
+                let color = match m.diffuse {
+                    None => SolidColor::new(1., 1., 1.),
+                    Some(c) => SolidColor::new_from_f32_array(c),
+                };
+                mat_map.insert(i as i8, Lambertian::new(color));
+            }
+            Some(diffuse_texture) => {
+                let texture = ImageTexture::load(&format!("{}{}", path, diffuse_texture))?;
+                mat_map.insert(i as i8, Lambertian::new(texture));
+            }
         }
     }
 

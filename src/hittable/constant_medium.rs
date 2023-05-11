@@ -27,7 +27,7 @@ impl ConstantMedium {
         ConstantMediumType(ConstantMedium {
             boundary: Box::new(boundary),
             negative_inverse_density: -1. / density,
-            phase_function: Isotropic::new(SolidColor::from_vec3(color)),
+            phase_function: Isotropic::new(SolidColor::new_from_vec3(color)),
         })
     }
 }

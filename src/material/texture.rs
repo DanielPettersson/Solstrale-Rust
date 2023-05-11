@@ -42,10 +42,13 @@ impl SolidColor {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new solid color texture
     pub fn new(r: f64, g: f64, b: f64) -> Textures {
-        SolidColor::from_vec3(Vec3::new(r, g, b))
+        SolidColor::new_from_vec3(Vec3::new(r, g, b))
+    }
+    pub fn new_from_f32_array(c: [f32; 3]) -> Textures {
+        SolidColor::new(c[0] as f64, c[1] as f64, c[2] as f64)
     }
     /// Create a new solid color texture from a [`Vec3`]
-    pub fn from_vec3(color: Vec3) -> Textures {
+    pub fn new_from_vec3(color: Vec3) -> Textures {
         SolidColorType(SolidColor(color))
     }
 }
