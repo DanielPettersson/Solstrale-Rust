@@ -6,6 +6,7 @@ use crate::hittable::Hittables::TriangleType;
 use crate::hittable::Triangle;
 use crate::material::texture::{ImageTexture, SolidColor};
 use crate::material::{Lambertian, Materials};
+use simple_error::SimpleError;
 use std::collections::HashMap;
 use std::error::Error;
 use tobj::LoadOptions;
@@ -37,9 +38,10 @@ pub fn load_obj_model_with_default_material(
         ..Default::default()
     };
 
-    let (models, materials) = tobj::load_obj(format!("{}{}", path, filename), &load_options)
-        .expect("failed to load obj model");
-    let materials = materials.expect("failed to load MTL file");
+    let filepath = format!("{}{}", path, filename);
+    let (models, materials) = tobj::load_obj(&filepath, &load_options)
+        .map_err(|_| SimpleError::new(format!("failed to load obj model from {}", &filepath)))?;
+    let materials = materials.map_err(|_| format!("failed to load MTL file for {}", &filepath))?;
 
     let mut mat_map = HashMap::from([(-1, default_material.clone())]);
     for (i, m) in materials.iter().enumerate() {
@@ -138,20 +140,19 @@ mod tests {
 
     #[test]
     fn missing_file() {
-        let res = catch_unwind(|| load_obj_model("resources/obj/", "missing.obj", 1.)).unwrap_err();
+        let res = load_obj_model("resources/obj/", "missing.obj", 1.);
         assert_eq!(
-            "failed to load obj model: OpenFileFailed",
-            panic_message(&res)
+            "failed to load obj model from resources/obj/missing.obj",
+            format!("{}", res.err().unwrap())
         );
     }
 
     #[test]
     fn missing_material_file() {
-        let res = catch_unwind(|| load_obj_model("resources/obj/", "missingMaterialLib.obj", 1.))
-            .unwrap_err();
+        let res = load_obj_model("resources/obj/", "missingMaterialLib.obj", 1.);
         assert_eq!(
-            "failed to load MTL file: OpenFileFailed",
-            panic_message(&res)
+            "failed to load MTL file for resources/obj/missingMaterialLib.obj",
+            format!("{}", res.err().unwrap())
         );
     }
 
