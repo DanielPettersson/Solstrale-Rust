@@ -146,8 +146,6 @@ pub fn load_obj_model_with_default_material(
 mod tests {
     use super::*;
     use crate::geo::vec3::ZERO_VECTOR;
-    use panic_message::panic_message;
-    use std::panic::catch_unwind;
 
     #[test]
     fn missing_file() {
@@ -169,20 +167,15 @@ mod tests {
 
     #[test]
     fn missing_image_file() {
-        let res =
-            catch_unwind(|| load_obj_model("resources/obj/", "missingImage.obj", 1., ZERO_VECTOR))
-                .unwrap_err();
-        assert!(
-            panic_message(&res).contains("Failed to load image texture resources/obj/missing.jpg")
-        );
+        let res = load_obj_model("resources/obj/", "missingImage.obj", 1., ZERO_VECTOR);
+        assert!(format!("{}", res.err().unwrap())
+            .contains("Failed to load image texture resources/obj/missing.jpg"));
     }
 
     #[test]
     fn invalid_image_file() {
-        let res =
-            catch_unwind(|| load_obj_model("resources/obj/", "invalidImage.obj", 1., ZERO_VECTOR))
-                .unwrap_err();
-        assert!(panic_message(&res)
+        let res = load_obj_model("resources/obj/", "invalidImage.obj", 1., ZERO_VECTOR);
+        assert!(format!("{}", res.err().unwrap())
             .contains("Failed to load image texture resources/obj/invalidImage.mtl"));
     }
 }

@@ -20,7 +20,7 @@ pub struct Bvh {
     b_box: Aabb,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum BvhItem {
     Node(Bvh),
     Leaf(Box<Triangle>),
@@ -55,6 +55,16 @@ impl Bvh {
             panic!("Cannot create a Bvh with empty list of objects")
         }
         BvhType(new_bvh(list))
+    }
+}
+
+impl Clone for Bvh {
+    fn clone(&self) -> Self {
+        Bvh {
+            left: self.left.clone(),
+            right: self.right.clone(),
+            b_box: self.b_box.clone(),
+        }
     }
 }
 

@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use enum_dispatch::enum_dispatch;
 use image::RgbImage;
+use simple_error::SimpleError;
 
 use crate::geo::vec3::Vec3;
 use crate::material::texture::Textures::{ImageTextureType, SolidColorType};
@@ -72,7 +73,7 @@ impl ImageTexture {
     /// Creates a new image texture from a file path
     pub fn load(path: &str) -> Result<Textures, Box<dyn Error>> {
         let image = image::open(path)
-            .unwrap_or_else(|_| panic!("Failed to load image texture {}", path))
+            .map_err(|_| SimpleError::new(format!("Failed to load image texture {}", path)))?
             .into_rgb8();
         Ok(Self::new(Arc::new(image)))
     }

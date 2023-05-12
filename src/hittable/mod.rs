@@ -94,7 +94,7 @@ impl Clone for Hittables {
             RotationYType(h) => RotationYType(h.clone()),
             TranslationType(h) => TranslationType(h.clone()),
             TriangleType(h) => TriangleType(h.clone()),
-            BvhType(_) => panic!("Should not clone Bvh"),
+            BvhType(h) => BvhType(h.clone()),
         }
     }
 }
