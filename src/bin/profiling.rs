@@ -1,6 +1,6 @@
 use image::RgbImage;
 use solstrale::camera::CameraConfig;
-use solstrale::geo::vec3::Vec3;
+use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
 use solstrale::hittable::hittable_list::HittableList;
 use solstrale::hittable::obj_model::load_obj_model;
 use solstrale::hittable::sphere::Sphere;
@@ -51,7 +51,7 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Arc<Scene> {
     let light = DiffuseLight::new(15., 15., 15.);
 
     world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
-    world.add(load_obj_model("", obj_path, 1.).unwrap());
+    world.add(load_obj_model("", obj_path, 1., ZERO_VECTOR).unwrap());
 
     Arc::new(Scene {
         world,

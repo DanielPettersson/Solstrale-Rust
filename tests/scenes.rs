@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use solstrale::camera::CameraConfig;
-use solstrale::geo::vec3::Vec3;
+use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
 use solstrale::geo::Uv;
 use solstrale::hittable::bvh::Bvh;
 use solstrale::hittable::constant_medium::ConstantMedium;
@@ -16,7 +18,6 @@ use solstrale::hittable::Hittables::TriangleType;
 use solstrale::material::texture::{ImageTexture, SolidColor};
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
-use std::sync::Arc;
 
 pub fn create_test_scene(render_config: RenderConfig) -> Arc<Scene> {
     let camera = CameraConfig {
@@ -254,7 +255,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Arc<Scene> {
     let light = DiffuseLight::new(15., 15., 15.);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    let model = load_obj_model("resources/spider/", "spider.obj", 1.).unwrap();
+    let model = load_obj_model("resources/spider/", "spider.obj", 1., ZERO_VECTOR).unwrap();
     world.add(model);
 
     let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
@@ -289,7 +290,7 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     let red = Lambertian::new(SolidColor::new(1., 0., 0.));
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    world.add(load_obj_model_with_default_material(path, filename, 1., red).unwrap());
+    world.add(load_obj_model_with_default_material(path, filename, 1., ZERO_VECTOR, red).unwrap());
 
     Arc::new(Scene {
         world,

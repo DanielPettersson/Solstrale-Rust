@@ -14,11 +14,17 @@ use tobj::LoadOptions;
 /// Reads a Wavefront .obj file and creates a bvh containing
 /// all triangles. It also read materials from the referred .mat file.
 /// Support for colored and textured lambertian materials.
-pub fn load_obj_model(path: &str, filename: &str, scale: f64) -> Result<Hittables, Box<dyn Error>> {
+pub fn load_obj_model(
+    path: &str,
+    filename: &str,
+    scale: f64,
+    pos: Vec3,
+) -> Result<Hittables, Box<dyn Error>> {
     load_obj_model_with_default_material(
         path,
         filename,
         scale,
+        pos,
         Lambertian::new(SolidColor::new(1., 1., 1.)),
     )
 }
@@ -31,6 +37,7 @@ pub fn load_obj_model_with_default_material(
     path: &str,
     filename: &str,
     scale: f64,
+    pos: Vec3,
     default_material: Materials,
 ) -> Result<Hittables, Box<dyn Error>> {
     let load_options = LoadOptions {
@@ -70,21 +77,24 @@ pub fn load_obj_model_with_default_material(
                 mesh.positions[pos_offset] as f64,
                 mesh.positions[pos_offset + 1] as f64,
                 mesh.positions[pos_offset + 2] as f64,
-            ) * scale;
+            ) * scale
+                + pos;
 
             pos_offset = (mesh.indices[i + 1] * 3) as usize;
             let v1 = Vec3::new(
                 mesh.positions[pos_offset] as f64,
                 mesh.positions[pos_offset + 1] as f64,
                 mesh.positions[pos_offset + 2] as f64,
-            ) * scale;
+            ) * scale
+                + pos;
 
             pos_offset = (mesh.indices[i + 2] * 3) as usize;
             let v2 = Vec3::new(
                 mesh.positions[pos_offset] as f64,
                 mesh.positions[pos_offset + 1] as f64,
                 mesh.positions[pos_offset + 2] as f64,
-            ) * scale;
+            ) * scale
+                + pos;
 
             let (uv0, uv1, uv2) = if mesh.texcoords.is_empty() {
                 (
@@ -135,12 +145,13 @@ pub fn load_obj_model_with_default_material(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::geo::vec3::ZERO_VECTOR;
     use panic_message::panic_message;
     use std::panic::catch_unwind;
 
     #[test]
     fn missing_file() {
-        let res = load_obj_model("resources/obj/", "missing.obj", 1.);
+        let res = load_obj_model("resources/obj/", "missing.obj", 1., ZERO_VECTOR);
         assert_eq!(
             "failed to load obj model from resources/obj/missing.obj",
             format!("{}", res.err().unwrap())
@@ -149,7 +160,7 @@ mod tests {
 
     #[test]
     fn missing_material_file() {
-        let res = load_obj_model("resources/obj/", "missingMaterialLib.obj", 1.);
+        let res = load_obj_model("resources/obj/", "missingMaterialLib.obj", 1., ZERO_VECTOR);
         assert_eq!(
             "failed to load MTL file for resources/obj/missingMaterialLib.obj",
             format!("{}", res.err().unwrap())
@@ -159,7 +170,8 @@ mod tests {
     #[test]
     fn missing_image_file() {
         let res =
-            catch_unwind(|| load_obj_model("resources/obj/", "missingImage.obj", 1.)).unwrap_err();
+            catch_unwind(|| load_obj_model("resources/obj/", "missingImage.obj", 1., ZERO_VECTOR))
+                .unwrap_err();
         assert!(
             panic_message(&res).contains("Failed to load image texture resources/obj/missing.jpg")
         );
@@ -168,7 +180,8 @@ mod tests {
     #[test]
     fn invalid_image_file() {
         let res =
-            catch_unwind(|| load_obj_model("resources/obj/", "invalidImage.obj", 1.)).unwrap_err();
+            catch_unwind(|| load_obj_model("resources/obj/", "invalidImage.obj", 1., ZERO_VECTOR))
+                .unwrap_err();
         assert!(panic_message(&res)
             .contains("Failed to load image texture resources/obj/invalidImage.mtl"));
     }
