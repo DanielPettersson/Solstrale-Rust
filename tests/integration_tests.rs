@@ -113,7 +113,7 @@ fn test_abort_render_scene() {
     let (abort_sender, abort_receiver) = channel();
 
     thread::spawn(move || {
-        ray_trace(200, 100, scene, &output_sender, &abort_receiver).unwrap();
+        ray_trace(400, 200, scene, &output_sender, &abort_receiver).unwrap();
     });
 
     let mut progress_count = 0;
