@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::mpsc::channel;
-use std::sync::Arc;
 use std::thread;
 
 use image::imageops::FilterType;
@@ -139,12 +138,12 @@ fn test_render_scene_without_light() {
     let res = ray_trace(20, 10, scene, &output_sender, &abort_receiver);
 
     match res {
-        Ok(_) => assert!(false),
+        Ok(_) => panic!("There should be an error"),
         Err(e) => assert_eq!("Scene should have at least one light", e.to_string()),
     }
 }
 
-fn render_and_compare_output(scene: Arc<Scene>, name: &str, width: u32, height: u32) {
+fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
     let (output_sender, output_receiver) = channel();
     let (_, abort_receiver) = channel();
 
@@ -163,7 +162,7 @@ fn render_and_compare_output(scene: Arc<Scene>, name: &str, width: u32, height: 
 fn compare_output(name: &str, actual_image: &RgbImage) {
     let expected_image_path = format!("tests/output/out_expected_{}.jpg", name);
     let expected_image = image::open(&expected_image_path)
-        .expect(&format!("Could not load {}", &expected_image_path))
+        .unwrap_or_else(|_| panic!("Could not load {}", &expected_image_path))
         .into_rgb8();
 
     let sized_actual = image::imageops::resize(actual_image, 100, 50, FilterType::Gaussian);
