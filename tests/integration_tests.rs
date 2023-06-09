@@ -6,7 +6,6 @@ use image::imageops::FilterType;
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
 
-use solstrale::post::OidnPostProcessor;
 use solstrale::ray_trace;
 use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
@@ -40,11 +39,12 @@ fn test_render_scene() {
 }
 
 #[test]
+#[cfg(feature = "oidn-postprocessor")]
 fn test_render_scene_with_oidn() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
-        post_processor: Some(OidnPostProcessor::new()),
+        post_processor: Some(solstrale::post::OidnPostProcessor::new()),
     };
 
     let scene = create_simple_test_scene(render_config, true);

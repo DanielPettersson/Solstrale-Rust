@@ -1,7 +1,7 @@
 [package]
 name = "solstrale"
 description = "A Path tracing library"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 license = "GPL-3.0-only"
 repository = "https://github.com/DanielPettersson/solstrale-rust"
@@ -30,8 +30,8 @@ derive_more = "0.99.17"
 rayon = "1.6.1"
 
 [dev-dependencies]
-image-compare = "0.2.4"
-criterion = "0.4.0"
+image-compare = "0.3.0"
+criterion = "0.5.1"
 panic-message = "0.3.0"
 
 [[bench]]
