@@ -10,7 +10,7 @@ use simple_error::SimpleError;
 
 use crate::camera::{Camera, CameraConfig};
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
-use crate::geo::Ray;
+use crate::geo::{Ray, Uv};
 use crate::hittable::hittable_list::HittableList;
 use crate::hittable::{Hittable, Hittables};
 use crate::post::{PostProcessor, PostProcessors};
@@ -165,7 +165,7 @@ impl Renderer {
                         for x in 0..image_width {
                             let u = (x as f64 + random_normal_float()) / (image_width - 1) as f64;
                             let v = (y as f64 + random_normal_float()) / (image_height - 1) as f64;
-                            let ray = cam.get_ray(u, v);
+                            let ray = cam.get_ray(Uv::new(u as f32, v as f32));
                             let (pixel_color, albedo_color, normal_color) = self.ray_color(&ray, 0);
 
                             row_pixel_colors[x] = pixel_color;

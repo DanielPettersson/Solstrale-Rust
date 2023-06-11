@@ -5,7 +5,6 @@
 pub mod bvh;
 pub mod constant_medium;
 pub mod hittable_list;
-pub mod motion_blur;
 pub mod obj_model;
 pub mod quad;
 pub mod rotation_y;
@@ -19,14 +18,13 @@ use crate::geo::Ray;
 use crate::hittable::bvh::Bvh;
 use crate::hittable::constant_medium::ConstantMedium;
 use crate::hittable::hittable_list::HittableList;
-use crate::hittable::motion_blur::MotionBlur;
 use crate::hittable::quad::Quad;
 use crate::hittable::rotation_y::RotationY;
 use crate::hittable::sphere::Sphere;
 use crate::hittable::translation::Translation;
 use crate::hittable::triangle::Triangle;
 use crate::hittable::Hittables::{
-    BvhType, ConstantMediumType, HittableListType, MotionBlurType, QuadType, RotationYType,
+    BvhType, ConstantMediumType, HittableListType, QuadType, RotationYType,
     SphereType, TranslationType, TriangleType,
 };
 use crate::material::HitRecord;
@@ -75,7 +73,6 @@ pub enum Hittables {
     HittableListType(HittableList),
     SphereType(Sphere),
     ConstantMediumType(ConstantMedium),
-    MotionBlurType(MotionBlur),
     QuadType(Quad),
     RotationYType(RotationY),
     TranslationType(Translation),
@@ -89,7 +86,6 @@ impl Clone for Hittables {
             HittableListType(_) => panic!("Should not clone HittableList"),
             SphereType(h) => SphereType(h.clone()),
             ConstantMediumType(h) => ConstantMediumType(h.clone()),
-            MotionBlurType(h) => MotionBlurType(h.clone()),
             QuadType(h) => QuadType(h.clone()),
             RotationYType(h) => RotationYType(h.clone()),
             TranslationType(h) => TranslationType(h.clone()),

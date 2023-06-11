@@ -37,7 +37,7 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
-        let ray = Ray::new(origin, direction, 0.);
+        let ray = Ray::new(origin, direction);
 
         let hit = self.hit(&ray, &RAY_INTERVAL);
 

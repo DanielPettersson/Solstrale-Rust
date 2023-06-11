@@ -1,8 +1,7 @@
 //! Provides a camera used by raytracer to shoot rays into the scene
 
-use crate::geo::vec3::{random_in_unit_disc, Vec3};
-use crate::geo::Ray;
-use crate::random::random_normal_float;
+use crate::geo::vec3::{random_in_unit_disc, Vec3, ZERO_VECTOR};
+use crate::geo::{Ray, Uv};
 use crate::util::degrees_to_radians;
 
 /// Contains all needed parameters for constructing a camera
@@ -61,13 +60,17 @@ impl Camera {
     }
 
     /// A function for generating a ray for a certain u/v for the raytraced image
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
-        let rd = random_in_unit_disc() * self.lens_radius;
-        let offset = self.u * rd.x + self.v * rd.y;
+    pub fn get_ray(&self, uv: Uv) -> Ray {
+        let offset = if self.lens_radius > 0. {
+            let rd = random_in_unit_disc() * self.lens_radius;
+            self.u * rd.x + self.v * rd.y
+        } else {
+            ZERO_VECTOR
+        };
 
-        let r_dir = self.lower_left_corner + (self.horizontal * u) + (self.vertical * v)
+        let r_dir = self.lower_left_corner + (self.horizontal * uv.u) + (self.vertical * uv.v)
             - self.origin
             - offset;
-        Ray::new(self.origin + offset, r_dir, random_normal_float())
+        Ray::new(self.origin + offset, r_dir)
     }
 }

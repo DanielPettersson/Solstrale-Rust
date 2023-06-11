@@ -93,7 +93,7 @@ impl Quad {
 
 impl Hittable for Quad {
     fn pdf_value(&self, origin: Vec3, direction: Vec3) -> f64 {
-        let ray = Ray::new(origin, direction, 0.);
+        let ray = Ray::new(origin, direction);
 
         match self.hit(&ray, &RAY_INTERVAL) {
             None => 0.,

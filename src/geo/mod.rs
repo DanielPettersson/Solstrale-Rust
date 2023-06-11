@@ -198,13 +198,11 @@ pub struct Ray {
     /// Direction of the ray
     pub direction: Vec3,
     direction_inverted: Vec3,
-    /// A unit-less point in time for the ray
-    pub time: f64,
 }
 
 impl Ray {
     /// Create a new ray instance
-    pub fn new(origin: Vec3, direction: Vec3, time: f64) -> Ray {
+    pub fn new(origin: Vec3, direction: Vec3) -> Ray {
         let dir = direction.unit();
         let dir_inv = Vec3::new(1. / dir.x, 1. / dir.y, 1. / dir.z);
 
@@ -212,7 +210,6 @@ impl Ray {
             origin,
             direction: dir,
             direction_inverted: dir_inv,
-            time,
         }
     }
 
@@ -226,7 +223,6 @@ impl Ray {
 mod ray_tests {
     use crate::geo::vec3::Vec3;
     use crate::geo::Ray;
-    use crate::random;
 
     #[test]
     fn test_at() {
@@ -234,7 +230,7 @@ mod ray_tests {
         let direction = Vec3::new(4., 5., 6.);
         let l = direction.length();
 
-        let r = Ray::new(origin, direction, random::random_normal_float());
+        let r = Ray::new(origin, direction);
 
         assert_eq!(r.at(0.), origin);
         assert!((r.at(l) - origin - direction).near_zero());

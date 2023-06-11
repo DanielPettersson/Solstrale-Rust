@@ -60,7 +60,7 @@ impl Shader for PathTracingShader {
                     let light_pdf = HittablePdf::new(&renderer.lights, rec.hit_point);
 
                     let pdf_direction = mix_generate(&light_pdf, &pdf);
-                    let scattered = Ray::new(rec.hit_point, pdf_direction, ray.time);
+                    let scattered = Ray::new(rec.hit_point, pdf_direction);
                     let pdf_val = mix_value(&light_pdf, &pdf, scattered.direction);
                     let scattering_pdf = rec.material.scattering_pdf(rec, &scattered);
                     let (rc, _, _) = renderer.ray_color(&scattered, depth + 1);

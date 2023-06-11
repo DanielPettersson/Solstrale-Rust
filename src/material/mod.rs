@@ -158,7 +158,6 @@ impl Material for Metal {
             scatter_type: ScatterType::ScatterRay(Ray::new(
                 rec.hit_point,
                 reflected + random_in_unit_sphere() * self.fuzz,
-                ray.time,
             )),
         })
     }
@@ -204,7 +203,7 @@ impl Material for Dielectric {
 
         Some(ScatterRecord {
             attenuation: self.tex.color(rec),
-            scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction, ray.time)),
+            scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
         })
     }
 }

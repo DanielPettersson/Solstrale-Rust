@@ -80,7 +80,7 @@ impl Hittable for RotationY {
         direction.x = self.cos_theta * r.direction.x - self.sin_theta * r.direction.z;
         direction.z = self.sin_theta * r.direction.x + self.cos_theta * r.direction.z;
 
-        let rotated_r = Ray::new(origin, direction, r.time);
+        let rotated_r = Ray::new(origin, direction);
 
         match self.object.hit(&rotated_r, ray_length) {
             None => None,

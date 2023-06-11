@@ -4,7 +4,6 @@ use solstrale::geo::Uv;
 use solstrale::hittable::bvh::Bvh;
 use solstrale::hittable::constant_medium::ConstantMedium;
 use solstrale::hittable::hittable_list::HittableList;
-use solstrale::hittable::motion_blur::MotionBlur;
 use solstrale::hittable::obj_model::{load_obj_model, load_obj_model_with_default_material};
 use solstrale::hittable::quad::Quad;
 use solstrale::hittable::rotation_y::RotationY;
@@ -62,13 +61,10 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         0.1,
         Vec3::new(1., 1., 1.),
     ));
-    world.add(MotionBlur::new(
-        Quad::new_box(
-            Vec3::new(-1., 2., 0.),
-            Vec3::new(-0.5, 2.5, 0.5),
-            red_mat.clone(),
-        ),
-        Vec3::new(0., 1., 0.),
+    world.add(Quad::new_box(
+        Vec3::new(-1., 2., 0.),
+        Vec3::new(-0.5, 2.5, 0.5),
+        red_mat.clone(),
     ));
 
     let mut balls = Vec::new();

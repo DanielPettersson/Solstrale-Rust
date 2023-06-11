@@ -119,6 +119,25 @@ impl Mul<f64> for Vec3 {
     }
 }
 
+impl Mul<f32> for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values multiplied with given scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) * 2.;
+    /// assert_eq!(Vec3::new(2., 4., 6.), res)
+    /// ```
+    fn mul(self, t: f32) -> Self::Output {
+        Vec3 {
+            x: self.x * t as f64,
+            y: self.y * t as f64,
+            z: self.z * t as f64,
+        }
+    }
+}
+
 impl Div<Vec3> for Vec3 {
     type Output = Vec3;
 

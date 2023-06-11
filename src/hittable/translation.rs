@@ -37,7 +37,7 @@ impl Hittable for Translation {
     }
 
     fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
-        let offset_ray = Ray::new(r.origin - self.offset, r.direction, r.time);
+        let offset_ray = Ray::new(r.origin - self.offset, r.direction);
 
         self.object
             .hit(&offset_ray, ray_length)
