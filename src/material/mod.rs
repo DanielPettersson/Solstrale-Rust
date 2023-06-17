@@ -5,7 +5,7 @@ use std::f64::consts::PI;
 use enum_dispatch::enum_dispatch;
 
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
-use crate::geo::Ray;
+use crate::geo::{Onb, Ray};
 use crate::geo::Uv;
 use crate::material::texture::Textures;
 use crate::material::texture::{SolidColor, Texture};
@@ -232,7 +232,9 @@ fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
 }
 
 fn transform_normal_by_map(normal: Vec3, normal_map: &Textures, rec: &HitRecord) -> Vec3 {
-    normal
+    let map_normal = (normal_map.color(rec) - 0.5) * 2.;
+    let local_map_normal = Onb::new(normal).local(map_normal);
+    (normal + local_map_normal).unit()
 }
 
 /// A material used for emitting light
@@ -305,4 +307,41 @@ impl Material for Isotropic {
             scatter_type: ScatterType::ScatterPdf(pdf),
         })
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::f64::consts::FRAC_1_SQRT_2;
+    use std::ops::Sub;
+    use crate::geo::Uv;
+    use crate::geo::vec3::Vec3;
+    use crate::material::texture::SolidColor;
+    use crate::material::{HitRecord, Lambertian, Materials, transform_normal_by_map};
+
+    #[test]
+    fn test_transform_normal_by_map() {
+        let n = transform_normal_by_map(
+            Vec3::new(1., 0., 0.),
+            &SolidColor::new(1., 0.5, 0.5),
+            &dummy_hit_record(&dummy_material())
+        );
+
+        assert!(Vec3::new(FRAC_1_SQRT_2, -FRAC_1_SQRT_2, 0.).sub(n).near_zero());
+    }
+
+    fn dummy_material() -> Materials {
+        Lambertian::new(SolidColor::new(1., 1., 1.), None)
+    }
+
+    fn dummy_hit_record(m: &Materials) -> HitRecord {
+        HitRecord {
+            hit_point: Default::default(),
+            normal: Default::default(),
+            material: m,
+            ray_length: 0.0,
+            uv: Uv::new(0., 0.),
+            front_face: false,
+        }
+    }
+
 }

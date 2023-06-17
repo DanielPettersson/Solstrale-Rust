@@ -44,6 +44,25 @@ impl Add for Vec3 {
     }
 }
 
+impl Add<f64>for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values added by scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) + 0.5;
+    /// assert_eq!(Vec3::new(1.5, 2.5, 3.5), res)
+    /// ```
+    fn add(self, v: f64) -> Self::Output {
+        Vec3 {
+            x: self.x + v,
+            y: self.y + v,
+            z: self.z + v,
+        }
+    }
+}
+
 impl AddAssign for Vec3 {
     /// returns a Vec3 that has all values added with corresponding value in given Vec3
     /// # Examples:
@@ -77,6 +96,25 @@ impl Sub for Vec3 {
             x: self.x - v.x,
             y: self.y - v.y,
             z: self.z - v.z,
+        }
+    }
+}
+
+impl Sub<f64>for Vec3 {
+    type Output = Vec3;
+
+    /// returns a Vec3 that has all values subtracted by scalar
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let res = Vec3::new(1., 2., 3.) - 0.5;
+    /// assert_eq!(Vec3::new(0.5, 1.5, 2.5), res)
+    /// ```
+    fn sub(self, v: f64) -> Self::Output {
+        Vec3 {
+            x: self.x - v,
+            y: self.y - v,
+            z: self.z - v,
         }
     }
 }
