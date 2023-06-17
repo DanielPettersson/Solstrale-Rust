@@ -29,10 +29,10 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
 
     let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
 
-    let ground_material = Lambertian::new(image_tex);
-    let glass_mat = Dielectric::new(SolidColor::new(1., 1., 1.), 1.5);
+    let ground_material = Lambertian::new(image_tex, None);
+    let glass_mat = Dielectric::new(SolidColor::new(1., 1., 1.), None, 1.5);
     let light_mat = DiffuseLight::new(10., 10., 10.);
-    let red_mat = Lambertian::new(SolidColor::new(1., 0., 0.));
+    let red_mat = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
     world.add(Quad::new(
         Vec3::new(-5., 0., -15.),
@@ -135,7 +135,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
     };
 
     let mut world = HittableList::new();
-    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.));
+    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
     let light = DiffuseLight::new(10., 10., 10.);
     world.add(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
 
@@ -180,7 +180,7 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
     };
 
     let mut world = HittableList::new();
-    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.));
+    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
     let light = DiffuseLight::new(10., 10., 10.);
     if add_light {
         world.add(Sphere::new(Vec3::new(0., 100., 0.), 20., light))
@@ -211,7 +211,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
     world.add(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
 
     let tex = ImageTexture::load("resources/textures/checker.jpg").unwrap();
-    let checker_mat = Lambertian::new(tex);
+    let checker_mat = Lambertian::new(tex, None);
 
     world.add(Triangle::new_with_tex_coords(
         Vec3::new(-1., 0., 0.),
@@ -249,7 +249,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     world.add(model);
 
     let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
-    let ground_material = Lambertian::new(image_tex);
+    let ground_material = Lambertian::new(image_tex, None);
     world.add(Quad::new(
         Vec3::new(-200., -30., -200.),
         Vec3::new(400., 0., 0.),
@@ -277,7 +277,7 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
 
     let mut world = HittableList::new();
     let light = DiffuseLight::new(15., 15., 15.);
-    let red = Lambertian::new(SolidColor::new(1., 0., 0.));
+    let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
     world.add(load_obj_model_with_default_material(path, filename, 1., ZERO_VECTOR, red).unwrap());

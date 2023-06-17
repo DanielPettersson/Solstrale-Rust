@@ -25,7 +25,7 @@ pub fn load_obj_model(
         filename,
         scale,
         pos,
-        Lambertian::new(SolidColor::new(1., 1., 1.)),
+        Lambertian::new(SolidColor::new(1., 1., 1.), None),
     )
 }
 
@@ -58,11 +58,11 @@ pub fn load_obj_model_with_default_material(
                     None => SolidColor::new(1., 1., 1.),
                     Some(c) => SolidColor::new_from_f32_array(c),
                 };
-                mat_map.insert(i as i8, Lambertian::new(color));
+                mat_map.insert(i as i8, Lambertian::new(color, None));
             }
             Some(diffuse_texture) => {
                 let texture = ImageTexture::load(&format!("{}{}", path, diffuse_texture))?;
-                mat_map.insert(i as i8, Lambertian::new(texture));
+                mat_map.insert(i as i8, Lambertian::new(texture, None));
             }
         }
     }

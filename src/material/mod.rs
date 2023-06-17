@@ -100,14 +100,15 @@ impl Clone for Materials {
 /// A typical matte material
 #[derive(Clone, Debug)]
 pub struct Lambertian {
-    tex: Textures,
+    albedo: Textures,
+    normal: Option<Textures>,
 }
 
 impl Lambertian {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new lambertian material
-    pub fn new(tex: Textures) -> Materials {
-        LambertianType(Lambertian { tex })
+    pub fn new(albedo: Textures, normal: Option<Textures>,) -> Materials {
+        LambertianType(Lambertian { albedo, normal })
     }
 }
 
@@ -122,7 +123,7 @@ impl Material for Lambertian {
     }
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.tex.color(rec);
+        let attenuation = self.albedo.color(rec);
         let pdf = CosinePdf::new(rec.normal);
 
         return Some(ScatterRecord {
@@ -135,15 +136,16 @@ impl Material for Lambertian {
 /// Metal is a material that is reflective
 #[derive(Clone, Debug)]
 pub struct Metal {
-    tex: Textures,
+    albedo: Textures,
+    normal: Option<Textures>,
     fuzz: f64,
 }
 
 impl Metal {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
-    pub fn new(tex: Textures, fuzz: f64) -> Materials {
-        MetalType(Metal { tex, fuzz })
+    pub fn new(albedo: Textures, normal: Option<Textures>, fuzz: f64) -> Materials {
+        MetalType(Metal { albedo, normal, fuzz })
     }
 }
 
@@ -154,7 +156,7 @@ impl Material for Metal {
         let reflected = ray.direction.unit().reflect(rec.normal);
 
         Some(ScatterRecord {
-            attenuation: self.tex.color(rec),
+            attenuation: self.albedo.color(rec),
             scatter_type: ScatterType::ScatterRay(Ray::new(
                 rec.hit_point,
                 reflected + random_in_unit_sphere() * self.fuzz,
@@ -166,16 +168,18 @@ impl Material for Metal {
 /// A glass type material with an index of refraction
 #[derive(Clone, Debug)]
 pub struct Dielectric {
-    tex: Textures,
+    albedo: Textures,
+    normal: Option<Textures>,
     index_of_refraction: f64,
 }
 
 impl Dielectric {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new dielectric material
-    pub fn new(tex: Textures, index_of_refraction: f64) -> Materials {
+    pub fn new(albedo: Textures, normal: Option<Textures>, index_of_refraction: f64) -> Materials {
         DielectricType(Dielectric {
-            tex,
+            albedo,
+            normal,
             index_of_refraction,
         })
     }
@@ -202,7 +206,7 @@ impl Material for Dielectric {
             };
 
         Some(ScatterRecord {
-            attenuation: self.tex.color(rec),
+            attenuation: self.albedo.color(rec),
             scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
         })
     }
@@ -261,7 +265,7 @@ pub struct Isotropic {
 impl Isotropic {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new isotropic material
-    pub fn new(tex: Textures) -> Materials {
+    pub(crate) fn new(tex: Textures) -> Materials {
         IsotropicType(Isotropic { tex })
     }
 }
