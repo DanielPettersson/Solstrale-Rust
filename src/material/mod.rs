@@ -107,7 +107,7 @@ pub struct Lambertian {
 impl Lambertian {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new lambertian material
-    pub fn new(albedo: Textures, normal: Option<Textures>,) -> Materials {
+    pub fn new(albedo: Textures, normal: Option<Textures>) -> Materials {
         LambertianType(Lambertian { albedo, normal })
     }
 }
@@ -124,7 +124,11 @@ impl Material for Lambertian {
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.albedo.color(rec);
-        let pdf = CosinePdf::new(rec.normal);
+        let normal = self.normal.as_ref().map_or(
+            rec.normal,
+            |n| transform_normal_by_map(rec.normal, &n, rec)
+        );
+        let pdf = CosinePdf::new(normal);
 
         return Some(ScatterRecord {
             attenuation,
@@ -153,7 +157,11 @@ impl Material for Metal {
     /// Returns a reflected scattered ray for the metal material
     /// The Fuzz property of the metal defines the randomness applied to the reflection
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let reflected = ray.direction.unit().reflect(rec.normal);
+        let normal = self.normal.as_ref().map_or(
+            rec.normal,
+            |n| transform_normal_by_map(rec.normal, &n, rec)
+        );
+        let reflected = ray.direction.unit().reflect(normal);
 
         Some(ScatterRecord {
             attenuation: self.albedo.color(rec),
@@ -192,17 +200,21 @@ impl Material for Dielectric {
         } else {
             self.index_of_refraction
         };
+        let normal = self.normal.as_ref().map_or(
+            rec.normal,
+            |n| transform_normal_by_map(rec.normal, &n, rec)
+        );
 
         let unit_direction = ray.direction.unit();
-        let cos_theta = unit_direction.neg().dot(rec.normal).min(1.);
+        let cos_theta = unit_direction.neg().dot(normal).min(1.);
         let sin_theta = (1. - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.;
 
         let direction =
             if cannot_refract || reflectance(cos_theta, refraction_ratio) > random_normal_float() {
-                unit_direction.reflect(rec.normal)
+                unit_direction.reflect(normal)
             } else {
-                unit_direction.refract(rec.normal, refraction_ratio)
+                unit_direction.refract(normal, refraction_ratio)
             };
 
         Some(ScatterRecord {
@@ -217,6 +229,10 @@ fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
     let mut r0 = (1. - index_of_refraction) / (1. + index_of_refraction);
     r0 = r0 * r0;
     r0 + (1. - r0) * (1. - cosine).powi(5)
+}
+
+fn transform_normal_by_map(normal: Vec3, normal_map: &Textures, rec: &HitRecord) -> Vec3 {
+    normal
 }
 
 /// A material used for emitting light
