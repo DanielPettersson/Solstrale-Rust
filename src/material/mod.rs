@@ -4,14 +4,14 @@ use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
 use crate::geo::{Onb, Ray};
 use crate::geo::Uv;
-use crate::material::texture::Textures;
-use crate::material::texture::{SolidColor, Texture};
+use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
 use crate::material::Materials::{
     DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType,
 };
+use crate::material::texture::{SolidColor, Texture};
+use crate::material::texture::Textures;
 use crate::pdf::{CosinePdf, Pdfs, SpherePdf};
 use crate::random::random_normal_float;
 
@@ -72,6 +72,11 @@ pub trait Material {
     fn scatter(&self, _ray: &Ray, _rec: &HitRecord) -> Option<ScatterRecord> {
         None
     }
+
+    /// Get normal transformed by the material, implementations typically uses a normal texture map
+    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
+        rec.normal
+    }
 }
 
 #[enum_dispatch(Material)]
@@ -124,16 +129,20 @@ impl Material for Lambertian {
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.albedo.color(rec);
-        let normal = self.normal.as_ref().map_or(
-            rec.normal,
-            |n| transform_normal_by_map(rec.normal, &n, rec)
-        );
+        let normal = self.get_transformed_normal(rec);
         let pdf = CosinePdf::new(normal);
 
         return Some(ScatterRecord {
             attenuation,
             scatter_type: ScatterType::ScatterPdf(pdf),
         });
+    }
+
+    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
+        self.normal.as_ref().map_or(
+            rec.normal,
+            |n| transform_normal_by_map(n, rec)
+        )
     }
 }
 
@@ -157,10 +166,7 @@ impl Material for Metal {
     /// Returns a reflected scattered ray for the metal material
     /// The Fuzz property of the metal defines the randomness applied to the reflection
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let normal = self.normal.as_ref().map_or(
-            rec.normal,
-            |n| transform_normal_by_map(rec.normal, &n, rec)
-        );
+        let normal = self.get_transformed_normal(rec);
         let reflected = ray.direction.unit().reflect(normal);
 
         Some(ScatterRecord {
@@ -170,6 +176,13 @@ impl Material for Metal {
                 reflected + random_in_unit_sphere() * self.fuzz,
             )),
         })
+    }
+
+    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
+        self.normal.as_ref().map_or(
+            rec.normal,
+            |n| transform_normal_by_map(n, rec)
+        )
     }
 }
 
@@ -200,10 +213,7 @@ impl Material for Dielectric {
         } else {
             self.index_of_refraction
         };
-        let normal = self.normal.as_ref().map_or(
-            rec.normal,
-            |n| transform_normal_by_map(rec.normal, &n, rec)
-        );
+        let normal = self.get_transformed_normal(rec);
 
         let unit_direction = ray.direction.unit();
         let cos_theta = unit_direction.neg().dot(normal).min(1.);
@@ -222,6 +232,13 @@ impl Material for Dielectric {
             scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
         })
     }
+
+    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
+        self.normal.as_ref().map_or(
+            rec.normal,
+            |n| transform_normal_by_map(n, rec)
+        )
+    }
 }
 
 /// Calculate reflectance using Schlick's approximation
@@ -229,12 +246,6 @@ fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
     let mut r0 = (1. - index_of_refraction) / (1. + index_of_refraction);
     r0 = r0 * r0;
     r0 + (1. - r0) * (1. - cosine).powi(5)
-}
-
-fn transform_normal_by_map(normal: Vec3, normal_map: &Textures, rec: &HitRecord) -> Vec3 {
-    let map_normal = (normal_map.color(rec) - 0.5) * 2.;
-    let local_map_normal = Onb::new(normal).local(map_normal);
-    (normal + local_map_normal).unit()
 }
 
 /// A material used for emitting light
@@ -288,6 +299,11 @@ impl Isotropic {
     }
 }
 
+fn transform_normal_by_map(normal_map: &Textures, rec: &HitRecord) -> Vec3 {
+    let map_normal = (normal_map.color(rec) - 0.5) * 2.;
+    Onb::new(rec.normal).local(map_normal)
+}
+
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
 
 impl Material for Isotropic {
@@ -311,32 +327,31 @@ impl Material for Isotropic {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::consts::FRAC_1_SQRT_2;
     use std::ops::Sub;
+
     use crate::geo::Uv;
     use crate::geo::vec3::Vec3;
-    use crate::material::texture::SolidColor;
     use crate::material::{HitRecord, Lambertian, Materials, transform_normal_by_map};
+    use crate::material::texture::SolidColor;
 
     #[test]
     fn test_transform_normal_by_map() {
         let n = transform_normal_by_map(
-            Vec3::new(1., 0., 0.),
             &SolidColor::new(1., 0.5, 0.5),
-            &dummy_hit_record(&dummy_material())
+            &hit_record(Vec3::new(1., 0., 0.), &dummy_material()),
         );
 
-        assert!(Vec3::new(FRAC_1_SQRT_2, -FRAC_1_SQRT_2, 0.).sub(n).near_zero());
+        assert!(Vec3::new(0., -1., 0.).sub(n).near_zero(), "n was {}", n);
     }
 
     fn dummy_material() -> Materials {
         Lambertian::new(SolidColor::new(1., 1., 1.), None)
     }
 
-    fn dummy_hit_record(m: &Materials) -> HitRecord {
+    fn hit_record(n: Vec3, m: &Materials) -> HitRecord {
         HitRecord {
             hit_point: Default::default(),
-            normal: Default::default(),
+            normal: n,
             material: m,
             ray_length: 0.0,
             uv: Uv::new(0., 0.),

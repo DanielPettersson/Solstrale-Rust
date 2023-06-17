@@ -18,6 +18,7 @@ pub trait Shader {
 }
 
 #[enum_dispatch(Shader)]
+#[derive(Clone)]
 /// An enum of shaders
 pub enum Shaders {
     PathTracingShaderType(PathTracingShader),
@@ -26,6 +27,7 @@ pub enum Shaders {
     SimpleShaderType(SimpleShader),
 }
 
+#[derive(Clone)]
 /// A full raytracing shader
 pub struct PathTracingShader {
     max_depth: u32,
@@ -91,6 +93,7 @@ fn filter_color_value(val: f64) -> f64 {
     }
 }
 
+#[derive(Clone)]
 /// Outputs flat color
 pub struct AlbedoShader {}
 
@@ -112,6 +115,7 @@ impl Shader for AlbedoShader {
     }
 }
 
+#[derive(Clone)]
 /// Outputs the normals of the ray hit point
 pub struct NormalShader {}
 
@@ -126,10 +130,11 @@ impl NormalShader {
 impl Shader for NormalShader {
     /// Calculates the color only using normal
     fn shade(&self, _: &Renderer, rec: &HitRecord, _: &Ray, _: u32) -> Vec3 {
-        rec.normal.unit()
+        rec.material.get_transformed_normal(rec)
     }
 }
 
+#[derive(Clone)]
 /// A simple shader for quick rendering
 pub struct SimpleShader {
     light_dir: Vec3,
@@ -153,7 +158,7 @@ impl Shader for SimpleShader {
             Some(scatter_record) => {
                 // Get a factor to multiply attenuation color, range between .25 -> 1.25
                 // To get some decent flat shading
-                let normal_factor = rec.normal.unit().dot(self.light_dir) * 0.5 + 0.75;
+                let normal_factor = rec.material.get_transformed_normal(rec).dot(self.light_dir) * 0.5 + 0.75;
 
                 scatter_record.attenuation * normal_factor
             }

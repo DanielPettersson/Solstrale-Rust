@@ -22,6 +22,7 @@ use crate::util::rgb_color::to_rgb_color;
 pub mod shader;
 
 ///Input to the ray tracer for how the image should be rendered
+#[derive(Clone)]
 pub struct RenderConfig {
     /// Number of times each pixel should be sampled
     pub samples_per_pixel: u32,

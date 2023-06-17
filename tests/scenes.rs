@@ -232,6 +232,40 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
 }
 
 #[allow(dead_code)]
+pub fn create_normal_mapping_scene(render_config: RenderConfig, light_pos: Vec3) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 40.,
+        aperture_size: 0.,
+        focus_distance: 1.,
+        look_from: Vec3::new(0., 0., 2.),
+        look_at: Vec3::new(0., 0., 0.),
+    };
+
+    let mut world = HittableList::new();
+    let light = DiffuseLight::new(10., 10., 10.);
+
+    world.add(Sphere::new(light_pos, 30., light));
+
+    let albedo_tex = ImageTexture::load("resources/textures/wall_color.png").unwrap();
+    let normal_tex = None;
+    let mat = Lambertian::new(albedo_tex, normal_tex);
+
+    world.add(Quad::new(
+        Vec3::new(-1., -1., 0.),
+        Vec3::new(2., 0., 0.),
+        Vec3::new(0., 2., 0.),
+        mat,
+    ));
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0., 0., 0.),
+        render_config,
+    }
+}
+
+#[allow(dead_code)]
 pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,

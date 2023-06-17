@@ -5,15 +5,14 @@ use std::thread;
 use image::imageops::FilterType;
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
+use solstrale::geo::vec3::Vec3;
+use solstrale::post::OidnPostProcessor;
 
 use solstrale::ray_trace;
-use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
+use solstrale::renderer::shader::{NormalShader, PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
 
-use crate::scenes::{
-    create_obj_scene, create_obj_with_box, create_simple_test_scene, create_test_scene,
-    create_uv_scene,
-};
+use crate::scenes::{create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_simple_test_scene, create_test_scene, create_uv_scene};
 
 mod scenes;
 
@@ -100,6 +99,30 @@ fn test_render_uv_mapping() {
 }
 
 #[test]
+fn test_render_normal_mapping_1() {
+    let render_config = RenderConfig {
+        samples_per_pixel: 100,
+        shader: PathTracingShader::new(50),
+        post_processor: None,
+    };
+
+    let scene = create_normal_mapping_scene(render_config, Vec3::new(0., 100., 20.));
+    render_and_compare_output(scene, "normal_mapping_1", 400, 400);
+}
+
+#[test]
+fn test_render_normal_mapping_2() {
+    let render_config = RenderConfig {
+        samples_per_pixel: 100,
+        shader: PathTracingShader::new(50),
+        post_processor: None,
+    };
+
+    let scene = create_normal_mapping_scene(render_config, Vec3::new(0., -100., 20.));
+    render_and_compare_output(scene, "normal_mapping_2", 400, 400);
+}
+
+#[test]
 fn test_abort_render_scene() {
     let render_config = RenderConfig {
         samples_per_pixel: 1000,
@@ -160,6 +183,10 @@ fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) 
 }
 
 fn compare_output(name: &str, actual_image: &RgbImage) {
+    actual_image
+        .save(format!("tests/output/out_actual_{}.jpg", name))
+        .unwrap();
+
     let expected_image_path = format!("tests/output/out_expected_{}.jpg", name);
     let expected_image = image::open(&expected_image_path)
         .unwrap_or_else(|_| panic!("Could not load {}", &expected_image_path))
@@ -172,10 +199,6 @@ fn compare_output(name: &str, actual_image: &RgbImage) {
         image_compare::rgb_similarity_structure(&RootMeanSquared, &sized_expected, &sized_actual)
             .expect("Failed to compare images")
             .score;
-
-    actual_image
-        .save(format!("tests/output/out_actual_{}.jpg", name))
-        .unwrap();
 
     assert!(
         score > IMAGE_COMPARISON_SCORE_THRESHOLD,
