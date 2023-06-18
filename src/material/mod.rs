@@ -20,6 +20,7 @@ pub mod texture;
 /// A collection of all interesting properties from
 /// when a ray hits a hittable object
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct HitRecord<'a> {
     /// Hit point for the ray on a hittable
     pub hit_point: Vec3,
@@ -36,6 +37,7 @@ pub struct HitRecord<'a> {
 }
 
 impl<'a> HitRecord<'a> {
+    /// Creates a new HitRecord
     pub fn new(
         hit_point: Vec3,
         normal: Vec3,
