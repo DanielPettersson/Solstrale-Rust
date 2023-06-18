@@ -20,11 +20,13 @@ pub trait PostProcessor {
 }
 
 #[enum_dispatch(PostProcessor)]
+#[derive(Clone)]
 /// An enum of post processors
 pub enum PostProcessors {
     OidnPostProcessorType(OidnPostProcessor),
 }
 
+#[derive(Clone)]
 /// A post processor that uses Intel Open Image DeNoise on the image
 pub struct OidnPostProcessor();
 

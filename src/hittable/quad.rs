@@ -140,14 +140,14 @@ impl Hittable for Quad {
         if !front_face {
             normal = normal.neg();
         }
-        Some(HitRecord {
+        Some(HitRecord::new(
             hit_point,
             normal,
-            material: &self.mat,
-            ray_length: t,
-            uv: Uv::new(alpha, beta),
+            &self.mat,
+            t,
+            Uv::new(alpha, beta),
             front_face,
-        })
+        ))
     }
 
     fn bounding_box(&self) -> &Aabb {

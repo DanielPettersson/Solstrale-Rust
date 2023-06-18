@@ -5,8 +5,8 @@ use std::f64::consts::PI;
 use enum_dispatch::enum_dispatch;
 
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
-use crate::geo::Ray;
 use crate::geo::Uv;
+use crate::geo::{Onb, Ray};
 use crate::material::texture::Textures;
 use crate::material::texture::{SolidColor, Texture};
 use crate::material::Materials::{
@@ -33,6 +33,26 @@ pub struct HitRecord<'a> {
     pub uv: Uv,
     /// Whether the hit point is inside or outside the hittable
     pub front_face: bool,
+}
+
+impl<'a> HitRecord<'a> {
+    pub fn new(
+        hit_point: Vec3,
+        normal: Vec3,
+        material: &'a Materials,
+        ray_length: f64,
+        uv: Uv,
+        front_face: bool,
+    ) -> HitRecord<'a> {
+        HitRecord {
+            hit_point,
+            normal: material.get_transformed_normal(normal, uv),
+            material,
+            ray_length,
+            uv,
+            front_face,
+        }
+    }
 }
 
 /// A collection of attributes from the scattering of a ray with a material
@@ -72,6 +92,11 @@ pub trait Material {
     fn scatter(&self, _ray: &Ray, _rec: &HitRecord) -> Option<ScatterRecord> {
         None
     }
+
+    /// Get normal transformed by the material, implementations typically uses a normal texture map
+    fn get_transformed_normal(&self, normal: Vec3, _: Uv) -> Vec3 {
+        normal
+    }
 }
 
 #[enum_dispatch(Material)]
@@ -100,14 +125,15 @@ impl Clone for Materials {
 /// A typical matte material
 #[derive(Clone, Debug)]
 pub struct Lambertian {
-    tex: Textures,
+    albedo: Textures,
+    normal: Option<Textures>,
 }
 
 impl Lambertian {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new lambertian material
-    pub fn new(tex: Textures) -> Materials {
-        LambertianType(Lambertian { tex })
+    pub fn new(albedo: Textures, normal: Option<Textures>) -> Materials {
+        LambertianType(Lambertian { albedo, normal })
     }
 }
 
@@ -122,7 +148,7 @@ impl Material for Lambertian {
     }
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.tex.color(rec);
+        let attenuation = self.albedo.color(rec.uv);
         let pdf = CosinePdf::new(rec.normal);
 
         return Some(ScatterRecord {
@@ -130,20 +156,31 @@ impl Material for Lambertian {
             scatter_type: ScatterType::ScatterPdf(pdf),
         });
     }
+
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        self.normal
+            .as_ref()
+            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
+    }
 }
 
 /// Metal is a material that is reflective
 #[derive(Clone, Debug)]
 pub struct Metal {
-    tex: Textures,
+    albedo: Textures,
+    normal: Option<Textures>,
     fuzz: f64,
 }
 
 impl Metal {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
-    pub fn new(tex: Textures, fuzz: f64) -> Materials {
-        MetalType(Metal { tex, fuzz })
+    pub fn new(albedo: Textures, normal: Option<Textures>, fuzz: f64) -> Materials {
+        MetalType(Metal {
+            albedo,
+            normal,
+            fuzz,
+        })
     }
 }
 
@@ -154,28 +191,36 @@ impl Material for Metal {
         let reflected = ray.direction.unit().reflect(rec.normal);
 
         Some(ScatterRecord {
-            attenuation: self.tex.color(rec),
+            attenuation: self.albedo.color(rec.uv),
             scatter_type: ScatterType::ScatterRay(Ray::new(
                 rec.hit_point,
                 reflected + random_in_unit_sphere() * self.fuzz,
             )),
         })
     }
+
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        self.normal
+            .as_ref()
+            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
+    }
 }
 
 /// A glass type material with an index of refraction
 #[derive(Clone, Debug)]
 pub struct Dielectric {
-    tex: Textures,
+    albedo: Textures,
+    normal: Option<Textures>,
     index_of_refraction: f64,
 }
 
 impl Dielectric {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new dielectric material
-    pub fn new(tex: Textures, index_of_refraction: f64) -> Materials {
+    pub fn new(albedo: Textures, normal: Option<Textures>, index_of_refraction: f64) -> Materials {
         DielectricType(Dielectric {
-            tex,
+            albedo,
+            normal,
             index_of_refraction,
         })
     }
@@ -202,9 +247,15 @@ impl Material for Dielectric {
             };
 
         Some(ScatterRecord {
-            attenuation: self.tex.color(rec),
+            attenuation: self.albedo.color(rec.uv),
             scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
         })
+    }
+
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        self.normal
+            .as_ref()
+            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
 }
 
@@ -243,7 +294,7 @@ impl Material for DiffuseLight {
         if !rec.front_face {
             return ZERO_VECTOR;
         }
-        self.tex.color(rec)
+        self.tex.color(rec.uv)
     }
 
     fn is_light(&self) -> bool {
@@ -261,9 +312,14 @@ pub struct Isotropic {
 impl Isotropic {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new isotropic material
-    pub fn new(tex: Textures) -> Materials {
+    pub(crate) fn new(tex: Textures) -> Materials {
         IsotropicType(Isotropic { tex })
     }
+}
+
+fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, uv: Uv) -> Vec3 {
+    let map_normal = (normal_map.color(uv) - 0.5) * 2.;
+    Onb::new(normal).local(map_normal)
 }
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -276,7 +332,7 @@ impl Material for Isotropic {
 
     /// Returns a randomly scattered ray in any direction
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.tex.color(rec);
+        let attenuation = self.tex.color(rec.uv);
 
         let pdf = SpherePdf::new();
 
@@ -284,5 +340,26 @@ impl Material for Isotropic {
             attenuation,
             scatter_type: ScatterType::ScatterPdf(pdf),
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ops::Sub;
+
+    use crate::geo::vec3::Vec3;
+    use crate::geo::Uv;
+    use crate::material::texture::SolidColor;
+    use crate::material::transform_normal_by_map;
+
+    #[test]
+    fn test_transform_normal_by_map() {
+        let n = transform_normal_by_map(
+            &SolidColor::new(1., 0.5, 0.5),
+            Vec3::new(1., 0., 0.),
+            Uv::default(),
+        );
+
+        assert!(Vec3::new(0., -1., 0.).sub(n).near_zero(), "n was {}", n);
     }
 }

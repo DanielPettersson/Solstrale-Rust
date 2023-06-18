@@ -141,14 +141,14 @@ impl Hittable for Triangle {
         if !front_face {
             normal = normal.neg()
         }
-        Some(HitRecord {
-            hit_point: intersection,
+        Some(HitRecord::new(
+            intersection,
             normal,
-            material: &self.mat,
-            ray_length: tt,
+            &self.mat,
+            tt,
             uv,
             front_face,
-        })
+        ))
     }
 
     fn bounding_box(&self) -> &Aabb {

@@ -1,13 +1,13 @@
 use std::error::Error;
 use std::sync::Arc;
 
+use crate::geo::Uv;
 use enum_dispatch::enum_dispatch;
 use image::RgbImage;
 use simple_error::SimpleError;
 
 use crate::geo::vec3::Vec3;
 use crate::material::texture::Textures::{ImageTextureType, SolidColorType};
-use crate::material::HitRecord;
 use crate::util::rgb_color::rgb_to_vec3;
 
 /// Describes the color of a material.
@@ -15,7 +15,7 @@ use crate::util::rgb_color::rgb_to_vec3;
 #[enum_dispatch]
 pub trait Texture {
     /// Return the color of the texture at a given hit
-    fn color(&self, rec: &HitRecord) -> Vec3;
+    fn color(&self, uv: Uv) -> Vec3;
 }
 
 #[enum_dispatch(Texture)]
@@ -55,7 +55,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn color(&self, _: &HitRecord) -> Vec3 {
+    fn color(&self, _: Uv) -> Vec3 {
         self.0
     }
 }
@@ -93,9 +93,9 @@ impl ImageTexture {
 impl Texture for ImageTexture {
     /// Returns the color in the image data that corresponds to the UV coordinate of the hittable
     /// If UV coordinates from hit record is <0 or >1 texture wraps
-    fn color(&self, rec: &HitRecord) -> Vec3 {
-        let u = rec.uv.u.abs() % 1.;
-        let v = 1. - rec.uv.v.abs() % 1.;
+    fn color(&self, uv: Uv) -> Vec3 {
+        let u = uv.u.abs() % 1.;
+        let v = 1. - uv.v.abs() % 1.;
 
         let x = u * self.max_x;
         let y = v * self.max_y;

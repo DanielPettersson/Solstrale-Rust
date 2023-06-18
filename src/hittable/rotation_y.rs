@@ -93,14 +93,14 @@ impl Hittable for RotationY {
                 normal.x = self.cos_theta * rec.normal.x + self.sin_theta * rec.normal.z;
                 normal.z = -self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.z;
 
-                Some(HitRecord {
+                Some(HitRecord::new(
                     hit_point,
                     normal,
-                    material: rec.material,
-                    ray_length: rec.ray_length,
-                    uv: rec.uv,
-                    front_face: rec.front_face,
-                })
+                    rec.material,
+                    rec.ray_length,
+                    rec.uv,
+                    rec.front_face,
+                ))
             }
         }
     }

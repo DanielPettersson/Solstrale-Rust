@@ -8,7 +8,7 @@ use std::ops::Add;
 const PAD_DELTA: f64 = 0.0001;
 
 /// Texture map coordinates
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Uv {
     /// U coordinate
     pub u: f32,
