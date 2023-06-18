@@ -232,7 +232,11 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
 }
 
 #[allow(dead_code)]
-pub fn create_normal_mapping_scene(render_config: RenderConfig, light_pos: Vec3) -> Scene {
+pub fn create_normal_mapping_scene(
+    render_config: RenderConfig,
+    light_pos: Vec3,
+    normal_mapping_enabled: bool,
+) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 40.,
         aperture_size: 0.,
@@ -242,12 +246,16 @@ pub fn create_normal_mapping_scene(render_config: RenderConfig, light_pos: Vec3)
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(10., 10., 10.);
+    let light = DiffuseLight::new(5., 5., 5.);
 
     world.add(Sphere::new(light_pos, 30., light));
 
     let albedo_tex = ImageTexture::load("resources/textures/wall_color.png").unwrap();
-    let normal_tex = None;
+    let normal_tex = if normal_mapping_enabled {
+        Some(ImageTexture::load("resources/textures/wall_n.png").unwrap())
+    } else {
+        None
+    };
     let mat = Lambertian::new(albedo_tex, normal_tex);
 
     world.add(Quad::new(

@@ -61,14 +61,14 @@ impl Hittable for ConstantMedium {
 
                         let t = rec1_ray_length + hit_distance / r_length;
 
-                        Some(HitRecord {
-                            hit_point: r.at(t),
-                            normal: random_unit_vector(),
-                            material: &self.phase_function,
-                            ray_length: t,
-                            uv: Uv::new(0.0, 0.0),
-                            front_face: false,
-                        })
+                        Some(HitRecord::new(
+                            r.at(t),
+                            random_unit_vector(),
+                            &self.phase_function,
+                            t,
+                            Uv::default(),
+                            false,
+                        ))
                     }
                 }
             }

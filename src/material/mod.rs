@@ -4,14 +4,14 @@ use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::{Onb, Ray};
-use crate::geo::Uv;
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
+use crate::geo::Uv;
+use crate::geo::{Onb, Ray};
+use crate::material::texture::Textures;
+use crate::material::texture::{SolidColor, Texture};
 use crate::material::Materials::{
     DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType,
 };
-use crate::material::texture::{SolidColor, Texture};
-use crate::material::texture::Textures;
 use crate::pdf::{CosinePdf, Pdfs, SpherePdf};
 use crate::random::random_normal_float;
 
@@ -33,6 +33,26 @@ pub struct HitRecord<'a> {
     pub uv: Uv,
     /// Whether the hit point is inside or outside the hittable
     pub front_face: bool,
+}
+
+impl<'a> HitRecord<'a> {
+    pub fn new(
+        hit_point: Vec3,
+        normal: Vec3,
+        material: &'a Materials,
+        ray_length: f64,
+        uv: Uv,
+        front_face: bool,
+    ) -> HitRecord<'a> {
+        HitRecord {
+            hit_point,
+            normal: material.get_transformed_normal(normal, uv),
+            material,
+            ray_length,
+            uv,
+            front_face,
+        }
+    }
 }
 
 /// A collection of attributes from the scattering of a ray with a material
@@ -74,8 +94,8 @@ pub trait Material {
     }
 
     /// Get normal transformed by the material, implementations typically uses a normal texture map
-    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
-        rec.normal
+    fn get_transformed_normal(&self, normal: Vec3, _: Uv) -> Vec3 {
+        normal
     }
 }
 
@@ -128,9 +148,8 @@ impl Material for Lambertian {
     }
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.albedo.color(rec);
-        let normal = self.get_transformed_normal(rec);
-        let pdf = CosinePdf::new(normal);
+        let attenuation = self.albedo.color(rec.uv);
+        let pdf = CosinePdf::new(rec.normal);
 
         return Some(ScatterRecord {
             attenuation,
@@ -138,11 +157,10 @@ impl Material for Lambertian {
         });
     }
 
-    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
-        self.normal.as_ref().map_or(
-            rec.normal,
-            |n| transform_normal_by_map(n, rec)
-        )
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        self.normal
+            .as_ref()
+            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
 }
 
@@ -158,7 +176,11 @@ impl Metal {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
     pub fn new(albedo: Textures, normal: Option<Textures>, fuzz: f64) -> Materials {
-        MetalType(Metal { albedo, normal, fuzz })
+        MetalType(Metal {
+            albedo,
+            normal,
+            fuzz,
+        })
     }
 }
 
@@ -166,11 +188,10 @@ impl Material for Metal {
     /// Returns a reflected scattered ray for the metal material
     /// The Fuzz property of the metal defines the randomness applied to the reflection
     fn scatter(&self, ray: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let normal = self.get_transformed_normal(rec);
-        let reflected = ray.direction.unit().reflect(normal);
+        let reflected = ray.direction.unit().reflect(rec.normal);
 
         Some(ScatterRecord {
-            attenuation: self.albedo.color(rec),
+            attenuation: self.albedo.color(rec.uv),
             scatter_type: ScatterType::ScatterRay(Ray::new(
                 rec.hit_point,
                 reflected + random_in_unit_sphere() * self.fuzz,
@@ -178,11 +199,10 @@ impl Material for Metal {
         })
     }
 
-    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
-        self.normal.as_ref().map_or(
-            rec.normal,
-            |n| transform_normal_by_map(n, rec)
-        )
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        self.normal
+            .as_ref()
+            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
 }
 
@@ -213,31 +233,29 @@ impl Material for Dielectric {
         } else {
             self.index_of_refraction
         };
-        let normal = self.get_transformed_normal(rec);
 
         let unit_direction = ray.direction.unit();
-        let cos_theta = unit_direction.neg().dot(normal).min(1.);
+        let cos_theta = unit_direction.neg().dot(rec.normal).min(1.);
         let sin_theta = (1. - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.;
 
         let direction =
             if cannot_refract || reflectance(cos_theta, refraction_ratio) > random_normal_float() {
-                unit_direction.reflect(normal)
+                unit_direction.reflect(rec.normal)
             } else {
-                unit_direction.refract(normal, refraction_ratio)
+                unit_direction.refract(rec.normal, refraction_ratio)
             };
 
         Some(ScatterRecord {
-            attenuation: self.albedo.color(rec),
+            attenuation: self.albedo.color(rec.uv),
             scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
         })
     }
 
-    fn get_transformed_normal(&self, rec: &HitRecord) -> Vec3 {
-        self.normal.as_ref().map_or(
-            rec.normal,
-            |n| transform_normal_by_map(n, rec)
-        )
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        self.normal
+            .as_ref()
+            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
 }
 
@@ -276,7 +294,7 @@ impl Material for DiffuseLight {
         if !rec.front_face {
             return ZERO_VECTOR;
         }
-        self.tex.color(rec)
+        self.tex.color(rec.uv)
     }
 
     fn is_light(&self) -> bool {
@@ -299,9 +317,9 @@ impl Isotropic {
     }
 }
 
-fn transform_normal_by_map(normal_map: &Textures, rec: &HitRecord) -> Vec3 {
-    let map_normal = (normal_map.color(rec) - 0.5) * 2.;
-    Onb::new(rec.normal).local(map_normal)
+fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, uv: Uv) -> Vec3 {
+    let map_normal = (normal_map.color(uv) - 0.5) * 2.;
+    Onb::new(normal).local(map_normal)
 }
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -314,7 +332,7 @@ impl Material for Isotropic {
 
     /// Returns a randomly scattered ray in any direction
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.tex.color(rec);
+        let attenuation = self.tex.color(rec.uv);
 
         let pdf = SpherePdf::new();
 
@@ -329,34 +347,19 @@ impl Material for Isotropic {
 mod tests {
     use std::ops::Sub;
 
-    use crate::geo::Uv;
     use crate::geo::vec3::Vec3;
-    use crate::material::{HitRecord, Lambertian, Materials, transform_normal_by_map};
+    use crate::geo::Uv;
     use crate::material::texture::SolidColor;
+    use crate::material::transform_normal_by_map;
 
     #[test]
     fn test_transform_normal_by_map() {
         let n = transform_normal_by_map(
             &SolidColor::new(1., 0.5, 0.5),
-            &hit_record(Vec3::new(1., 0., 0.), &dummy_material()),
+            Vec3::new(1., 0., 0.),
+            Uv::default(),
         );
 
         assert!(Vec3::new(0., -1., 0.).sub(n).near_zero(), "n was {}", n);
     }
-
-    fn dummy_material() -> Materials {
-        Lambertian::new(SolidColor::new(1., 1., 1.), None)
-    }
-
-    fn hit_record(n: Vec3, m: &Materials) -> HitRecord {
-        HitRecord {
-            hit_point: Default::default(),
-            normal: n,
-            material: m,
-            ray_length: 0.0,
-            uv: Uv::new(0., 0.),
-            front_face: false,
-        }
-    }
-
 }

@@ -88,14 +88,9 @@ impl Hittable for Sphere {
         if !front_face {
             normal = normal.neg();
         }
-        Some(HitRecord {
-            hit_point,
-            normal,
-            material: &self.mat,
-            ray_length: root,
-            uv,
-            front_face,
-        })
+        Some(HitRecord::new(
+            hit_point, normal, &self.mat, root, uv, front_face,
+        ))
     }
 
     fn bounding_box(&self) -> &Aabb {

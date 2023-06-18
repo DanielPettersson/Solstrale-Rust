@@ -130,7 +130,7 @@ impl NormalShader {
 impl Shader for NormalShader {
     /// Calculates the color only using normal
     fn shade(&self, _: &Renderer, rec: &HitRecord, _: &Ray, _: u32) -> Vec3 {
-        rec.material.get_transformed_normal(rec)
+        rec.normal
     }
 }
 
@@ -158,7 +158,7 @@ impl Shader for SimpleShader {
             Some(scatter_record) => {
                 // Get a factor to multiply attenuation color, range between .25 -> 1.25
                 // To get some decent flat shading
-                let normal_factor = rec.material.get_transformed_normal(rec).dot(self.light_dir) * 0.5 + 0.75;
+                let normal_factor = rec.normal.dot(self.light_dir) * 0.5 + 0.75;
 
                 scatter_record.attenuation * normal_factor
             }
