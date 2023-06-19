@@ -10,8 +10,6 @@ pub struct CameraConfig {
     pub vertical_fov_degrees: f64,
     /// Radius of the lens of the camera, affects the depth of field
     pub aperture_size: f64,
-    /// Distance where the lens is focused
-    pub focus_distance: f64,
     /// Point where the camera is located
     pub look_from: Vec3,
     /// Point where the camera is looking
@@ -39,14 +37,16 @@ impl Camera {
         let view_port_height = 2. * h;
         let view_port_width = aspect_ratio * view_port_height;
 
-        let w = (c.look_from - c.look_at).unit();
+        let look_v = c.look_from - c.look_at;
+        let focus_distance = look_v.length();
+        let w = look_v.unit();
         let u = Vec3::new(0., 1., 0.).cross(w).unit();
         let v = w.cross(u);
 
-        let horizontal = (u * view_port_width) * c.focus_distance;
-        let vertical = (v * view_port_height) * c.focus_distance;
+        let horizontal = (u * view_port_width) * focus_distance;
+        let vertical = (v * view_port_height) * focus_distance;
         let lower_left_corner =
-            c.look_from - (horizontal / 2.) - (vertical / 2.) - (w * c.focus_distance);
+            c.look_from - (horizontal / 2.) - (vertical / 2.) - (w * focus_distance);
 
         Camera {
             origin: c.look_from,

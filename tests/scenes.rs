@@ -20,7 +20,6 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
-        focus_distance: 10.,
         look_from: Vec3::new(-5., 3., 6.),
         look_at: Vec3::new(0.25, 1., 0.),
     };
@@ -129,7 +128,6 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
-        focus_distance: 10.,
         look_from: Vec3::new(-0.5, 0., 4.),
         look_at: Vec3::new(-0.5, 0., 0.),
     };
@@ -174,7 +172,6 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.1,
-        focus_distance: 10.,
         look_from: Vec3::new(0., 0., 4.),
         look_at: Vec3::new(0., 0., 0.),
     };
@@ -200,7 +197,6 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.,
-        focus_distance: 1.,
         look_from: Vec3::new(0., 1., 5.),
         look_at: Vec3::new(0., 1., 0.),
     };
@@ -240,7 +236,6 @@ pub fn create_normal_mapping_scene(
     let camera = CameraConfig {
         vertical_fov_degrees: 40.,
         aperture_size: 0.,
-        focus_distance: 1.,
         look_from: Vec3::new(0., 0., 2.),
         look_at: Vec3::new(0., 0., 0.),
     };
@@ -278,7 +273,6 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 20.,
-        focus_distance: 260.,
         look_from: Vec3::new(-250., 30., 150.),
         look_at: Vec3::new(-50., 0., 0.),
     };
@@ -312,7 +306,6 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 0.,
-        focus_distance: 1.,
         look_from: Vec3::new(2., 1., 3.),
         look_at: Vec3::new(0., 0., 0.),
     };

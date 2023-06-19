@@ -41,7 +41,6 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,
         aperture_size: 0.,
-        focus_distance: 10.,
         look_from: Vec3::new(1., 0.05, 0.),
         look_at: Vec3::new(0., 0.05, 0.),
     };
