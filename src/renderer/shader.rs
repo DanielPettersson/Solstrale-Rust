@@ -1,3 +1,4 @@
+//! Contains the different shader used by the renderer
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::geo::Ray;
 use crate::material::HitRecord;
@@ -10,7 +11,7 @@ use crate::renderer::shader::Shaders::{
 use crate::renderer::Renderer;
 use enum_dispatch::enum_dispatch;
 
-/// shader calculates the color from a ray hitting a hittable object
+/// Calculates the color from a ray hitting a hittable object
 #[enum_dispatch]
 pub trait Shader {
     /// Calculate the color of the pixel

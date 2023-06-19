@@ -1,3 +1,4 @@
+//! Defines a range between min and max inclusive
 use derive_more::Constructor;
 use std::ops::{Add, Sub};
 

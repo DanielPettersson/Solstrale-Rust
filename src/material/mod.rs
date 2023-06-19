@@ -1,4 +1,4 @@
-//! Materials to be applied to [`hittable::Hittable`] objects
+//! Materials to be applied to [`Hittable`] objects
 
 use std::f64::consts::PI;
 

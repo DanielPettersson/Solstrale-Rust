@@ -1,3 +1,4 @@
+//! Functions for converting between Vec3 and Rgb colors
 use crate::geo::vec3::Vec3;
 use crate::util::interval::Interval;
 use image::Rgb;

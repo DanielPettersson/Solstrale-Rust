@@ -11,7 +11,7 @@ use simple_error::SimpleError;
 use crate::camera::{Camera, CameraConfig};
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::geo::{Ray, Uv};
-use crate::hittable::hittable_list::HittableList;
+use crate::hittable::HittableList;
 use crate::hittable::{Hittable, Hittables};
 use crate::post::{PostProcessor, PostProcessors};
 use crate::random::random_normal_float;

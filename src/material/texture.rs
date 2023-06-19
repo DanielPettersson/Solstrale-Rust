@@ -1,3 +1,4 @@
+//! Contains textures to be used by [`Material`]
 use std::error::Error;
 use std::sync::Arc;
 

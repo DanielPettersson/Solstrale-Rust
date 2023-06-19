@@ -2,27 +2,29 @@
 //! Some of these hittable objects are containers for other objects
 //! Some others are used to translate or rotate other objects
 
-pub mod bvh;
-pub mod constant_medium;
-pub mod hittable_list;
-pub mod obj_model;
-pub mod quad;
-pub mod rotation_y;
-pub mod sphere;
-pub mod translation;
-pub mod triangle;
+mod bvh;
+mod constant_medium;
+mod hittable_list;
+mod obj_model;
+mod quad;
+mod rotation_y;
+mod sphere;
+mod translation;
+mod triangle;
 
 use crate::geo::vec3::Vec3;
 use crate::geo::Aabb;
 use crate::geo::Ray;
-use crate::hittable::bvh::Bvh;
-use crate::hittable::constant_medium::ConstantMedium;
-use crate::hittable::hittable_list::HittableList;
-use crate::hittable::quad::Quad;
-use crate::hittable::rotation_y::RotationY;
-use crate::hittable::sphere::Sphere;
-use crate::hittable::translation::Translation;
-use crate::hittable::triangle::Triangle;
+pub use crate::hittable::bvh::Bvh;
+pub use crate::hittable::constant_medium::ConstantMedium;
+pub use crate::hittable::hittable_list::HittableList;
+pub use crate::hittable::quad::Quad;
+pub use crate::hittable::rotation_y::RotationY;
+pub use crate::hittable::sphere::Sphere;
+pub use crate::hittable::translation::Translation;
+pub use crate::hittable::triangle::Triangle;
+pub use crate::hittable::obj_model::load_obj_model;
+pub use crate::hittable::obj_model::load_obj_model_with_default_material;
 use crate::hittable::Hittables::{
     BvhType, ConstantMediumType, HittableListType, QuadType, RotationYType,
     SphereType, TranslationType, TriangleType,

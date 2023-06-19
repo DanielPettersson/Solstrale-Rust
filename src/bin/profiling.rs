@@ -1,9 +1,9 @@
 use image::RgbImage;
 use solstrale::camera::CameraConfig;
 use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
-use solstrale::hittable::hittable_list::HittableList;
-use solstrale::hittable::obj_model::load_obj_model;
-use solstrale::hittable::sphere::Sphere;
+use solstrale::hittable::HittableList;
+use solstrale::hittable::load_obj_model;
+use solstrale::hittable::Sphere;
 use solstrale::hittable::Hittable;
 use solstrale::material::DiffuseLight;
 use solstrale::ray_trace;
