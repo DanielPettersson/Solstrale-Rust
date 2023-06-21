@@ -60,9 +60,18 @@ pub fn load_obj_model_with_default_material(
                 };
                 mat_map.insert(i as i8, Lambertian::new(color, None));
             }
-            Some(diffuse_texture) => {
-                let texture = ImageTexture::load(&format!("{}{}", path, diffuse_texture))?;
-                mat_map.insert(i as i8, Lambertian::new(texture, None));
+            Some(diffuse_texture_filename) => {
+                let albedo_texture =
+                    ImageTexture::load(&format!("{}{}", path, diffuse_texture_filename))?;
+                let normal_texture = match &m.normal_texture {
+                    None => None,
+                    Some(normal_texture_filename) => Some(ImageTexture::load(&format!(
+                        "{}{}",
+                        path, normal_texture_filename
+                    ))?),
+                };
+
+                mat_map.insert(i as i8, Lambertian::new(albedo_texture, normal_texture));
             }
         }
     }
