@@ -4,11 +4,13 @@ use crate::hittable::bvh::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Hittables::TriangleType;
 use crate::hittable::Triangle;
-use crate::material::texture::{ImageTexture, SolidColor};
-use crate::material::{Lambertian, Materials};
+use crate::material::texture::{BumpMap, ImageTexture, SolidColor};
+use crate::material::{texture, Lambertian, Materials};
+use crate::util::height_map;
 use simple_error::SimpleError;
 use std::collections::HashMap;
 use std::error::Error;
+use std::sync::Arc;
 use tobj::LoadOptions;
 
 /// Reads a Wavefront .obj file and creates a bvh containing
@@ -65,10 +67,16 @@ pub fn load_obj_model_with_default_material(
                     ImageTexture::load(&format!("{}{}", path, diffuse_texture_filename))?;
                 let normal_texture = match &m.normal_texture {
                     None => None,
-                    Some(normal_texture_filename) => Some(ImageTexture::load(&format!(
-                        "{}{}",
-                        path, normal_texture_filename
-                    ))?),
+                    Some(bump_texture_filename) => {
+                        let bump_texture_path = format!("{}{}", path, bump_texture_filename);
+                        match texture::load_bump_map(&bump_texture_path)? {
+                            BumpMap::Normal(n) => Some(ImageTexture::new(Arc::new(n))),
+                            BumpMap::Height(h) => {
+                                let n = height_map::to_normal_map(h);
+                                Some(ImageTexture::new(Arc::new(n)))
+                            }
+                        }
+                    }
                 };
 
                 mat_map.insert(i as i8, Lambertian::new(albedo_texture, normal_texture));

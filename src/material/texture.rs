@@ -8,6 +8,7 @@ use image::RgbImage;
 use simple_error::SimpleError;
 
 use crate::geo::vec3::Vec3;
+use crate::material::texture::BumpMap::{Height, Normal};
 use crate::material::texture::Textures::{ImageTextureType, SolidColorType};
 use crate::util::rgb_color::rgb_to_vec3;
 
@@ -33,6 +34,37 @@ impl Clone for Textures {
             SolidColorType(t) => SolidColorType(t.clone()),
             ImageTextureType(t) => ImageTextureType(t.clone()),
         }
+    }
+}
+
+pub enum BumpMap {
+    Normal(RgbImage),
+    Height(RgbImage),
+}
+
+/// Load a bump map image texture and detect if it is a normal of height map
+pub fn load_bump_map(path: &str) -> Result<BumpMap, Box<dyn Error>> {
+    let image = image::open(path)
+        .map_err(|_| SimpleError::new(format!("Failed to load bump texture {}", path)))?
+        .into_rgb8();
+
+    let mut num_normal = 0;
+    let mut num_height = 0;
+
+    for pixel in image.pixels() {
+        let p = rgb_to_vec3(pixel);
+        if (p.length() - 1.).abs() < 0.05 {
+            num_normal += 1;
+        }
+        if (p.x - p.y).abs() < 0.05 && (p.y - p.z).abs() < 0.05 {
+            num_height += 1;
+        }
+    }
+
+    if num_height > num_normal {
+        Ok(Height(image))
+    } else {
+        Ok(Normal(image))
     }
 }
 

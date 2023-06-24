@@ -2,6 +2,7 @@
 
 use std::f64::consts::PI;
 
+pub mod height_map;
 pub mod interval;
 pub mod rgb_color;
 
