@@ -1,0 +1,3 @@
+newmtl Default
+Kd 1 1 0
+map_bump ../textures/earth_height.jpg

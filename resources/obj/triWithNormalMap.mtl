@@ -1,0 +1,4 @@
+newmtl Default
+Kd 0 0 1
+map_Kd ../textures/wall_color.png
+map_bump ../textures/wall_n.png

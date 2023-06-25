@@ -13,8 +13,8 @@ use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
 
 use crate::scenes::{
-    create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_simple_test_scene,
-    create_test_scene, create_uv_scene,
+    create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle,
+    create_simple_test_scene, create_test_scene, create_uv_scene,
 };
 
 mod scenes;
@@ -179,6 +179,30 @@ fn test_render_scene_without_light() {
         Ok(_) => panic!("There should be an error"),
         Err(e) => assert_eq!("Scene should have at least one light", e.to_string()),
     }
+}
+
+#[test]
+fn test_render_obj_with_normal_map() {
+    let render_config = RenderConfig {
+        samples_per_pixel: 50,
+        shader: PathTracingShader::new(50),
+        post_processor: None,
+    };
+    let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithNormalMap.obj");
+
+    render_and_compare_output(scene, "obj_normal_map", 500, 500);
+}
+
+#[test]
+fn test_render_obj_with_height_map() {
+    let render_config = RenderConfig {
+        samples_per_pixel: 50,
+        shader: PathTracingShader::new(50),
+        post_processor: None,
+    };
+    let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithHeightMap.obj");
+
+    render_and_compare_output(scene, "obj_height_map", 500, 500);
 }
 
 fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {

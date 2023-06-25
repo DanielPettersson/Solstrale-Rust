@@ -3,15 +3,15 @@ use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
 use solstrale::geo::Uv;
 use solstrale::hittable::Bvh;
 use solstrale::hittable::ConstantMedium;
+use solstrale::hittable::Hittable;
 use solstrale::hittable::HittableList;
-use solstrale::hittable::{load_obj_model, load_obj_model_with_default_material};
+use solstrale::hittable::Hittables::TriangleType;
 use solstrale::hittable::Quad;
 use solstrale::hittable::RotationY;
 use solstrale::hittable::Sphere;
 use solstrale::hittable::Translation;
 use solstrale::hittable::Triangle;
-use solstrale::hittable::Hittable;
-use solstrale::hittable::Hittables::TriangleType;
+use solstrale::hittable::{load_obj_model, load_obj_model_with_default_material};
 use solstrale::material::texture::{ImageTexture, SolidColor};
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
@@ -321,6 +321,29 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
         world,
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
+        render_config,
+    }
+}
+
+#[allow(dead_code)]
+pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filename: &str) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 30.,
+        aperture_size: 0.,
+        look_from: Vec3::new(0., 0., 2.),
+        look_at: Vec3::new(0., 0., 0.),
+    };
+
+    let mut world = HittableList::new();
+    let light = DiffuseLight::new(15., 15., 15.);
+
+    world.add(Sphere::new(Vec3::new(100., 0., 100.), 35., light));
+    world.add(load_obj_model(path, filename, 1., ZERO_VECTOR).unwrap());
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0., 0., 0.),
         render_config,
     }
 }
