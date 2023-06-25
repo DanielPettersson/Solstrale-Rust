@@ -54,34 +54,29 @@ pub fn load_obj_model_with_default_material(
 
     let mut mat_map = HashMap::from([(-1, default_material.clone())]);
     for (i, m) in materials.iter().enumerate() {
-        match &m.diffuse_texture {
-            None => {
-                let color = match m.diffuse {
-                    None => SolidColor::new(1., 1., 1.),
-                    Some(c) => SolidColor::new_from_f32_array(c),
-                };
-                mat_map.insert(i as i8, Lambertian::new(color, None));
-            }
+        let albedo_texture = match &m.diffuse_texture {
+            None => match m.diffuse {
+                None => SolidColor::new(1., 1., 1.),
+                Some(c) => SolidColor::new_from_f32_array(c),
+            },
             Some(diffuse_texture_filename) => {
-                let albedo_texture =
-                    ImageTexture::load(&format!("{}{}", path, diffuse_texture_filename))?;
-                let normal_texture = match &m.normal_texture {
-                    None => None,
-                    Some(bump_texture_filename) => {
-                        let bump_texture_path = format!("{}{}", path, bump_texture_filename);
-                        match texture::load_bump_map(&bump_texture_path)? {
-                            BumpMap::Normal(n) => Some(ImageTexture::new(Arc::new(n))),
-                            BumpMap::Height(h) => {
-                                let n = height_map::to_normal_map(h);
-                                Some(ImageTexture::new(Arc::new(n)))
-                            }
-                        }
-                    }
-                };
-
-                mat_map.insert(i as i8, Lambertian::new(albedo_texture, normal_texture));
+                ImageTexture::load(&format!("{}{}", path, diffuse_texture_filename))?
             }
-        }
+        };
+        let normal_texture = match &m.normal_texture {
+            None => None,
+            Some(bump_texture_filename) => {
+                let bump_texture_path = format!("{}{}", path, bump_texture_filename);
+                match texture::load_bump_map(&bump_texture_path)? {
+                    BumpMap::Normal(n) => Some(ImageTexture::new(Arc::new(n))),
+                    BumpMap::Height(h) => {
+                        let n = height_map::to_normal_map(h);
+                        Some(ImageTexture::new(Arc::new(n)))
+                    }
+                }
+            }
+        };
+        mat_map.insert(i as i8, Lambertian::new(albedo_texture, normal_texture));
     }
 
     let mut triangles = Vec::new();

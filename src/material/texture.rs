@@ -137,3 +137,26 @@ impl Texture for ImageTexture {
         rgb_to_vec3(pixel)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::material::texture::{load_bump_map, BumpMap};
+
+    #[test]
+    fn test_load_normal_bump_map() {
+        let res = load_bump_map("resources/textures/wall_n.png").unwrap();
+        match res {
+            BumpMap::Normal(n) => assert!(n.width() > 0 && n.height() > 0),
+            BumpMap::Height(_) => panic!("Should not be a height map"),
+        }
+    }
+
+    #[test]
+    fn test_load_height_bump_map() {
+        let res = load_bump_map("resources/textures/sponza-h.jpg").unwrap();
+        match res {
+            BumpMap::Normal(_) => panic!("Should not be a height map"),
+            BumpMap::Height(n) => assert!(n.width() > 0 && n.height() > 0),
+        }
+    }
+}
