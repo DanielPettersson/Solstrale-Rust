@@ -30,7 +30,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
 
     let ground_material = Lambertian::new(image_tex, None);
     let glass_mat = Dielectric::new(SolidColor::new(1., 1., 1.), None, 1.5);
-    let light_mat = DiffuseLight::new(10., 10., 10.);
+    let light_mat = DiffuseLight::new(10., 10., 10., None);
     let red_mat = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
     world.add(Quad::new(
@@ -134,7 +134,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
 
     let mut world = HittableList::new();
     let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
-    let light = DiffuseLight::new(10., 10., 10.);
+    let light = DiffuseLight::new(10., 10., 10., None);
     world.add(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
 
     let mut triangles = Vec::new();
@@ -178,7 +178,7 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
 
     let mut world = HittableList::new();
     let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
-    let light = DiffuseLight::new(10., 10., 10.);
+    let light = DiffuseLight::new(10., 10., 10., None);
     if add_light {
         world.add(Sphere::new(Vec3::new(0., 100., 0.), 20., light))
     }
@@ -202,7 +202,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(10., 10., 10.);
+    let light = DiffuseLight::new(10., 10., 10., None);
 
     world.add(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
 
@@ -241,7 +241,7 @@ pub fn create_normal_mapping_scene(
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(5., 5., 5.);
+    let light = DiffuseLight::new(5., 5., 5., None);
 
     world.add(Sphere::new(light_pos, 30., light));
 
@@ -278,7 +278,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(15., 15., 15.);
+    let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
     let model = load_obj_model("resources/spider/", "spider.obj", 1., ZERO_VECTOR).unwrap();
@@ -311,7 +311,7 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(15., 15., 15.);
+    let light = DiffuseLight::new(15., 15., 15., None);
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
@@ -335,10 +335,40 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(15., 15., 15.);
+    let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(100., 0., 100.), 35., light));
     world.add(load_obj_model(path, filename, 1., ZERO_VECTOR).unwrap());
+
+    Scene {
+        world,
+        camera,
+        background_color: Vec3::new(0., 0., 0.),
+        render_config,
+    }
+}
+
+#[allow(dead_code)]
+pub fn create_light_attenuation_scene(render_config: RenderConfig) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 20.,
+        aperture_size: 0.,
+        look_from: Vec3::new(0., 1., 2.),
+        look_at: Vec3::new(0., 0.2, 0.),
+    };
+
+    let mut world = HittableList::new();
+    let light = DiffuseLight::new(15., 15., 15., Some(0.2));
+    let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
+    let green = Lambertian::new(SolidColor::new(0., 1., 0.), None);
+    let blue = Lambertian::new(SolidColor::new(0., 0., 1.), None);
+    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
+
+    world.add(Sphere::new(Vec3::new(0., 0.1, 0.), 0.05, light));
+    world.add(Sphere::new(Vec3::new(0.25, 0.1, 0.25), 0.1, green));
+    world.add(Sphere::new(Vec3::new(0.25, 0.1, -0.5), 0.1, blue));
+    world.add(Sphere::new(Vec3::new(-0.1, 0.1, -0.1), 0.1, yellow));
+    world.add(Quad::new(Vec3::new(-1., 0., -1.), Vec3::new(2., 0., 0.), Vec3::new(0., 0., 2.), red));
 
     Scene {
         world,

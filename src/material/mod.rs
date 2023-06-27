@@ -272,21 +272,34 @@ fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
 #[derive(Clone, Debug)]
 pub struct DiffuseLight {
     tex: Textures,
+    attenuation_factor: Option<f64>,
 }
 
 impl DiffuseLight {
     #![allow(clippy::new_ret_no_self)]
+
     /// Creates a new diffuse light material
-    pub fn new(r: f64, g: f64, b: f64) -> Materials {
+    ///
+    /// # Arguments
+    /// * `r` - The red component of the light
+    /// * `g` - The green component of the light
+    /// * `b` - The blue component of the light
+    /// * `attenuation_half_length` - The distance at which the light is attenuated to half its strength
+    pub fn new(r: f64, g: f64, b: f64, attenuation_half_length: Option<f64>) -> Materials {
         DiffuseLightType(DiffuseLight {
             tex: SolidColor::new(r, g, b),
+            attenuation_factor: attenuation_half_length.map(|a| 1. / a),
         })
     }
 
-    /// Creates a new diffuse light material from a [´Vec3´] color
+    /// Creates a new diffuse light material
+    ///
+    /// # Arguments
+    /// * `v` - The [`Vec3`] representation of the light color
     pub fn new_from_vec3(v: Vec3) -> Materials {
         DiffuseLightType(DiffuseLight {
             tex: SolidColor::new_from_vec3(v),
+            attenuation_factor: None,
         })
     }
 }
@@ -296,7 +309,13 @@ impl Material for DiffuseLight {
         if !rec.front_face {
             return ZERO_VECTOR;
         }
-        self.tex.color(rec.uv)
+
+        let col = self.tex.color(rec.uv);
+
+        self.attenuation_factor.map_or(
+            col,
+            |af| col * 1. / (1. + af * rec.ray_length)
+        )
     }
 
     fn is_light(&self) -> bool {

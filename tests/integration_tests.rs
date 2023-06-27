@@ -12,10 +12,7 @@ use solstrale::ray_trace;
 use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
 
-use crate::scenes::{
-    create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle,
-    create_simple_test_scene, create_test_scene, create_uv_scene,
-};
+use crate::scenes::{create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_simple_test_scene, create_test_scene, create_uv_scene};
 
 mod scenes;
 
@@ -46,7 +43,7 @@ fn test_render_scene_with_oidn() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
-        post_processor: Some(solstrale::post::OidnPostProcessor::new()),
+        post_processor: Some(OidnPostProcessor::new()),
     };
 
     let scene = create_simple_test_scene(render_config, true);
@@ -203,6 +200,18 @@ fn test_render_obj_with_height_map() {
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithHeightMap.obj");
 
     render_and_compare_output(scene, "obj_height_map", 500, 500);
+}
+
+#[test]
+fn test_render_light_attenuation() {
+    let render_config = RenderConfig {
+        samples_per_pixel: 50,
+        shader: PathTracingShader::new(50),
+        post_processor: None,
+    };
+    let scene = create_light_attenuation_scene(render_config);
+
+    render_and_compare_output(scene, "light_attenuation", 300, 300);
 }
 
 fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
