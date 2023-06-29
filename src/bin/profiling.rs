@@ -46,7 +46,7 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(15., 15., 15.);
+    let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
     world.add(load_obj_model("", obj_path, 1., ZERO_VECTOR).unwrap());

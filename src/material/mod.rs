@@ -4,7 +4,7 @@ use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
+use crate::geo::vec3::{random_in_unit_sphere, Vec3};
 use crate::geo::Uv;
 use crate::geo::{Onb, Ray};
 use crate::material::texture::Textures;
@@ -60,7 +60,7 @@ impl<'a> HitRecord<'a> {
 /// A collection of attributes from the scattering of a ray with a material
 pub struct ScatterRecord<'a> {
     /// The attenuation color from the ray hit
-    pub attenuation: Vec3,
+    pub color: Vec3,
     /// The type of scattering to do for the ray, depends on the material
     pub scatter_type: ScatterType<'a>,
 }
@@ -81,8 +81,8 @@ pub trait Material {
     }
 
     /// Color emitted from the material
-    fn emitted(&self, _rec: &HitRecord) -> Vec3 {
-        ZERO_VECTOR
+    fn emitted(&self, _rec: &HitRecord, _total_ray_length: f64) -> AttenuatedColor {
+        AttenuatedColor::default()
     }
 
     /// Is the material emitting light
@@ -96,8 +96,27 @@ pub trait Material {
     }
 
     /// Get normal transformed by the material, implementations typically uses a normal texture map
-    fn get_transformed_normal(&self, normal: Vec3, _: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, normal: Vec3, _uv: Uv) -> Vec3 {
         normal
+    }
+}
+
+#[derive(Default)]
+/// An color along with along with attenuation information
+pub struct AttenuatedColor {
+    /// Color value before attenuation
+    pub color: Vec3,
+    /// Factor for calculating amount of attenuation
+    pub attenuation_factor: Option<f64>,
+    /// Distance the light has travelled
+    pub accumulated_ray_length: f64,
+}
+
+impl AttenuatedColor {
+    pub fn get_attenuated_color(&self) -> Vec3 {
+        self.attenuation_factor.map_or(self.color, |af| {
+            self.color * 1. / (1. + af * self.accumulated_ray_length)
+        })
     }
 }
 
@@ -150,11 +169,11 @@ impl Material for Lambertian {
     }
 
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.albedo.color(rec.uv);
+        let color = self.albedo.color(rec.uv);
         let pdf = CosinePdf::new(rec.normal);
 
         return Some(ScatterRecord {
-            attenuation,
+            color,
             scatter_type: ScatterType::ScatterPdf(pdf),
         });
     }
@@ -193,7 +212,7 @@ impl Material for Metal {
         let reflected = ray.direction.unit().reflect(rec.normal);
 
         Some(ScatterRecord {
-            attenuation: self.albedo.color(rec.uv),
+            color: self.albedo.color(rec.uv),
             scatter_type: ScatterType::ScatterRay(Ray::new(
                 rec.hit_point,
                 reflected + random_in_unit_sphere() * self.fuzz,
@@ -249,7 +268,7 @@ impl Material for Dielectric {
             };
 
         Some(ScatterRecord {
-            attenuation: self.albedo.color(rec.uv),
+            color: self.albedo.color(rec.uv),
             scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
         })
     }
@@ -272,31 +291,49 @@ fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
 #[derive(Clone, Debug)]
 pub struct DiffuseLight {
     tex: Textures,
+    attenuation_factor: Option<f64>,
 }
 
 impl DiffuseLight {
     #![allow(clippy::new_ret_no_self)]
+
     /// Creates a new diffuse light material
-    pub fn new(r: f64, g: f64, b: f64) -> Materials {
+    ///
+    /// # Arguments
+    /// * `r` - The red component of the light
+    /// * `g` - The green component of the light
+    /// * `b` - The blue component of the light
+    /// * `attenuation_half_length` - The distance at which the light is attenuated to half its strength
+    pub fn new(r: f64, g: f64, b: f64, attenuation_half_length: Option<f64>) -> Materials {
         DiffuseLightType(DiffuseLight {
             tex: SolidColor::new(r, g, b),
+            attenuation_factor: attenuation_half_length.map(|a| 1. / a),
         })
     }
 
-    /// Creates a new diffuse light material from a [´Vec3´] color
+    /// Creates a new diffuse light material
+    ///
+    /// # Arguments
+    /// * `v` - The [`Vec3`] representation of the light color
     pub fn new_from_vec3(v: Vec3) -> Materials {
         DiffuseLightType(DiffuseLight {
             tex: SolidColor::new_from_vec3(v),
+            attenuation_factor: None,
         })
     }
 }
 
 impl Material for DiffuseLight {
-    fn emitted(&self, rec: &HitRecord) -> Vec3 {
+    fn emitted(&self, rec: &HitRecord, total_ray_length: f64) -> AttenuatedColor {
         if !rec.front_face {
-            return ZERO_VECTOR;
+            return AttenuatedColor::default();
         }
-        self.tex.color(rec.uv)
+
+        AttenuatedColor {
+            color: self.tex.color(rec.uv),
+            attenuation_factor: self.attenuation_factor,
+            accumulated_ray_length: total_ray_length,
+        }
     }
 
     fn is_light(&self) -> bool {
@@ -334,12 +371,12 @@ impl Material for Isotropic {
 
     /// Returns a randomly scattered ray in any direction
     fn scatter(&self, _: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let attenuation = self.tex.color(rec.uv);
+        let color = self.tex.color(rec.uv);
 
         let pdf = SpherePdf::new();
 
         Some(ScatterRecord {
-            attenuation,
+            color,
             scatter_type: ScatterType::ScatterPdf(pdf),
         })
     }
