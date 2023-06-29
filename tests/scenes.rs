@@ -349,7 +349,10 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
 }
 
 #[allow(dead_code)]
-pub fn create_light_attenuation_scene(render_config: RenderConfig) -> Scene {
+pub fn create_light_attenuation_scene(
+    render_config: RenderConfig,
+    attenuation_half_length: Option<f64>,
+) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 20.,
         aperture_size: 0.,
@@ -358,17 +361,22 @@ pub fn create_light_attenuation_scene(render_config: RenderConfig) -> Scene {
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(15., 15., 15., Some(0.2));
+    let light = DiffuseLight::new(25., 25., 25., attenuation_half_length);
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
     let green = Lambertian::new(SolidColor::new(0., 1., 0.), None);
     let blue = Lambertian::new(SolidColor::new(0., 0., 1.), None);
-    let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
+    let glass = Dielectric::new(SolidColor::new(0.8, 0.8, 0.8), None, 1.5);
 
-    world.add(Sphere::new(Vec3::new(0., 0.1, 0.), 0.05, light));
+    world.add(Sphere::new(Vec3::new(0., 0.2, 0.), 0.03, light));
     world.add(Sphere::new(Vec3::new(0.25, 0.1, 0.25), 0.1, green));
     world.add(Sphere::new(Vec3::new(0.25, 0.1, -0.5), 0.1, blue));
-    world.add(Sphere::new(Vec3::new(-0.1, 0.1, -0.1), 0.1, yellow));
-    world.add(Quad::new(Vec3::new(-1., 0., -1.), Vec3::new(2., 0., 0.), Vec3::new(0., 0., 2.), red));
+    world.add(Sphere::new(Vec3::new(-0.1, 0.1, -0.1), 0.1, glass));
+    world.add(Quad::new(
+        Vec3::new(-1., 0., -1.),
+        Vec3::new(2., 0., 0.),
+        Vec3::new(0., 0., 2.),
+        red,
+    ));
 
     Scene {
         world,

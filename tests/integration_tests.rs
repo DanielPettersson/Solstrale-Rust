@@ -12,7 +12,11 @@ use solstrale::ray_trace;
 use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
 
-use crate::scenes::{create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_simple_test_scene, create_test_scene, create_uv_scene};
+use crate::scenes::{
+    create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene,
+    create_obj_with_box, create_obj_with_triangle, create_simple_test_scene, create_test_scene,
+    create_uv_scene,
+};
 
 mod scenes;
 
@@ -204,14 +208,24 @@ fn test_render_obj_with_height_map() {
 
 #[test]
 fn test_render_light_attenuation() {
-    let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
-        post_processor: None,
-    };
-    let scene = create_light_attenuation_scene(render_config);
+    for attenuation_half_length in [Some(0.1), Some(0.8), None] {
+        let render_config = RenderConfig {
+            samples_per_pixel: 50,
+            shader: PathTracingShader::new(50),
+            post_processor: None,
+        };
+        let scene = create_light_attenuation_scene(render_config, attenuation_half_length);
 
-    render_and_compare_output(scene, "light_attenuation", 300, 300);
+        render_and_compare_output(
+            scene,
+            &format!(
+                "light_attenuation_{}",
+                attenuation_half_length.map_or(-1., |a| a)
+            ),
+            300,
+            300,
+        );
+    }
 }
 
 fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
