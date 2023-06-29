@@ -84,7 +84,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             }
         }
     }
-    world.add(Bvh::new(balls));
+    world.add(Bvh::new(balls).unwrap());
 
     world.add(Triangle::new(
         Vec3::new(1., 0.1, 2.),
@@ -156,7 +156,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
     }
 
     if use_bvh {
-        world.add(Bvh::new(triangles))
+        world.add(Bvh::new(triangles).unwrap())
     }
 
     Scene {

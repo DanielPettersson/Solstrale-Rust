@@ -2,6 +2,7 @@ use std::fmt;
 use std::fmt::Display;
 
 use derive_more::Display;
+use simple_error::SimpleError;
 
 use crate::geo::Aabb;
 use crate::geo::Ray;
@@ -50,11 +51,14 @@ impl Bvh {
     /// The bounding Volume Hierarchy sorts the hittables in a binary tree
     /// where each node has a bounding box.
     /// This is to optimize the ray intersection search when having many hittable objects.
-    pub fn new(list: Vec<Triangle>) -> Hittables {
+    pub fn new(list: Vec<Triangle>) -> Result<Hittables, SimpleError> {
         if list.is_empty() {
-            panic!("Cannot create a Bvh with empty list of objects")
+            Err(SimpleError::new(
+                "Cannot create a Bvh with empty list of objects",
+            ))
+        } else {
+            Ok(BvhType(new_bvh(list)))
         }
-        BvhType(new_bvh(list))
     }
 }
 
@@ -172,18 +176,14 @@ impl Hittable for Bvh {
 
 #[cfg(test)]
 mod tests {
-    use std::panic::catch_unwind;
-
-    use panic_message::panic_message;
-
     use super::*;
 
     #[test]
     fn bvh_with_empty_list() {
-        let res = catch_unwind(|| Bvh::new(Vec::new())).unwrap_err();
+        let res = Bvh::new(Vec::new());
         assert_eq!(
             "Cannot create a Bvh with empty list of objects",
-            panic_message(&res)
+            res.err().unwrap().as_str()
         )
     }
 }

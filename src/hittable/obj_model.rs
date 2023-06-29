@@ -151,7 +151,7 @@ pub fn load_obj_model_with_default_material(
         }
     }
 
-    Ok(Bvh::new(triangles))
+    Ok(Bvh::new(triangles)?)
 }
 
 #[cfg(test)]
