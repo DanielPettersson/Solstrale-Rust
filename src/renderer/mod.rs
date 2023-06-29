@@ -13,6 +13,7 @@ use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::geo::{Ray, Uv};
 use crate::hittable::HittableList;
 use crate::hittable::{Hittable, Hittables};
+use crate::material::AttenuatedColor;
 use crate::post::{PostProcessor, PostProcessors};
 use crate::random::random_normal_float;
 use crate::renderer::shader::{AlbedoShader, NormalShader, Shader, Shaders};
@@ -62,6 +63,13 @@ pub struct Renderer {
     normal_shader: NormalShader,
 }
 
+/// Result of calculating color for a ray
+pub(crate) struct RayColorResult {
+    pixel_color: AttenuatedColor,
+    albedo_color: Vec3,
+    normal_color: Vec3,
+}
+
 impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
     pub fn new(scene: Scene) -> Result<Renderer, Box<dyn Error>> {
@@ -87,28 +95,47 @@ impl Renderer {
         })
     }
 
-    fn ray_color(&self, ray: &Ray, depth: u32) -> (Vec3, Vec3, Vec3) {
+    fn ray_color(&self, ray: &Ray, depth: u32, accumulated_ray_length: f64) -> RayColorResult {
         match self.scene.world.hit(ray, &RAY_INTERVAL) {
             Some(rec) => {
-                let pixel_color = self
-                    .scene
-                    .render_config
-                    .shader
-                    .shade(self, &rec, ray, depth);
+                let attenuated_color = self.scene.render_config.shader.shade(
+                    self,
+                    &rec,
+                    ray,
+                    depth,
+                    accumulated_ray_length,
+                );
 
                 if depth == 0 && self.scene.render_config.post_processor.is_some() {
-                    let albedo_color = self.albedo_shader.shade(self, &rec, ray, depth);
-                    let normal_color = self.normal_shader.shade(self, &rec, ray, depth);
-                    return (pixel_color, albedo_color, normal_color);
+                    let albedo_color = self
+                        .albedo_shader
+                        .shade(self, &rec, ray, depth, accumulated_ray_length)
+                        .color;
+                    let normal_color = self
+                        .normal_shader
+                        .shade(self, &rec, ray, depth, accumulated_ray_length)
+                        .color;
+                    return RayColorResult {
+                        pixel_color: attenuated_color,
+                        albedo_color,
+                        normal_color,
+                    };
                 }
 
-                (pixel_color, ZERO_VECTOR, ZERO_VECTOR)
+                RayColorResult {
+                    pixel_color: attenuated_color,
+                    albedo_color: ZERO_VECTOR,
+                    normal_color: ZERO_VECTOR,
+                }
             }
-            None => (
-                self.scene.background_color,
-                self.scene.background_color,
-                ZERO_VECTOR,
-            ),
+            None => RayColorResult {
+                pixel_color: AttenuatedColor {
+                    color: self.scene.background_color,
+                    ..AttenuatedColor::default()
+                },
+                albedo_color: self.scene.background_color,
+                normal_color: ZERO_VECTOR,
+            },
         }
     }
 
@@ -167,13 +194,13 @@ impl Renderer {
                             let u = (x as f64 + random_normal_float()) / (image_width - 1) as f64;
                             let v = (y as f64 + random_normal_float()) / (image_height - 1) as f64;
                             let ray = cam.get_ray(Uv::new(u as f32, v as f32));
-                            let (pixel_color, albedo_color, normal_color) = self.ray_color(&ray, 0);
+                            let ray_color_res = self.ray_color(&ray, 0, 0.);
 
-                            row_pixel_colors[x] = pixel_color;
+                            row_pixel_colors[x] = ray_color_res.pixel_color.get_attenuated_color();
 
                             if has_post_processor {
-                                row_albedo_colors[x] = albedo_color;
-                                row_normal_colors[x] = normal_color;
+                                row_albedo_colors[x] = ray_color_res.albedo_color;
+                                row_normal_colors[x] = ray_color_res.normal_color;
                             }
                         }
 
