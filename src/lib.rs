@@ -1,10 +1,21 @@
 #![warn(missing_docs)]
-//! A path tracer library
+//! A multi-threaded Monte Carlo path tracing library, that as such has features like:
+//! * Global illumination
+//! * Caustics
+//! * Reflection
+//! * Refraction
+//! * Soft shadows
 //!
-//! A port of the Go Solstrale library
-//! See [Go Solstrale library][go_solstrale].
+//! Additionally the library has:
+//! * Loading of obj models with included materials
+//! * Multi-threaded Bvh creation to greatly speed up rendering
+//! * Post processing of rendered images using [Open Image Denoise](https://www.openimagedenoise.org/)
 //!
-//! [go_solstrale]: https://github.com/DanielPettersson/solstrale
+//! ## Example output
+//! ![sponza-bump2](https://github.com/DanielPettersson/solstrale-rust/assets/3603911/0ab79ed9-cddf-46b1-84e7-03cef35f5600)
+//!
+//! ## Credits
+//! The ray tracing is inspired by the excellent [Ray Tracing in One Weekend Book Series](https://github.com/RayTracing/raytracing.github.io) by Peter Shirley
 
 use crate::renderer::{RenderProgress, Renderer, Scene};
 use std::error::Error;
