@@ -20,7 +20,7 @@ codegen-units = 1
 debug = 1
 
 [dependencies]
-fastrand = "1.8.0"
+fastrand = "2.0.0"
 image = "0.24.5"
 simple-error = "0.3.0"
 enum_dispatch = "0.3.11"

@@ -18,10 +18,6 @@ pub fn bvh_benchmark(c: &mut Criterion) {
     for input_param in [
         BvhInput::new(10, true),
         BvhInput::new(10, false),
-        BvhInput::new(100, true),
-        BvhInput::new(100, false),
-        BvhInput::new(1000, true),
-        BvhInput::new(1000, false),
         BvhInput::new(10000, true),
         BvhInput::new(10000, false),
     ]
