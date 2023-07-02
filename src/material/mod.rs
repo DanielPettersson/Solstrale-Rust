@@ -1,4 +1,4 @@
-//! Materials to be applied to [`Hittable`] objects
+//! Materials to be applied to hittable objects
 
 use std::f64::consts::PI;
 
@@ -67,7 +67,9 @@ pub struct ScatterRecord<'a> {
 
 /// An enum of scatter types
 pub enum ScatterType<'a> {
+    /// Scatters using [`Pdfs`] to determine the ray
     ScatterPdf(Pdfs<'a>),
+    /// A basic scattering without the use of [`Pdfs`]
     ScatterRay(Ray),
 }
 
@@ -113,6 +115,8 @@ pub struct AttenuatedColor {
 }
 
 impl AttenuatedColor {
+    /// Calculate the actual color based on the original color
+    /// and the attenuation information
     pub fn get_attenuated_color(&self) -> Vec3 {
         self.attenuation_factor.map_or(self.color, |af| {
             self.color * 1. / (1. + af * self.accumulated_ray_length)
@@ -122,12 +126,17 @@ impl AttenuatedColor {
 
 #[enum_dispatch(Material)]
 #[derive(Debug)]
-/// An enum of materials
+/// An enum of available materials
 pub enum Materials {
+    /// [`Material`] of type [`Lambertian`]
     LambertianType(Lambertian),
+    /// [`Material`] of type [`Metal`]
     MetalType(Metal),
+    /// [`Material`] of type [`Dielectric`]
     DielectricType(Dielectric),
+    /// [`Material`] of type [`DiffuseLight`]
     DiffuseLightType(DiffuseLight),
+    /// [`Material`] of type [`Isotropic`]
     IsotropicType(Isotropic),
 }
 

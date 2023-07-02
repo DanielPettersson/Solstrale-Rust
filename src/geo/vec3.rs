@@ -1,3 +1,5 @@
+//! 3 dimensional vector module, used for positions and also
+//! colors in the crate
 use crate::random;
 use derive_more::{Constructor, Display};
 use std::f64::consts::PI;
@@ -44,7 +46,7 @@ impl Add for Vec3 {
     }
 }
 
-impl Add<f64>for Vec3 {
+impl Add<f64> for Vec3 {
     type Output = Vec3;
 
     /// returns a Vec3 that has all values added by scalar
@@ -100,7 +102,7 @@ impl Sub for Vec3 {
     }
 }
 
-impl Sub<f64>for Vec3 {
+impl Sub<f64> for Vec3 {
     type Output = Vec3;
 
     /// returns a Vec3 that has all values subtracted by scalar

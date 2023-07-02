@@ -12,7 +12,7 @@ use solstrale::hittable::Sphere;
 use solstrale::hittable::Translation;
 use solstrale::hittable::Triangle;
 use solstrale::hittable::{load_obj_model, load_obj_model_with_default_material};
-use solstrale::material::texture::{ImageTexture, SolidColor};
+use solstrale::material::texture::{ImageMap, SolidColor};
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
 
@@ -26,7 +26,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
 
     let mut world = HittableList::new();
 
-    let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
+    let image_tex = ImageMap::load("resources/textures/tex.jpg").unwrap();
 
     let ground_material = Lambertian::new(image_tex, None);
     let glass_mat = Dielectric::new(SolidColor::new(1., 1., 1.), None, 1.5);
@@ -206,7 +206,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
 
     world.add(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
 
-    let tex = ImageTexture::load("resources/textures/checker.jpg").unwrap();
+    let tex = ImageMap::load("resources/textures/checker.jpg").unwrap();
     let checker_mat = Lambertian::new(tex, None);
 
     world.add(Triangle::new_with_tex_coords(
@@ -245,9 +245,9 @@ pub fn create_normal_mapping_scene(
 
     world.add(Sphere::new(light_pos, 30., light));
 
-    let albedo_tex = ImageTexture::load("resources/textures/wall_color.png").unwrap();
+    let albedo_tex = ImageMap::load("resources/textures/wall_color.png").unwrap();
     let normal_tex = if normal_mapping_enabled {
-        Some(ImageTexture::load("resources/textures/wall_n.png").unwrap())
+        Some(ImageMap::load("resources/textures/wall_n.png").unwrap())
     } else {
         None
     };
@@ -284,7 +284,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let model = load_obj_model("resources/spider/", "spider.obj", 1., ZERO_VECTOR).unwrap();
     world.add(model);
 
-    let image_tex = ImageTexture::load("resources/textures/tex.jpg").unwrap();
+    let image_tex = ImageMap::load("resources/textures/tex.jpg").unwrap();
     let ground_material = Lambertian::new(image_tex, None);
     world.add(Quad::new(
         Vec3::new(-200., -30., -200.),

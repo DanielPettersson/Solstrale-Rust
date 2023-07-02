@@ -18,16 +18,16 @@ use crate::geo::Ray;
 pub use crate::hittable::bvh::Bvh;
 pub use crate::hittable::constant_medium::ConstantMedium;
 pub use crate::hittable::hittable_list::HittableList;
+pub use crate::hittable::obj_model::load_obj_model;
+pub use crate::hittable::obj_model::load_obj_model_with_default_material;
 pub use crate::hittable::quad::Quad;
 pub use crate::hittable::rotation_y::RotationY;
 pub use crate::hittable::sphere::Sphere;
 pub use crate::hittable::translation::Translation;
 pub use crate::hittable::triangle::Triangle;
-pub use crate::hittable::obj_model::load_obj_model;
-pub use crate::hittable::obj_model::load_obj_model_with_default_material;
 use crate::hittable::Hittables::{
-    BvhType, ConstantMediumType, HittableListType, QuadType, RotationYType,
-    SphereType, TranslationType, TriangleType,
+    BvhType, ConstantMediumType, HittableListType, QuadType, RotationYType, SphereType,
+    TranslationType, TriangleType,
 };
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -68,17 +68,25 @@ pub trait Hittable {
     }
 }
 
-/// Enum of the hittable types
 #[enum_dispatch(Hittable)]
 #[derive(Debug)]
+/// Enum of the available hittable types
 pub enum Hittables {
+    /// [`Hittable`] of the type [`HittableList`]
     HittableListType(HittableList),
+    /// [`Hittable`] of the type [`Sphere`]
     SphereType(Sphere),
+    /// [`Hittable`] of the type [`ConstantMedium`]
     ConstantMediumType(ConstantMedium),
+    /// [`Hittable`] of the type [`Quad`]
     QuadType(Quad),
+    /// [`Hittable`] of the type [`RotationY`]
     RotationYType(RotationY),
+    /// [`Hittable`] of the type [`Translation`]
     TranslationType(Translation),
+    /// [`Hittable`] of the type [`Triangle`]
     TriangleType(Triangle),
+    /// [`Hittable`] of the type [`Bvh`]
     BvhType(Bvh),
 }
 

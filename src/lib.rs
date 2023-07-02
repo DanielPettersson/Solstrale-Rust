@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 //! A path tracer library
 //!
 //! A port of the Go Solstrale library

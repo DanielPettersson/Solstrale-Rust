@@ -1,3 +1,4 @@
+//! Utility to convert a [`RgbImage`] height map to a normal map
 use image::RgbImage;
 
 const STRENGTH: f32 = 6.0;

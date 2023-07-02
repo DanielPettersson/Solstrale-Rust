@@ -4,7 +4,7 @@ use crate::hittable::bvh::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Hittables::TriangleType;
 use crate::hittable::Triangle;
-use crate::material::texture::{BumpMap, ImageTexture, SolidColor};
+use crate::material::texture::{BumpMap, ImageMap, SolidColor};
 use crate::material::{texture, Lambertian, Materials};
 use crate::util::height_map;
 use simple_error::SimpleError;
@@ -60,7 +60,7 @@ pub fn load_obj_model_with_default_material(
                 Some(c) => SolidColor::new_from_f32_array(c),
             },
             Some(diffuse_texture_filename) => {
-                ImageTexture::load(&format!("{}{}", path, diffuse_texture_filename))?
+                ImageMap::load(&format!("{}{}", path, diffuse_texture_filename))?
             }
         };
         let normal_texture = match &m.normal_texture {
@@ -68,10 +68,10 @@ pub fn load_obj_model_with_default_material(
             Some(bump_texture_filename) => {
                 let bump_texture_path = format!("{}{}", path, bump_texture_filename);
                 match texture::load_bump_map(&bump_texture_path)? {
-                    BumpMap::Normal(n) => Some(ImageTexture::new(Arc::new(n))),
+                    BumpMap::Normal(n) => Some(ImageMap::new(Arc::new(n))),
                     BumpMap::Height(h) => {
                         let n = height_map::to_normal_map(h);
-                        Some(ImageTexture::new(Arc::new(n)))
+                        Some(ImageMap::new(Arc::new(n)))
                     }
                 }
             }

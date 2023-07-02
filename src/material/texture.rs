@@ -1,4 +1,4 @@
-//! Contains textures to be used by [`Material`]
+//! Contains textures to be used by materials
 use std::error::Error;
 use std::sync::Arc;
 
@@ -9,7 +9,7 @@ use simple_error::SimpleError;
 
 use crate::geo::vec3::Vec3;
 use crate::material::texture::BumpMap::{Height, Normal};
-use crate::material::texture::Textures::{ImageTextureType, SolidColorType};
+use crate::material::texture::Textures::{ImageMapType, SolidColorType};
 use crate::util::rgb_color::rgb_to_vec3;
 
 /// Describes the color of a material.
@@ -22,23 +22,28 @@ pub trait Texture {
 
 #[enum_dispatch(Texture)]
 #[derive(Debug)]
-/// An enum of textures
+/// An enum of available textures types
 pub enum Textures {
+    /// [`Texture`] of the type [`SolidColor`]
     SolidColorType(SolidColor),
-    ImageTextureType(ImageTexture),
+    /// [`Texture`] of the type [`ImageMap`]
+    ImageMapType(ImageMap),
 }
 
 impl Clone for Textures {
     fn clone(&self) -> Self {
         match self {
             SolidColorType(t) => SolidColorType(t.clone()),
-            ImageTextureType(t) => ImageTextureType(t.clone()),
+            ImageMapType(t) => ImageMapType(t.clone()),
         }
     }
 }
 
+/// The variants of bump maps supported.
 pub enum BumpMap {
+    /// Each pixel in the image describes the normal vector directly
     Normal(RgbImage),
+    /// Each pixel in the image describes the relative height in the surface
     Height(RgbImage),
 }
 
@@ -78,6 +83,8 @@ impl SolidColor {
     pub fn new(r: f64, g: f64, b: f64) -> Textures {
         SolidColor::new_from_vec3(Vec3::new(r, g, b))
     }
+    /// Create a new solid color texture from an array
+    /// where colors are in the order r, g, b
     pub fn new_from_f32_array(c: [f32; 3]) -> Textures {
         SolidColor::new(c[0] as f64, c[1] as f64, c[2] as f64)
     }
@@ -95,13 +102,13 @@ impl Texture for SolidColor {
 
 /// Texture that uses image data for color by loading the image from the path
 #[derive(Clone, Debug)]
-pub struct ImageTexture {
+pub struct ImageMap {
     image: Arc<RgbImage>,
     max_x: f32,
     max_y: f32,
 }
 
-impl ImageTexture {
+impl ImageMap {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new image texture from a file path
     pub fn load(path: &str) -> Result<Textures, Box<dyn Error>> {
@@ -115,7 +122,7 @@ impl ImageTexture {
     pub fn new(image: Arc<RgbImage>) -> Textures {
         let w = image.width();
         let h = image.height();
-        ImageTextureType(ImageTexture {
+        ImageMapType(ImageMap {
             image,
             max_x: w as f32 - 1.,
             max_y: h as f32 - 1.,
@@ -123,7 +130,7 @@ impl ImageTexture {
     }
 }
 
-impl Texture for ImageTexture {
+impl Texture for ImageMap {
     /// Returns the color in the image data that corresponds to the UV coordinate of the hittable
     /// If UV coordinates from hit record is <0 or >1 texture wraps
     fn color(&self, uv: Uv) -> Vec3 {

@@ -4,7 +4,7 @@ use crate::geo::Ray;
 use crate::material::Material;
 use crate::material::ScatterType::{ScatterPdf, ScatterRay};
 use crate::material::{AttenuatedColor, HitRecord};
-use crate::pdf::{mix_generate, mix_value, HittablePdf};
+use crate::pdf::{mix_generate, mix_value, ContainerPdf};
 use crate::renderer::shader::Shaders::{
     AlbedoShaderType, NormalShaderType, PathTracingShaderType, SimpleShaderType,
 };
@@ -35,11 +35,15 @@ pub trait Shader {
 
 #[enum_dispatch(Shader)]
 #[derive(Clone)]
-/// An enum of shaders
+/// An enum of available shaders
 pub enum Shaders {
+    /// [`Shader`] of type [`PathTracingShader`]
     PathTracingShaderType(PathTracingShader),
+    /// [`Shader`] of type [`AlbedoShader`]
     AlbedoShaderType(AlbedoShader),
+    /// [`Shader`] of type [`NormalShader`]
     NormalShaderType(NormalShader),
+    /// [`Shader`] of type [`SimpleShader`]
     SimpleShaderType(SimpleShader),
 }
 
@@ -88,7 +92,7 @@ impl Shader for PathTracingShader {
                     }
                 }
                 ScatterPdf(pdf) => {
-                    let light_pdf = HittablePdf::new(&renderer.lights, rec.hit_point);
+                    let light_pdf = ContainerPdf::new(&renderer.lights, rec.hit_point);
 
                     let pdf_direction = mix_generate(&light_pdf, &pdf);
                     let scattered = Ray::new(rec.hit_point, pdf_direction);

@@ -21,8 +21,9 @@ pub trait PostProcessor {
 
 #[enum_dispatch(PostProcessor)]
 #[derive(Clone)]
-/// An enum of post processors
+/// An enum of available post processors
 pub enum PostProcessors {
+    /// [`PostProcessor`] of type [`OidnPostProcessor`]
     OidnPostProcessorType(OidnPostProcessor),
 }
 

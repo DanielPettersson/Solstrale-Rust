@@ -7,7 +7,7 @@ use enum_dispatch::enum_dispatch;
 use crate::geo::vec3::{random_cosine_direction, random_unit_vector, Vec3};
 use crate::geo::Onb;
 use crate::hittable::{Hittable, Hittables};
-use crate::pdf::Pdfs::{CosinePdfType, HittablePdfType, SpherePdfType};
+use crate::pdf::Pdfs::{ContainerPdfType, CosinePdfType, SpherePdfType};
 use crate::random::random_normal_float;
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -22,10 +22,13 @@ pub trait Pdf {
 }
 
 #[enum_dispatch(Pdf)]
-/// Probability density functions
+/// The available probability density functions
 pub enum Pdfs<'a> {
+    /// [`Pdf`] of type [`CosinePdf`]
     CosinePdfType(CosinePdf),
-    HittablePdfType(HittablePdf<'a>),
+    /// [`Pdf`] of type [`ContainerPdf`]
+    ContainerPdfType(ContainerPdf<'a>),
+    /// [`Pdf`] of type [`SpherePdf`]
     SpherePdfType(SpherePdf),
 }
 
@@ -70,20 +73,20 @@ impl Pdf for CosinePdf {
 }
 
 /// A wrapper for generating pdfs for a list of hittable objects
-pub struct HittablePdf<'a> {
+pub struct ContainerPdf<'a> {
     objects: &'a Hittables,
     origin: Vec3,
 }
 
-impl<'a> HittablePdf<'a> {
+impl<'a> ContainerPdf<'a> {
     #![allow(clippy::new_ret_no_self)]
-    /// Creates a new instance of HittablePdf
+    /// Creates a new instance of ContainerPdf
     pub fn new(objects: &'a Hittables, origin: Vec3) -> Pdfs {
-        HittablePdfType(HittablePdf { objects, origin })
+        ContainerPdfType(ContainerPdf { objects, origin })
     }
 }
 
-impl<'a> Pdf for HittablePdf<'a> {
+impl<'a> Pdf for ContainerPdf<'a> {
     fn value(&self, direction: Vec3) -> f64 {
         self.objects.pdf_value(self.origin, direction)
     }
