@@ -16,5 +16,8 @@ Additionally the library has:
 * Multi-threaded Bvh creation to greatly speed up rendering
 * Post processing of rendered images using [Open Image Denoise](https://www.openimagedenoise.org/)
 
+## Example output
+![sponza-bump2](https://github.com/DanielPettersson/solstrale-rust/assets/3603911/0ab79ed9-cddf-46b1-84e7-03cef35f5600)
+
 ## Credits
 The ray tracing is inspired by the excellent [Ray Tracing in One Weekend Book Series](https://github.com/RayTracing/raytracing.github.io) by Peter Shirley
