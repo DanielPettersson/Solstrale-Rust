@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use crate::geo::Uv;
 use enum_dispatch::enum_dispatch;
+use image::io::Reader;
 use image::RgbImage;
 use simple_error::SimpleError;
 
@@ -49,9 +50,10 @@ pub enum BumpMap {
 
 /// Load a bump map image texture and detect if it is a normal of height map
 pub fn load_bump_map(path: &str) -> Result<BumpMap, Box<dyn Error>> {
-    let image = image::open(path)
-        .map_err(|_| SimpleError::new(format!("Failed to load bump texture {}", path)))?
-        .into_rgb8();
+    let mut reader = Reader::open(path).map_err(|err| SimpleError::new(format!("Failed to open bump texture {}: {}", path, err)))?;
+    reader.no_limits();
+    reader = reader.with_guessed_format().map_err(|err| SimpleError::new(format!("Failed to load bump texture {}: {}", path, err)))?;
+    let image = reader.decode().map_err(|err| SimpleError::new(format!("Failed to decode bump texture {}: {}", path, err)))?.into_rgb8();
 
     let mut num_normal = 0;
     let mut num_height = 0;
@@ -112,9 +114,11 @@ impl ImageMap {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new image texture from a file path
     pub fn load(path: &str) -> Result<Textures, Box<dyn Error>> {
-        let image = image::open(path)
-            .map_err(|_| SimpleError::new(format!("Failed to load image texture {}", path)))?
-            .into_rgb8();
+        let mut reader = Reader::open(path).map_err(|err| SimpleError::new(format!("Failed to open image texture {}: {}", path, err)))?;
+        reader.no_limits();
+        reader = reader.with_guessed_format().map_err(|err| SimpleError::new(format!("Failed to load image texture {}: {}", path, err)))?;
+        let image = reader.decode().map_err(|err| SimpleError::new(format!("Failed to decode image texture {}: {}", path, err)))?.into_rgb8();
+
         Ok(Self::new(Arc::new(image)))
     }
 

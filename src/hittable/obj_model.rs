@@ -181,13 +181,13 @@ mod tests {
     fn missing_image_file() {
         let res = load_obj_model("resources/obj/", "missingImage.obj", 1., ZERO_VECTOR);
         assert!(format!("{}", res.err().unwrap())
-            .contains("Failed to load image texture resources/obj/missing.jpg"));
+            .contains("Failed to open image texture resources/obj/missing.jpg"));
     }
 
     #[test]
     fn invalid_image_file() {
         let res = load_obj_model("resources/obj/", "invalidImage.obj", 1., ZERO_VECTOR);
         assert!(format!("{}", res.err().unwrap())
-            .contains("Failed to load image texture resources/obj/invalidImage.mtl"));
+            .contains("Failed to decode image texture resources/obj/invalidImage.mtl"));
     }
 }
