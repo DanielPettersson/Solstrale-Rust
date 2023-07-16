@@ -15,6 +15,8 @@ Additionally the library has:
 * Loading of obj models with included materials
 * Multi-threaded Bvh creation to greatly speed up rendering
 * Post processing of rendered images using [Open Image Denoise](https://www.openimagedenoise.org/)
+* Bump mapping
+* Light attenuation
 
 ## Example output
 ![happy](https://github.com/DanielPettersson/solstrale-rust/assets/3603911/c5357792-a3dc-42f9-8230-320140f9c30e)
