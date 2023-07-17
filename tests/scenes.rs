@@ -1,5 +1,6 @@
 use solstrale::camera::CameraConfig;
-use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
+use solstrale::geo::transformation::{NopTransformer, RotationY, Transformations, Translation};
+use solstrale::geo::vec3::Vec3;
 use solstrale::geo::Uv;
 use solstrale::hittable::Bvh;
 use solstrale::hittable::ConstantMedium;
@@ -7,9 +8,7 @@ use solstrale::hittable::Hittable;
 use solstrale::hittable::HittableList;
 use solstrale::hittable::Hittables::TriangleType;
 use solstrale::hittable::Quad;
-use solstrale::hittable::RotationY;
 use solstrale::hittable::Sphere;
-use solstrale::hittable::Translation;
 use solstrale::hittable::Triangle;
 use solstrale::hittable::{load_obj_model, load_obj_model_with_default_material};
 use solstrale::material::texture::{ImageMap, SolidColor};
@@ -38,24 +37,21 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         Vec3::new(20., 0., 0.),
         Vec3::new(0., 0., 20.),
         ground_material,
+        &NopTransformer(),
     ));
     world.add(Sphere::new(Vec3::new(-1., 1., 0.), 1., glass_mat));
-    world.add(RotationY::new(
+    world.add(Quad::new_box(
+        Vec3::new(0., 0., -0.5),
+        Vec3::new(1., 2., 0.5),
+        red_mat.clone(),
+        &RotationY::new(15.),
+    ));
+    world.add(ConstantMedium::new(
         Quad::new_box(
             Vec3::new(0., 0., -0.5),
             Vec3::new(1., 2., 0.5),
             red_mat.clone(),
-        ),
-        15.,
-    ));
-    world.add(ConstantMedium::new(
-        Translation::new(
-            Quad::new_box(
-                Vec3::new(0., 0., -0.5),
-                Vec3::new(1., 2., 0.5),
-                red_mat.clone(),
-            ),
-            Vec3::new(0., 0., 1.),
+            &Translation::new(Vec3::new(0., 0., 1.)),
         ),
         0.1,
         Vec3::new(1., 1., 1.),
@@ -64,7 +60,10 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         Vec3::new(-1., 2., 0.),
         Vec3::new(-0.5, 2.5, 0.5),
         red_mat.clone(),
+        &NopTransformer(),
     ));
+
+    let nop_transformer = NopTransformer();
 
     let mut balls = Vec::new();
     for ii in (0..10).step_by(2) {
@@ -78,6 +77,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
                     Vec3::new(i, j, k + 0.8),
                     Vec3::new(i, j + 0.05, k),
                     red_mat.clone(),
+                    &nop_transformer,
                 ) {
                     balls.push(t)
                 }
@@ -91,28 +91,28 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         Vec3::new(3., 0.1, 2.),
         Vec3::new(2., 0.1, 1.),
         red_mat,
+        &nop_transformer,
     ));
 
     // Lights
 
     world.add(Sphere::new(Vec3::new(10., 5., 10.), 10., light_mat.clone()));
-    world.add(Translation::new(
-        RotationY::new(
-            Quad::new(
-                Vec3::new(0., 0., 0.),
-                Vec3::new(2., 0., 0.),
-                Vec3::new(0., 0., 2.),
-                light_mat.clone(),
-            ),
-            45.,
-        ),
-        Vec3::new(-1., 10., -1.),
+    world.add(Quad::new(
+        Vec3::new(0., 0., 0.),
+        Vec3::new(2., 0., 0.),
+        Vec3::new(0., 0., 2.),
+        light_mat.clone(),
+        &Transformations::new(vec![
+            Box::new(RotationY::new(45.)),
+            Box::new(Translation::new(Vec3::new(-1., 10., -1.))),
+        ]),
     ));
     world.add(Triangle::new(
         Vec3::new(-2., 1., -3.),
         Vec3::new(0., 1., -3.),
         Vec3::new(-1., 2., -3.),
         light_mat,
+        &nop_transformer,
     ));
 
     Scene {
@@ -137,6 +137,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
     let light = DiffuseLight::new(10., 10., 10., None);
     world.add(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
 
+    let nop_transformer = NopTransformer();
     let mut triangles = Vec::new();
     for x in 0..num_triangles {
         let cx = x as f64 - num_triangles as f64 / 2.;
@@ -145,6 +146,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
             Vec3::new(cx + 1., -0.5, 0.),
             Vec3::new(cx + 0.5, 0.5, 0.),
             yellow.clone(),
+            &nop_transformer,
         );
         if use_bvh {
             if let TriangleType(tri) = t {
@@ -217,6 +219,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
         Uv::new(2., -1.),
         Uv::new(0., 2.),
         checker_mat,
+        &NopTransformer(),
     ));
 
     Scene {
@@ -258,6 +261,7 @@ pub fn create_normal_mapping_scene(
         Vec3::new(2., 0., 0.),
         Vec3::new(0., 2., 0.),
         mat,
+        &NopTransformer(),
     ));
 
     Scene {
@@ -281,7 +285,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    let model = load_obj_model("resources/spider/", "spider.obj", 1., ZERO_VECTOR).unwrap();
+    let model = load_obj_model("resources/spider/", "spider.obj", &NopTransformer()).unwrap();
     world.add(model);
 
     let image_tex = ImageMap::load("resources/textures/tex.jpg").unwrap();
@@ -291,6 +295,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
         Vec3::new(400., 0., 0.),
         Vec3::new(0., 0., 400.),
         ground_material,
+        &NopTransformer(),
     ));
 
     Scene {
@@ -315,7 +320,8 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    world.add(load_obj_model_with_default_material(path, filename, 1., ZERO_VECTOR, red).unwrap());
+    world
+        .add(load_obj_model_with_default_material(path, filename, &NopTransformer(), red).unwrap());
 
     Scene {
         world,
@@ -338,7 +344,7 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
     let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(100., 0., 100.), 35., light));
-    world.add(load_obj_model(path, filename, 1., ZERO_VECTOR).unwrap());
+    world.add(load_obj_model(path, filename, &NopTransformer()).unwrap());
 
     Scene {
         world,
@@ -376,6 +382,7 @@ pub fn create_light_attenuation_scene(
         Vec3::new(2., 0., 0.),
         Vec3::new(0., 0., 2.),
         red,
+        &NopTransformer(),
     ));
 
     Scene {

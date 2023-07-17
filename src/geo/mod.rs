@@ -1,4 +1,5 @@
 //! Basic geometric constructs
+pub mod transformation;
 pub mod vec3;
 
 use crate::geo::vec3::Vec3;

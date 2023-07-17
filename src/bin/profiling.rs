@@ -1,16 +1,19 @@
+use std::sync::mpsc::channel;
+use std::{env, thread};
+
 use image::RgbImage;
+
 use solstrale::camera::CameraConfig;
-use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
-use solstrale::hittable::HittableList;
+use solstrale::geo::transformation::NopTransformer;
+use solstrale::geo::vec3::Vec3;
 use solstrale::hittable::load_obj_model;
-use solstrale::hittable::Sphere;
 use solstrale::hittable::Hittable;
+use solstrale::hittable::HittableList;
+use solstrale::hittable::Sphere;
 use solstrale::material::DiffuseLight;
 use solstrale::ray_trace;
 use solstrale::renderer::shader::PathTracingShader;
 use solstrale::renderer::{RenderConfig, Scene};
-use std::sync::mpsc::channel;
-use std::{env, thread};
 
 fn main() {
     let obj_path = &env::args().nth(1).expect("Object path argument required");
@@ -49,7 +52,7 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
     let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
-    world.add(load_obj_model("", obj_path, 1., ZERO_VECTOR).unwrap());
+    world.add(load_obj_model("", obj_path, &NopTransformer()).unwrap());
 
     Scene {
         world,

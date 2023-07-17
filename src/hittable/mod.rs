@@ -1,15 +1,12 @@
 //! Objects that are hittable by rays shot by the ray tracer.
 //! Some of these hittable objects are containers for other objects
-//! Some others are used to translate or rotate other objects
 
 mod bvh;
 mod constant_medium;
 mod hittable_list;
 mod obj_model;
 mod quad;
-mod rotation_y;
 mod sphere;
-mod translation;
 mod triangle;
 
 use crate::geo::vec3::Vec3;
@@ -21,13 +18,10 @@ pub use crate::hittable::hittable_list::HittableList;
 pub use crate::hittable::obj_model::load_obj_model;
 pub use crate::hittable::obj_model::load_obj_model_with_default_material;
 pub use crate::hittable::quad::Quad;
-pub use crate::hittable::rotation_y::RotationY;
 pub use crate::hittable::sphere::Sphere;
-pub use crate::hittable::translation::Translation;
 pub use crate::hittable::triangle::Triangle;
 use crate::hittable::Hittables::{
-    BvhType, ConstantMediumType, HittableListType, QuadType, RotationYType, SphereType,
-    TranslationType, TriangleType,
+    BvhType, ConstantMediumType, HittableListType, QuadType, SphereType, TriangleType,
 };
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -80,10 +74,6 @@ pub enum Hittables {
     ConstantMediumType(ConstantMedium),
     /// [`Hittable`] of the type [`Quad`]
     QuadType(Quad),
-    /// [`Hittable`] of the type [`RotationY`]
-    RotationYType(RotationY),
-    /// [`Hittable`] of the type [`Translation`]
-    TranslationType(Translation),
     /// [`Hittable`] of the type [`Triangle`]
     TriangleType(Triangle),
     /// [`Hittable`] of the type [`Bvh`]
@@ -97,8 +87,6 @@ impl Clone for Hittables {
             SphereType(h) => SphereType(h.clone()),
             ConstantMediumType(h) => ConstantMediumType(h.clone()),
             QuadType(h) => QuadType(h.clone()),
-            RotationYType(h) => RotationYType(h.clone()),
-            TranslationType(h) => TranslationType(h.clone()),
             TriangleType(h) => TriangleType(h.clone()),
             BvhType(h) => BvhType(h.clone()),
         }

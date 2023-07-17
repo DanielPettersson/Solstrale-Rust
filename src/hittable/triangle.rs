@@ -1,3 +1,4 @@
+use crate::geo::transformation::Transformer;
 use crate::geo::vec3::{Vec3, ALMOST_ZERO};
 use crate::geo::Aabb;
 use crate::geo::Ray;
@@ -28,7 +29,13 @@ pub struct Triangle {
 impl Triangle {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new triangle hittable object with no texture coordinates
-    pub fn new(v0: Vec3, v1: Vec3, v2: Vec3, mat: Materials) -> Hittables {
+    pub fn new(
+        v0: Vec3,
+        v1: Vec3,
+        v2: Vec3,
+        mat: Materials,
+        transformation: &dyn Transformer,
+    ) -> Hittables {
         Triangle::new_with_tex_coords(
             v0,
             v1,
@@ -37,6 +44,7 @@ impl Triangle {
             Uv { u: 0.0, v: 0.0 },
             Uv { u: 0.0, v: 0.0 },
             mat,
+            transformation,
         )
     }
 
@@ -49,7 +57,12 @@ impl Triangle {
         uv1: Uv,
         uv2: Uv,
         mat: Materials,
+        transformation: &dyn Transformer,
     ) -> Hittables {
+        let v0 = transformation.transform(v0, false);
+        let v1 = transformation.transform(v1, false);
+        let v2 = transformation.transform(v2, false);
+
         let b_box = Aabb::new_from_3_points(v0, v1, v2).pad_if_needed();
         let v0v1 = v1 - v0;
         let v0v2 = v2 - v0;

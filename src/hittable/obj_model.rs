@@ -1,3 +1,4 @@
+use crate::geo::transformation::Transformer;
 use crate::geo::vec3::Vec3;
 use crate::geo::Uv;
 use crate::hittable::bvh::Bvh;
@@ -19,14 +20,12 @@ use tobj::LoadOptions;
 pub fn load_obj_model(
     path: &str,
     filename: &str,
-    scale: f64,
-    pos: Vec3,
+    transformation: &dyn Transformer,
 ) -> Result<Hittables, Box<dyn Error>> {
     load_obj_model_with_default_material(
         path,
         filename,
-        scale,
-        pos,
+        transformation,
         Lambertian::new(SolidColor::new(1., 1., 1.), None),
     )
 }
@@ -38,8 +37,7 @@ pub fn load_obj_model(
 pub fn load_obj_model_with_default_material(
     path: &str,
     filename: &str,
-    scale: f64,
-    pos: Vec3,
+    transformation: &dyn Transformer,
     default_material: Materials,
 ) -> Result<Hittables, Box<dyn Error>> {
     let load_options = LoadOptions {
@@ -89,24 +87,21 @@ pub fn load_obj_model_with_default_material(
                 mesh.positions[pos_offset] as f64,
                 mesh.positions[pos_offset + 1] as f64,
                 mesh.positions[pos_offset + 2] as f64,
-            ) * scale
-                + pos;
+            );
 
             pos_offset = (mesh.indices[i + 1] * 3) as usize;
             let v1 = Vec3::new(
                 mesh.positions[pos_offset] as f64,
                 mesh.positions[pos_offset + 1] as f64,
                 mesh.positions[pos_offset + 2] as f64,
-            ) * scale
-                + pos;
+            );
 
             pos_offset = (mesh.indices[i + 2] * 3) as usize;
             let v2 = Vec3::new(
                 mesh.positions[pos_offset] as f64,
                 mesh.positions[pos_offset + 1] as f64,
                 mesh.positions[pos_offset + 2] as f64,
-            ) * scale
-                + pos;
+            );
 
             let (uv0, uv1, uv2) = if mesh.texcoords.is_empty() {
                 (
@@ -144,7 +139,7 @@ pub fn load_obj_model_with_default_material(
             };
 
             if let TriangleType(t) =
-                Triangle::new_with_tex_coords(v0, v1, v2, uv0, uv1, uv2, material)
+                Triangle::new_with_tex_coords(v0, v1, v2, uv0, uv1, uv2, material, transformation)
             {
                 triangles.push(t);
             }
@@ -157,11 +152,11 @@ pub fn load_obj_model_with_default_material(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geo::vec3::ZERO_VECTOR;
+    use crate::geo::transformation::NopTransformer;
 
     #[test]
     fn missing_file() {
-        let res = load_obj_model("resources/obj/", "missing.obj", 1., ZERO_VECTOR);
+        let res = load_obj_model("resources/obj/", "missing.obj", &NopTransformer());
         assert_eq!(
             "failed to load obj model from resources/obj/missing.obj",
             format!("{}", res.err().unwrap())
@@ -170,7 +165,11 @@ mod tests {
 
     #[test]
     fn missing_material_file() {
-        let res = load_obj_model("resources/obj/", "missingMaterialLib.obj", 1., ZERO_VECTOR);
+        let res = load_obj_model(
+            "resources/obj/",
+            "missingMaterialLib.obj",
+            &NopTransformer(),
+        );
         assert_eq!(
             "failed to load MTL file for resources/obj/missingMaterialLib.obj",
             format!("{}", res.err().unwrap())
@@ -179,14 +178,14 @@ mod tests {
 
     #[test]
     fn missing_image_file() {
-        let res = load_obj_model("resources/obj/", "missingImage.obj", 1., ZERO_VECTOR);
+        let res = load_obj_model("resources/obj/", "missingImage.obj", &NopTransformer());
         assert!(format!("{}", res.err().unwrap())
             .contains("Failed to open image texture resources/obj/missing.jpg"));
     }
 
     #[test]
     fn invalid_image_file() {
-        let res = load_obj_model("resources/obj/", "invalidImage.obj", 1., ZERO_VECTOR);
+        let res = load_obj_model("resources/obj/", "invalidImage.obj", &NopTransformer());
         assert!(format!("{}", res.err().unwrap())
             .contains("Failed to decode image texture resources/obj/invalidImage.mtl"));
     }
