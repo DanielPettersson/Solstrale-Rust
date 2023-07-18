@@ -81,6 +81,7 @@ pub mod post;
 pub mod random;
 pub mod renderer;
 pub mod util;
+pub mod loader;
 
 /// Executes the ray tracing with the given [`Scene`] and reports [`RenderProgress`] on
 /// the output [`Sender`]. Listens to abort [`Receiver`] for aborting a started ray trace operation

@@ -6,19 +6,36 @@ use crate::util::degrees_to_radians;
 /// A trait used for different transformations on [`Vec3`]
 pub trait Transformer {
     /// Applies transformation
-    fn transform(&self, _vec: Vec3, only_rotation: bool) -> Vec3;
+    fn transform(&self, _vec: Vec3, _skip_translation: bool) -> Vec3;
 }
 
 /// A transformer that does nothing
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{NopTransformer, Transformer};
+/// # use solstrale::geo::vec3::Vec3;
+/// let res = NopTransformer().transform(Vec3::new(1., 2., 3.), false);
+/// assert_eq!(Vec3::new(1., 2., 3.), res)
+/// ```
 pub struct NopTransformer();
 
 impl Transformer for NopTransformer {
-    fn transform(&self, vec: Vec3, _only_rotation: bool) -> Vec3 {
+    fn transform(&self, vec: Vec3, _skip_translation: bool) -> Vec3 {
         vec
     }
 }
 
 /// A list of transformations to apply to a given [`Vec3`]
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{RotationY, Transformations, Transformer, Translation};
+/// # use solstrale::geo::vec3::Vec3;
+/// let res = Transformations::new(vec![
+///     Box::new(RotationY::new(90.)),
+///     Box::new(Translation::new(Vec3::new(1., 0., 0.))),
+/// ]).transform(Vec3::new(1., 0., 0.), false);
+/// assert_eq!(Vec3::new(1., 0., -1.), res)
+/// ```
 pub struct Transformations {
     transformations: Vec<Box<dyn Transformer>>,
 }
@@ -31,16 +48,26 @@ impl Transformations {
 }
 
 impl Transformer for Transformations {
-    fn transform(&self, vec: Vec3, only_rotation: bool) -> Vec3 {
+    fn transform(&self, vec: Vec3, skip_translation: bool) -> Vec3 {
         let mut v = vec;
         for t in &self.transformations {
-            v = t.transform(v, only_rotation);
+            v = t.transform(v, skip_translation);
         }
         v
     }
 }
 
 /// Translates the position of the given [`Vec3`]
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{Translation, Transformer};
+/// # use solstrale::geo::vec3::Vec3;
+/// let translation = Translation::new(Vec3::new(4., 5., 6.));
+/// let res = translation.transform(Vec3::new(1., 2., 3.), false);
+/// assert_eq!(Vec3::new(5., 7., 9.), res);
+/// let res = translation.transform(Vec3::new(1., 2., 3.), true);
+/// assert_eq!(Vec3::new(1., 2., 3.), res);
+/// ```
 pub struct Translation {
     translation: Vec3,
 }
@@ -53,8 +80,8 @@ impl Translation {
 }
 
 impl Transformer for Translation {
-    fn transform(&self, vec: Vec3, only_rotation: bool) -> Vec3 {
-        if only_rotation {
+    fn transform(&self, vec: Vec3, skip_translation: bool) -> Vec3 {
+        if skip_translation {
             vec
         } else {
             vec + self.translation
@@ -63,6 +90,13 @@ impl Transformer for Translation {
 }
 
 /// Rotates the given [`Vec3`] around the global x-axis by angle degrees
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{RotationX, Transformer};
+/// # use solstrale::geo::vec3::{ALMOST_ZERO, Vec3};
+/// let res = RotationX::new(90.).transform(Vec3::new(2., 1., 0.), false);
+/// assert!((Vec3::new(2., 0., -1.) - res).length() < ALMOST_ZERO)
+/// ```
 pub struct RotationX {
     sin_theta: f64,
     cos_theta: f64,
@@ -80,7 +114,7 @@ impl RotationX {
 }
 
 impl Transformer for RotationX {
-    fn transform(&self, vec: Vec3, _only_rotation: bool) -> Vec3 {
+    fn transform(&self, vec: Vec3, _skip_translation: bool) -> Vec3 {
         Vec3::new(
             vec.x,
             self.cos_theta * vec.y + self.sin_theta * vec.z,
@@ -90,6 +124,13 @@ impl Transformer for RotationX {
 }
 
 /// Rotates the given [`Vec3`] around the global y-axis by angle degrees
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{RotationY, Transformer};
+/// # use solstrale::geo::vec3::{ALMOST_ZERO, Vec3};
+/// let res = RotationY::new(90.).transform(Vec3::new(2., 1., 0.), false);
+/// assert!((Vec3::new(0., 1., -2.) - res).length() < ALMOST_ZERO)
+/// ```
 pub struct RotationY {
     sin_theta: f64,
     cos_theta: f64,
@@ -107,7 +148,7 @@ impl RotationY {
 }
 
 impl Transformer for RotationY {
-    fn transform(&self, vec: Vec3, _only_rotation: bool) -> Vec3 {
+    fn transform(&self, vec: Vec3, _skip_translation: bool) -> Vec3 {
         Vec3::new(
             self.cos_theta * vec.x + self.sin_theta * vec.z,
             vec.y,
@@ -117,6 +158,13 @@ impl Transformer for RotationY {
 }
 
 /// Rotates the given [`Vec3`] around the global z-axis by angle degrees
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{RotationZ, Transformer};
+/// # use solstrale::geo::vec3::{ALMOST_ZERO, Vec3};
+/// let res = RotationZ::new(90.).transform(Vec3::new(1., 0., 2.), false);
+/// assert!((Vec3::new(0., -1., 2.) - res).length() < ALMOST_ZERO)
+/// ```
 pub struct RotationZ {
     sin_theta: f64,
     cos_theta: f64,
@@ -134,7 +182,7 @@ impl RotationZ {
 }
 
 impl Transformer for RotationZ {
-    fn transform(&self, vec: Vec3, _only_rotation: bool) -> Vec3 {
+    fn transform(&self, vec: Vec3, _skip_translation: bool) -> Vec3 {
         Vec3::new(
             self.cos_theta * vec.x + self.sin_theta * vec.y,
             -self.sin_theta * vec.x + self.cos_theta * vec.y,
@@ -144,6 +192,13 @@ impl Transformer for RotationZ {
 }
 
 /// Scales the given [`Vec3`] by the given factor
+/// # Examples:
+/// ```
+/// # use solstrale::geo::transformation::{Scale, Transformer};
+/// # use solstrale::geo::vec3::{ALMOST_ZERO, Vec3};
+/// let res = Scale::new(3.).transform(Vec3::new(2., 1., 0.), false);
+/// assert_eq!(Vec3::new(6., 3., 0.), res);
+/// ```
 pub struct Scale {
     scale: f64,
 }
@@ -156,7 +211,7 @@ impl Scale {
 }
 
 impl Transformer for Scale {
-    fn transform(&self, vec: Vec3, _only_rotation: bool) -> Vec3 {
+    fn transform(&self, vec: Vec3, _skip_translation: bool) -> Vec3 {
         vec * self.scale
     }
 }

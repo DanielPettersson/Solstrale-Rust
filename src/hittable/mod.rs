@@ -4,7 +4,6 @@
 mod bvh;
 mod constant_medium;
 mod hittable_list;
-mod obj_model;
 mod quad;
 mod sphere;
 mod triangle;
@@ -15,8 +14,6 @@ use crate::geo::Ray;
 pub use crate::hittable::bvh::Bvh;
 pub use crate::hittable::constant_medium::ConstantMedium;
 pub use crate::hittable::hittable_list::HittableList;
-pub use crate::hittable::obj_model::load_obj_model;
-pub use crate::hittable::obj_model::load_obj_model_with_default_material;
 pub use crate::hittable::quad::Quad;
 pub use crate::hittable::sphere::Sphere;
 pub use crate::hittable::triangle::Triangle;

@@ -6,10 +6,11 @@ use image::RgbImage;
 use solstrale::camera::CameraConfig;
 use solstrale::geo::transformation::NopTransformer;
 use solstrale::geo::vec3::Vec3;
-use solstrale::hittable::load_obj_model;
 use solstrale::hittable::Hittable;
 use solstrale::hittable::HittableList;
 use solstrale::hittable::Sphere;
+use solstrale::loader::obj::Obj;
+use solstrale::loader::Loader;
 use solstrale::material::DiffuseLight;
 use solstrale::ray_trace;
 use solstrale::renderer::shader::PathTracingShader;
@@ -52,7 +53,11 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
     let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
-    world.add(load_obj_model("", obj_path, &NopTransformer()).unwrap());
+    world.add(
+        Obj::new("", obj_path)
+            .load(&NopTransformer(), None)
+            .unwrap(),
+    );
 
     Scene {
         world,

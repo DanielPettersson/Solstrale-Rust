@@ -48,6 +48,7 @@ impl Triangle {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     /// Creates a new triangle flat hittable object. A counter clockwise winding is expected
     pub fn new_with_tex_coords(
         v0: Vec3,

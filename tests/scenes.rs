@@ -10,7 +10,8 @@ use solstrale::hittable::Hittables::TriangleType;
 use solstrale::hittable::Quad;
 use solstrale::hittable::Sphere;
 use solstrale::hittable::Triangle;
-use solstrale::hittable::{load_obj_model, load_obj_model_with_default_material};
+use solstrale::loader::obj::Obj;
+use solstrale::loader::Loader;
 use solstrale::material::texture::{ImageMap, SolidColor};
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
@@ -285,7 +286,9 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    let model = load_obj_model("resources/spider/", "spider.obj", &NopTransformer()).unwrap();
+    let model = Obj::new("resources/spider/", "spider.obj")
+        .load(&NopTransformer(), None)
+        .unwrap();
     world.add(model);
 
     let image_tex = ImageMap::load("resources/textures/tex.jpg").unwrap();
@@ -320,8 +323,11 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
     world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    world
-        .add(load_obj_model_with_default_material(path, filename, &NopTransformer(), red).unwrap());
+    world.add(
+        Obj::new(path, filename)
+            .load(&NopTransformer(), Some(red))
+            .unwrap(),
+    );
 
     Scene {
         world,
@@ -344,7 +350,11 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
     let light = DiffuseLight::new(15., 15., 15., None);
 
     world.add(Sphere::new(Vec3::new(100., 0., 100.), 35., light));
-    world.add(load_obj_model(path, filename, &NopTransformer()).unwrap());
+    world.add(
+        Obj::new(path, filename)
+            .load(&NopTransformer(), None)
+            .unwrap(),
+    );
 
     Scene {
         world,
