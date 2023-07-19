@@ -4,6 +4,7 @@ use std::error::Error;
 use std::ops::Deref;
 use std::sync::mpsc::{Receiver, SendError, Sender};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, SystemTime};
 
 use image::{ImageBuffer, RgbImage};
 use simple_error::SimpleError;
@@ -49,6 +50,8 @@ pub struct Scene {
 pub struct RenderProgress {
     /// progress is reported between 0 -> 1 and represents a percentage of completion
     pub progress: f64,
+    /// Current speed of rendering in number of frames per second
+    pub fps: Option<f64>,
     /// Output image so far, will be final when progress is 1
     pub render_image: RgbImage,
 }
@@ -147,6 +150,7 @@ impl Renderer {
         output: &Sender<RenderProgress>,
         abort: &Receiver<bool>,
     ) -> Result<(), Box<dyn Error>> {
+        let mut last_frame_render_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
         let has_post_processor = self.scene.render_config.post_processor.is_some();
@@ -231,6 +235,7 @@ impl Renderer {
                 samples_per_pixel,
                 pixel_colors.lock().unwrap().deref(),
                 output,
+                &mut last_frame_render_time,
             )?
         }
 
@@ -249,6 +254,7 @@ impl Renderer {
                         Ok(img) => {
                             output.send(RenderProgress {
                                 progress: 1.,
+                                fps: None,
                                 render_image: img,
                             })?;
                             Ok(())
@@ -269,6 +275,7 @@ fn create_progress(
     samples_per_pixel: u32,
     pixel_colors: &[Vec3],
     output: &Sender<RenderProgress>,
+    last_frame_render_time: &mut SystemTime,
 ) -> Result<(), SendError<RenderProgress>> {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
 
@@ -281,8 +288,20 @@ fn create_progress(
 
     output.send(RenderProgress {
         progress: sample as f64 / samples_per_pixel as f64,
+        fps: Some(calculate_fps(last_frame_render_time)),
         render_image: img,
     })
+}
+
+fn calculate_fps(last_frame_render_time: &mut SystemTime) -> f64 {
+    let now = SystemTime::now();
+    let micros_since_last_frame = now
+        .duration_since(*last_frame_render_time)
+        .unwrap_or(Duration::from_millis(1))
+        .as_micros();
+    *last_frame_render_time = now;
+
+    1_000_000. / micros_since_last_frame as f64
 }
 
 fn find_lights(s: &Hittables, list: &mut Hittables) {
