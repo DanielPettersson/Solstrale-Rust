@@ -2,7 +2,7 @@
 
 use std::error::Error;
 use std::ops::Deref;
-use std::sync::mpsc::{Receiver, SendError, Sender};
+use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
@@ -52,6 +52,8 @@ pub struct RenderProgress {
     pub progress: f64,
     /// Current speed of rendering in number of frames per second
     pub fps: Option<f64>,
+    /// Estimated time left until rendering is complete
+    pub estimated_time_left: Duration,
     /// Output image so far, will be final when progress is 1
     pub render_image: RgbImage,
 }
@@ -151,6 +153,7 @@ impl Renderer {
         abort: &Receiver<bool>,
     ) -> Result<(), Box<dyn Error>> {
         let mut last_frame_render_time = SystemTime::now();
+        let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
         let has_post_processor = self.scene.render_config.post_processor.is_some();
@@ -228,15 +231,28 @@ impl Renderer {
                 }
             });
 
-            create_progress(
-                image_width as u32,
-                image_height as u32,
-                sample,
-                samples_per_pixel,
-                pixel_colors.lock().unwrap().deref(),
-                output,
-                &mut last_frame_render_time,
-            )?
+            {
+                let mut img: RgbImage = ImageBuffer::new(image_width as u32, image_height as u32);
+                let pixel_colors = pixel_colors.lock().unwrap();
+
+                for y in 0..image_height as u32 {
+                    for x in 0..image_width as u32 {
+                        let i = (y * image_width as u32 + x) as usize;
+                        img.put_pixel(x, y, to_rgb_color(pixel_colors[i], sample))
+                    }
+                }
+
+                output.send(RenderProgress {
+                    progress: sample as f64 / samples_per_pixel as f64,
+                    fps: Some(calculate_fps(&mut last_frame_render_time)),
+                    estimated_time_left: calculate_estimated_time_left(
+                        &render_start_time,
+                        sample,
+                        samples_per_pixel,
+                    ),
+                    render_image: img,
+                })?
+            }
         }
 
         match &self.scene.render_config.post_processor {
@@ -255,6 +271,7 @@ impl Renderer {
                             output.send(RenderProgress {
                                 progress: 1.,
                                 fps: None,
+                                estimated_time_left: Duration::from_millis(0),
                                 render_image: img,
                             })?;
                             Ok(())
@@ -268,31 +285,6 @@ impl Renderer {
     }
 }
 
-fn create_progress(
-    image_width: u32,
-    image_height: u32,
-    sample: u32,
-    samples_per_pixel: u32,
-    pixel_colors: &[Vec3],
-    output: &Sender<RenderProgress>,
-    last_frame_render_time: &mut SystemTime,
-) -> Result<(), SendError<RenderProgress>> {
-    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
-
-    for y in 0..image_height {
-        for x in 0..image_width {
-            let i = (y * image_width + x) as usize;
-            img.put_pixel(x, y, to_rgb_color(pixel_colors[i], sample))
-        }
-    }
-
-    output.send(RenderProgress {
-        progress: sample as f64 / samples_per_pixel as f64,
-        fps: Some(calculate_fps(last_frame_render_time)),
-        render_image: img,
-    })
-}
-
 fn calculate_fps(last_frame_render_time: &mut SystemTime) -> f64 {
     let now = SystemTime::now();
     let micros_since_last_frame = now
@@ -302,6 +294,22 @@ fn calculate_fps(last_frame_render_time: &mut SystemTime) -> f64 {
     *last_frame_render_time = now;
 
     1_000_000. / micros_since_last_frame as f64
+}
+
+fn calculate_estimated_time_left(
+    render_start_time: &SystemTime,
+    samples_done: u32,
+    total_samples: u32,
+) -> Duration {
+    let now = SystemTime::now();
+    let time_since_start = now
+        .duration_since(*render_start_time)
+        .unwrap_or(Duration::from_millis(1));
+    let samples_left = total_samples - samples_done;
+
+    time_since_start
+        .div_f32(samples_done as f32)
+        .mul_f32(samples_left as f32)
 }
 
 fn find_lights(s: &Hittables, list: &mut Hittables) {
