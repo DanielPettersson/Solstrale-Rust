@@ -242,11 +242,13 @@ impl Renderer {
                     }
                 }
 
+                let now = SystemTime::now();
                 output.send(RenderProgress {
                     progress: sample as f64 / samples_per_pixel as f64,
-                    fps: Some(calculate_fps(&mut last_frame_render_time)),
+                    fps: Some(calculate_fps(&mut last_frame_render_time, now)),
                     estimated_time_left: calculate_estimated_time_left(
-                        &render_start_time,
+                        render_start_time,
+                        now,
                         sample,
                         samples_per_pixel,
                     ),
@@ -285,8 +287,7 @@ impl Renderer {
     }
 }
 
-fn calculate_fps(last_frame_render_time: &mut SystemTime) -> f64 {
-    let now = SystemTime::now();
+fn calculate_fps(last_frame_render_time: &mut SystemTime, now: SystemTime) -> f64 {
     let micros_since_last_frame = now
         .duration_since(*last_frame_render_time)
         .unwrap_or(Duration::from_millis(1))
@@ -297,13 +298,13 @@ fn calculate_fps(last_frame_render_time: &mut SystemTime) -> f64 {
 }
 
 fn calculate_estimated_time_left(
-    render_start_time: &SystemTime,
+    render_start_time: SystemTime,
+    now: SystemTime,
     samples_done: u32,
     total_samples: u32,
 ) -> Duration {
-    let now = SystemTime::now();
     let time_since_start = now
-        .duration_since(*render_start_time)
+        .duration_since(render_start_time)
         .unwrap_or(Duration::from_millis(1));
     let samples_left = total_samples - samples_done;
 
@@ -324,5 +325,37 @@ fn find_lights(s: &Hittables, list: &mut Hittables) {
                 find_lights(child, list)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::renderer::{calculate_estimated_time_left, calculate_fps};
+    use std::time::{Duration, SystemTime};
+
+    #[test]
+    fn test_calculate_fps() {
+        let mut last_frame_render_time = SystemTime::UNIX_EPOCH + Duration::from_millis(900);
+        let now = SystemTime::UNIX_EPOCH + Duration::from_millis(1000);
+
+        let fps = calculate_fps(&mut last_frame_render_time, now);
+
+        assert_eq!(fps, 10.);
+        assert_eq!(last_frame_render_time, now);
+    }
+
+    #[test]
+    fn test_calculate_estimated_time_left() {
+        let render_start = SystemTime::UNIX_EPOCH;
+        let now = SystemTime::UNIX_EPOCH + Duration::from_millis(1000);
+
+        let mut time_left = calculate_estimated_time_left(render_start, now, 1, 100);
+        assert_eq!(time_left, Duration::from_secs(99));
+
+        time_left = calculate_estimated_time_left(render_start, now, 50, 100);
+        assert_eq!(time_left, Duration::from_secs(1));
+
+        time_left = calculate_estimated_time_left(render_start, now, 100, 100);
+        assert_eq!(time_left, Duration::from_secs(0));
     }
 }
