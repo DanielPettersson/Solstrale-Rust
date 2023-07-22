@@ -178,10 +178,10 @@ impl Renderer {
 
             pool.scope(|s| {
                 for y in 0..image_height {
-                    let cam = camera.clone();
-                    let cloned_pixel_colors = pixel_colors.clone();
-                    let cloned_albedo_colors = albedo_colors.clone();
-                    let cloned_normal_colors = normal_colors.clone();
+                    let camera = camera.clone();
+                    let pixel_colors = pixel_colors.clone();
+                    let albedo_colors = albedo_colors.clone();
+                    let normal_colors = normal_colors.clone();
 
                     s.spawn(move |_| {
                         let mut row_pixel_colors: Vec<Vec3> = vec![ZERO_VECTOR; image_width];
@@ -200,7 +200,7 @@ impl Renderer {
                         for x in 0..image_width {
                             let u = (x as f64 + random_normal_float()) / (image_width - 1) as f64;
                             let v = (y as f64 + random_normal_float()) / (image_height - 1) as f64;
-                            let ray = cam.get_ray(Uv::new(u as f32, v as f32));
+                            let ray = camera.get_ray(Uv::new(u as f32, v as f32));
                             let ray_color_res = self.ray_color(&ray, 0, 0.);
 
                             row_pixel_colors[x] = ray_color_res.pixel_color.get_attenuated_color();
@@ -211,38 +211,24 @@ impl Renderer {
                             }
                         }
 
-                        let mut pc = cloned_pixel_colors.lock().unwrap();
-                        for (x, c) in row_pixel_colors.iter().enumerate() {
-                            pc[yi + x] += *c;
-                        }
-
+                        add_row_data(yi, &mut pixel_colors.lock().unwrap(), &row_pixel_colors);
                         if has_post_processor {
-                            let mut pc = cloned_albedo_colors.lock().unwrap();
-                            for (x, c) in row_albedo_colors.iter().enumerate() {
-                                pc[yi + x] += *c;
-                            }
-
-                            let mut pc = cloned_normal_colors.lock().unwrap();
-                            for (x, c) in row_normal_colors.iter().enumerate() {
-                                pc[yi + x] += *c;
-                            }
+                            add_row_data(yi, &mut albedo_colors.lock().unwrap(), &row_albedo_colors);
+                            add_row_data(yi, &mut normal_colors.lock().unwrap(), &row_normal_colors);
                         }
                     });
                 }
             });
 
             {
-                let mut img: RgbImage = ImageBuffer::new(image_width as u32, image_height as u32);
-                let pixel_colors = pixel_colors.lock().unwrap();
-
-                for y in 0..image_height as u32 {
-                    for x in 0..image_width as u32 {
-                        let i = (y * image_width as u32 + x) as usize;
-                        img.put_pixel(x, y, to_rgb_color(pixel_colors[i], sample))
-                    }
-                }
-
+                let render_image = create_render_image(
+                    image_width as u32,
+                    image_height as u32,
+                    sample,
+                    &pixel_colors.lock().unwrap()
+                );
                 let now = SystemTime::now();
+
                 output.send(RenderProgress {
                     progress: sample as f64 / samples_per_pixel as f64,
                     fps: Some(calculate_fps(&mut last_frame_render_time, now)),
@@ -252,7 +238,7 @@ impl Renderer {
                         sample,
                         samples_per_pixel,
                     ),
-                    render_image: img,
+                    render_image,
                 })?
             }
         }
@@ -285,6 +271,24 @@ impl Renderer {
             None => Ok(()),
         }
     }
+}
+
+fn add_row_data(yi: usize, colors: &mut [Vec3], row_colors: &[Vec3]) {
+    for (x, c) in row_colors.iter().enumerate() {
+        colors[yi + x] += *c;
+    }
+}
+
+fn create_render_image(image_width: u32, image_height: u32, sample: u32, colors: &[Vec3]) -> RgbImage {
+    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
+
+    for y in 0..image_height {
+        for x in 0..image_width {
+            let i = (y * image_width + x) as usize;
+            img.put_pixel(x, y, to_rgb_color(colors[i], sample))
+        }
+    }
+    img
 }
 
 fn calculate_fps(last_frame_render_time: &mut SystemTime, now: SystemTime) -> f64 {
