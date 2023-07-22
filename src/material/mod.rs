@@ -367,7 +367,7 @@ impl Isotropic {
 
 fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, uv: Uv) -> Vec3 {
     let map_normal = (normal_map.color(uv) - 0.5) * 2.;
-    Onb::new(normal).local(map_normal)
+    Onb::new(map_normal).local(normal)
 }
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);

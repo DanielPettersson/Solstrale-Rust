@@ -240,14 +240,14 @@ pub fn create_normal_mapping_scene(
     let camera = CameraConfig {
         vertical_fov_degrees: 40.,
         aperture_size: 0.,
-        look_from: Vec3::new(0., 0., 2.),
+        look_from: Vec3::new(0.2, 0.2, 2.),
         look_at: Vec3::new(0., 0., 0.),
     };
 
     let mut world = HittableList::new();
-    let light = DiffuseLight::new(5., 5., 5., None);
+    let light = DiffuseLight::new(45., 45., 45., None);
 
-    world.add(Sphere::new(light_pos, 30., light));
+    world.add(Sphere::new(light_pos, 5., light));
 
     let albedo_tex = ImageMap::load("resources/textures/wall_color.png").unwrap();
     let normal_tex = if normal_mapping_enabled {
@@ -256,6 +256,14 @@ pub fn create_normal_mapping_scene(
         None
     };
     let mat = Lambertian::new(albedo_tex, normal_tex);
+    let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
+
+    world.add(Quad::new_box(
+        Vec3::new(-0.1, -0.1, 0.),
+        Vec3::new(0.1, 0.1, 1.),
+        red,
+        &NopTransformer()
+    ));
 
     world.add(Quad::new(
         Vec3::new(-1., -1., 0.),
