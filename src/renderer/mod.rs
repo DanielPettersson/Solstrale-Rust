@@ -1,7 +1,7 @@
 //! The renderer takes a [`Scene`] as input, renders it and reports [`RenderProgress`]
 
 use std::error::Error;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
@@ -31,7 +31,7 @@ pub struct RenderConfig {
     /// Shader to use when rendering the image
     pub shader: Shaders,
     /// Post processor to apply to the rendered image
-    pub post_processor: Option<PostProcessors>,
+    pub post_processors: Vec<PostProcessors>,
 }
 
 /// Contains all information needed to render an image
@@ -111,7 +111,7 @@ impl Renderer {
                     accumulated_ray_length,
                 );
 
-                if depth == 0 && self.scene.render_config.post_processor.is_some() {
+                if depth == 0 && !self.scene.render_config.post_processors.is_empty() {
                     let albedo_color = self
                         .albedo_shader
                         .shade(self, &rec, ray, depth, accumulated_ray_length)
@@ -156,7 +156,7 @@ impl Renderer {
         let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
-        let has_post_processor = self.scene.render_config.post_processor.is_some();
+        let has_post_processor = !self.scene.render_config.post_processors.is_empty();
 
         let pixel_colors: Arc<Mutex<Vec<Vec3>>> =
             Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count]));
@@ -243,33 +243,45 @@ impl Renderer {
             }
         }
 
-        match &self.scene.render_config.post_processor {
-            Some(p) => match abort.try_recv() {
-                Ok(_) => Ok(()),
-                _ => {
-                    match p.post_process(
-                        pixel_colors.lock().unwrap().deref(),
-                        albedo_colors.lock().unwrap().deref(),
-                        normal_colors.lock().unwrap().deref(),
-                        image_width as u32,
-                        image_height as u32,
-                        samples_per_pixel,
-                    ) {
-                        Ok(img) => {
-                            output.send(RenderProgress {
-                                progress: 1.,
-                                fps: None,
-                                estimated_time_left: Duration::from_millis(0),
-                                render_image: img,
-                            })?;
-                            Ok(())
-                        }
-                        Err(e) => Err(e),
-                    }
+        if let Some((last_post_processor, intermediate_post_processors)) = self.scene.render_config.post_processors.split_last() {
+            if abort.try_recv().is_ok() {
+                return Ok(());
+            }
+
+            for ipp in intermediate_post_processors {
+                let processed_pixel_colors = ipp.intermediate_post_process(
+                    pixel_colors.lock().unwrap().deref(),
+                    albedo_colors.lock().unwrap().deref(),
+                    normal_colors.lock().unwrap().deref(),
+                    image_width as u32,
+                    image_height as u32,
+                    samples_per_pixel,
+                )?;
+
+                *pixel_colors.lock().unwrap().deref_mut() = processed_pixel_colors;
+            }
+
+            return match last_post_processor.post_process(
+                pixel_colors.lock().unwrap().deref(),
+                albedo_colors.lock().unwrap().deref(),
+                normal_colors.lock().unwrap().deref(),
+                image_width as u32,
+                image_height as u32,
+                samples_per_pixel,
+            ) {
+                Ok(img) => {
+                    output.send(RenderProgress {
+                        progress: 1.,
+                        fps: None,
+                        estimated_time_left: Duration::from_millis(0),
+                        render_image: img,
+                    })?;
+                    Ok(())
                 }
-            },
-            None => Ok(()),
+                Err(e) => Err(e),
+            }
         }
+        Ok(())
     }
 }
 
