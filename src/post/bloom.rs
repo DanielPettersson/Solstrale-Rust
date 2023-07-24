@@ -53,7 +53,7 @@ impl PostProcessor for BloomPostProcessor {
 
         let weights = create_gaussian_blur_weights(kernel_size, kernel_size as f64 / 5.);
 
-        let mut blur_pixel_colors: Vec<Vec3> = Vec::from(pixel_colors).par_iter().map(|p| if p.length() >= threshold {
+        let bright_colors: Vec<Vec3> = Vec::from(pixel_colors).par_iter().map(|p| if p.length() >= threshold {
             if p.length() > max_intensity {
                 p.unit() * max_intensity
             } else {
@@ -63,26 +63,27 @@ impl PostProcessor for BloomPostProcessor {
             ZERO_VECTOR
         }).collect();
 
-        for y in 0..height as i32 {
-            for x in 0..width as i32 {
-                let mut col = ZERO_VECTOR;
-                for i in 0..kernel_size {
-                    col += get_pixel_safe(&blur_pixel_colors, x + i as i32 - half_kernel_size, y, width, height) * weights[i];
-                }
-                blur_pixel_colors[(y * width as i32 + x) as usize] = col;
+        let blurred_colors: Vec<Vec3> = (0..(height * width)).into_par_iter().map(|xy| {
+            let x = (xy % width) as i32;
+            let y = (xy / width) as i32;
+            let mut col = ZERO_VECTOR;
+            for i in 0..kernel_size {
+                col += get_pixel_safe(&bright_colors, x + i as i32 - half_kernel_size, y, width, height) * weights[i];
             }
-        }
-        for x in 0..width as i32{
-            for y in 0..height as i32 {
-                let mut col = ZERO_VECTOR;
-                for i in 0..kernel_size {
-                    col += get_pixel_safe(&blur_pixel_colors, x, y + i as i32 - half_kernel_size, width, height) * weights[i];
-                }
-                blur_pixel_colors[(y * width as i32 + x) as usize] = col;
-            }
-        }
+            col
+        }).collect();
 
-        Ok(pixel_colors.into_par_iter().zip(blur_pixel_colors).map(|pp| *pp.0 + pp.1).collect())
+        let blurred_colors: Vec<Vec3> = (0..(height * width)).into_par_iter().map(|xy| {
+            let x = (xy % width) as i32;
+            let y = (xy / width) as i32;
+            let mut col = ZERO_VECTOR;
+            for i in 0..kernel_size {
+                col += get_pixel_safe(&blurred_colors, x, y + i as i32 - half_kernel_size, width, height) * weights[i];
+            }
+            col
+        }).collect();
+
+        Ok(pixel_colors.into_par_iter().zip(blurred_colors).map(|pp| *pp.0 + pp.1).collect())
     }
 }
 
