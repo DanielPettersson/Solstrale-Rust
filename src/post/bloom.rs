@@ -1,10 +1,11 @@
 use std::error::Error;
-use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+
+use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::post::{pixel_colors_to_rgb_image, PostProcessor, PostProcessors};
 use crate::util::gaussian::create_gaussian_blur_weights;
 

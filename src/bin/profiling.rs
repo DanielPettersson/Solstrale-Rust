@@ -22,7 +22,7 @@ fn main() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_obj_scene(render_config, obj_path);
 

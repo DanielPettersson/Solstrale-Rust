@@ -1,16 +1,18 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::sync::mpsc::channel;
 use std::thread;
 
 use image::imageops::FilterType;
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
-use solstrale::geo::vec3::Vec3;
-use solstrale::post::OidnPostProcessor;
+use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
+use solstrale::post::{BloomPostProcessor, OidnPostProcessor, PostProcessor};
 
 use solstrale::ray_trace;
 use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
+use solstrale::util::rgb_color::rgb_to_vec3;
 
 use crate::scenes::{
     create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene,
@@ -33,7 +35,7 @@ fn test_render_scene() {
         let render_config = RenderConfig {
             samples_per_pixel: 25,
             shader,
-            post_processor: None,
+            post_processors: Vec::new(),
         };
         let scene = create_test_scene(render_config);
 
@@ -47,7 +49,7 @@ fn test_render_scene_with_oidn() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
-        post_processor: Some(OidnPostProcessor::new()),
+        post_processors: vec![OidnPostProcessor::new()],
     };
 
     let scene = create_simple_test_scene(render_config, true);
@@ -59,7 +61,7 @@ fn test_render_obj_with_textures() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_obj_scene(render_config);
 
@@ -71,7 +73,7 @@ fn test_render_obj_with_default_material() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_obj_with_box(render_config, "resources/obj/", "box.obj");
 
@@ -83,7 +85,7 @@ fn test_render_obj_with_diffuse_material() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_obj_with_box(render_config, "resources/obj/", "boxWithMat.obj");
 
@@ -95,7 +97,7 @@ fn test_render_uv_mapping() {
     let render_config = RenderConfig {
         samples_per_pixel: 5,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_uv_scene(render_config);
 
@@ -107,7 +109,7 @@ fn test_render_normal_mapping_disabled() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: Some(OidnPostProcessor::new()),
+        post_processors: vec![OidnPostProcessor::new()],
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(30., 30., 30.), false);
@@ -119,7 +121,7 @@ fn test_render_normal_mapping_1() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: Some(OidnPostProcessor::new()),
+        post_processors: vec![OidnPostProcessor::new()],
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(30., 30., 30.), true);
@@ -131,7 +133,7 @@ fn test_render_normal_mapping_2() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: Some(OidnPostProcessor::new()),
+        post_processors: vec![OidnPostProcessor::new()],
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(-30., 30., 30.), true);
@@ -143,7 +145,7 @@ fn test_abort_render_scene() {
     let render_config = RenderConfig {
         samples_per_pixel: 1000,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_test_scene(render_config);
 
@@ -167,7 +169,7 @@ fn test_render_scene_without_light() {
     let render_config = RenderConfig {
         samples_per_pixel: 100,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_simple_test_scene(render_config, false);
 
@@ -187,7 +189,7 @@ fn test_render_obj_with_normal_map() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithNormalMap.obj");
 
@@ -199,7 +201,7 @@ fn test_render_obj_with_height_map() {
     let render_config = RenderConfig {
         samples_per_pixel: 50,
         shader: PathTracingShader::new(50),
-        post_processor: None,
+        post_processors: Vec::new(),
     };
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithHeightMap.obj");
 
@@ -212,7 +214,7 @@ fn test_render_light_attenuation() {
         let render_config = RenderConfig {
             samples_per_pixel: 50,
             shader: PathTracingShader::new(50),
-            post_processor: None,
+            post_processors: Vec::new(),
         };
         let scene = create_light_attenuation_scene(render_config, attenuation_half_length);
 
@@ -227,6 +229,39 @@ fn test_render_light_attenuation() {
         );
     }
 }
+
+#[test]
+fn test_bloom() -> Result<(), Box<dyn Error>> {
+    let post = BloomPostProcessor::new(0.2, None, None)?;
+    let bloom_image = image::open("resources/textures/bloom.png").unwrap().into_rgb8();
+    let w = bloom_image.width();
+    let h = bloom_image.height();
+    let pixel_colors = image_to_vec3(bloom_image);
+
+    let res = post.post_process(
+        &pixel_colors,
+        &[ZERO_VECTOR; 0],
+        &[ZERO_VECTOR; 0],
+        w,
+        h,
+        1
+    )?;
+    
+    compare_output("bloom", &res);
+
+    Ok(())
+}
+
+fn image_to_vec3(image: RgbImage) -> Vec<Vec3> {
+    let mut ret = Vec::with_capacity((image.width() * image.height()) as usize);
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            ret.push(rgb_to_vec3(image.get_pixel(x, y)));
+        }
+    }
+    ret
+}
+
 
 fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
     let (output_sender, output_receiver) = channel();

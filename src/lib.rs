@@ -29,7 +29,7 @@
 //! let render_config = RenderConfig {
 //!     samples_per_pixel: 50,
 //!     shader: PathTracingShader::new(50),
-//!     post_processor: None,
+//!     post_processors: Vec::new(),
 //! };
 //! let camera = CameraConfig {
 //!     vertical_fov_degrees: 20.,
