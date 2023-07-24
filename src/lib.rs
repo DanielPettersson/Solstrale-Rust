@@ -9,7 +9,9 @@
 //! Additionally the library has:
 //! * Loading of obj models with included materials
 //! * Multi-threaded Bvh creation to greatly speed up rendering
-//! * Post processing of rendered images using [Open Image Denoise](https://www.openimagedenoise.org/)
+//! * Post processing of rendered images by:
+//!   * [Open Image Denoise](https://www.openimagedenoise.org/)
+//!   * Bloom filter
 //! * Bump mapping
 //! * Light attenuation
 //!
