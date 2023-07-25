@@ -35,6 +35,9 @@ pub trait PostProcessor {
         height: u32,
         num_samples: u32,
     ) -> Result<Vec<Vec3>, Box<dyn Error>>;
+
+    /// Does this post-processor need albedo or normal colors
+    fn needs_albedo_and_normal_colors(&self) -> bool;
 }
 
 #[enum_dispatch(PostProcessor)]

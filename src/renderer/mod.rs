@@ -34,6 +34,12 @@ pub struct RenderConfig {
     pub post_processors: Vec<PostProcessors>,
 }
 
+impl RenderConfig {
+    fn needs_albedo_and_normal_colors(&self) -> bool {
+        self.post_processors.iter().any(|p| p.needs_albedo_and_normal_colors())
+    }
+}
+
 /// Contains all information needed to render an image
 pub struct Scene {
     /// World is the hittable objects in the scene
@@ -111,7 +117,7 @@ impl Renderer {
                     accumulated_ray_length,
                 );
 
-                if depth == 0 && !self.scene.render_config.post_processors.is_empty() {
+                if depth == 0 && self.scene.render_config.needs_albedo_and_normal_colors() {
                     let albedo_color = self
                         .albedo_shader
                         .shade(self, &rec, ray, depth, accumulated_ray_length)
@@ -156,7 +162,7 @@ impl Renderer {
         let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
-        let has_post_processor = !self.scene.render_config.post_processors.is_empty();
+        let needs_albedo_and_normal_colors = !self.scene.render_config.needs_albedo_and_normal_colors();
 
         let pixel_colors: Arc<Mutex<Vec<Vec3>>> =
             Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count]));
@@ -185,12 +191,12 @@ impl Renderer {
 
                     s.spawn(move |_| {
                         let mut row_pixel_colors: Vec<Vec3> = vec![ZERO_VECTOR; image_width];
-                        let mut row_albedo_colors: Vec<Vec3> = if has_post_processor {
+                        let mut row_albedo_colors: Vec<Vec3> = if needs_albedo_and_normal_colors {
                             vec![ZERO_VECTOR; image_width]
                         } else {
                             Vec::new()
                         };
-                        let mut row_normal_colors: Vec<Vec3> = if has_post_processor {
+                        let mut row_normal_colors: Vec<Vec3> = if needs_albedo_and_normal_colors {
                             vec![ZERO_VECTOR; image_width]
                         } else {
                             Vec::new()
@@ -205,14 +211,14 @@ impl Renderer {
 
                             row_pixel_colors[x] = ray_color_res.pixel_color.get_attenuated_color();
 
-                            if has_post_processor {
+                            if needs_albedo_and_normal_colors {
                                 row_albedo_colors[x] = ray_color_res.albedo_color;
                                 row_normal_colors[x] = ray_color_res.normal_color;
                             }
                         }
 
                         add_row_data(yi, &mut pixel_colors.lock().unwrap(), &row_pixel_colors);
-                        if has_post_processor {
+                        if needs_albedo_and_normal_colors {
                             add_row_data(yi, &mut albedo_colors.lock().unwrap(), &row_albedo_colors);
                             add_row_data(yi, &mut normal_colors.lock().unwrap(), &row_normal_colors);
                         }

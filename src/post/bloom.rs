@@ -85,6 +85,10 @@ impl PostProcessor for BloomPostProcessor {
 
         Ok(pixel_colors.into_par_iter().zip(blurred_colors).map(|pp| *pp.0 + pp.1).collect())
     }
+
+    fn needs_albedo_and_normal_colors(&self) -> bool {
+        false
+    }
 }
 
 fn get_pixel_safe(pixel_colors: &[Vec3], x: i32, y: i32, width: u32, height: u32) -> Vec3 {

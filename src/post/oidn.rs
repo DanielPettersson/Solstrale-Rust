@@ -66,6 +66,10 @@ impl PostProcessor for OidnPostProcessor {
     fn intermediate_post_process(&self, _pixel_colors: &[Vec3], _albedo_colors: &[Vec3], _normal_colors: &[Vec3], _width: u32, _height: u32, _num_samples: u32) -> Result<Vec<Vec3>, Box<dyn Error>> {
         Err(Box::new(simple_error::SimpleError::new("Intel Open Image DeNoise can not be used as an intermediate post processor")))
     }
+
+    fn needs_albedo_and_normal_colors(&self) -> bool {
+        true
+    }
 }
 
 #[cfg(not(feature = "oidn-postprocessor"))]
@@ -84,6 +88,10 @@ impl PostProcessor for OidnPostProcessor {
 
     fn intermediate_post_process(&self, pixel_colors: &[Vec3], _albedo_colors: &[Vec3], _normal_colors: &[Vec3], _width: u32, _height: u32, _num_samples: u32) -> Result<Vec<Vec3>, Box<dyn Error>> {
         Ok(Vec::from(pixel_colors))
+    }
+
+    fn needs_albedo_and_normal_colors(&self) -> bool {
+        false
     }
 }
 
