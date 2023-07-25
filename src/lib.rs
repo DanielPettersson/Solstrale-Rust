@@ -28,11 +28,6 @@
 //! # use solstrale::ray_trace;
 //! # use solstrale::renderer::{RenderConfig, Scene};
 //! # use solstrale::renderer::shader::PathTracingShader;
-//! let render_config = RenderConfig {
-//!     samples_per_pixel: 50,
-//!     shader: PathTracingShader::new(50),
-//!     post_processors: Vec::new(),
-//! };
 //! let camera = CameraConfig {
 //!     vertical_fov_degrees: 20.,
 //!     aperture_size: 0.1,
@@ -48,7 +43,7 @@
 //!     world,
 //!     camera,
 //!     background_color: Vec3::new(0.2, 0.3, 0.5),
-//!     render_config,
+//!     render_config: RenderConfig::default(),
 //! };
 //!
 //! let (output_sender, output_receiver) = channel();

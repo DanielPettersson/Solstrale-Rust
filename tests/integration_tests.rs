@@ -35,7 +35,7 @@ fn test_render_scene() {
         let render_config = RenderConfig {
             samples_per_pixel: 25,
             shader,
-            post_processors: Vec::new(),
+            ..Default::default()
         };
         let scene = create_test_scene(render_config);
 
@@ -50,6 +50,7 @@ fn test_render_scene_with_oidn() {
         samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
         post_processors: vec![OidnPostProcessor::new()],
+        ..Default::default()
     };
 
     let scene = create_simple_test_scene(render_config, true);
@@ -60,8 +61,7 @@ fn test_render_scene_with_oidn() {
 fn test_render_obj_with_textures() {
     let render_config = RenderConfig {
         samples_per_pixel: 20,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
+        ..Default::default()
     };
     let scene = create_obj_scene(render_config);
 
@@ -70,11 +70,7 @@ fn test_render_obj_with_textures() {
 
 #[test]
 fn test_render_obj_with_default_material() {
-    let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
-    };
+    let render_config = RenderConfig::default();
     let scene = create_obj_with_box(render_config, "resources/obj/", "box.obj");
 
     render_and_compare_output(scene, "obj_default", 200, 100);
@@ -82,11 +78,7 @@ fn test_render_obj_with_default_material() {
 
 #[test]
 fn test_render_obj_with_diffuse_material() {
-    let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
-    };
+    let render_config = RenderConfig::default();
     let scene = create_obj_with_box(render_config, "resources/obj/", "boxWithMat.obj");
 
     render_and_compare_output(scene, "obj_diffuse", 200, 100);
@@ -96,8 +88,7 @@ fn test_render_obj_with_diffuse_material() {
 fn test_render_uv_mapping() {
     let render_config = RenderConfig {
         samples_per_pixel: 5,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
+        ..Default::default()
     };
     let scene = create_uv_scene(render_config);
 
@@ -107,9 +98,8 @@ fn test_render_uv_mapping() {
 #[test]
 fn test_render_normal_mapping_disabled() {
     let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
         post_processors: vec![OidnPostProcessor::new()],
+        ..Default::default()
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(30., 30., 30.), false);
@@ -119,9 +109,8 @@ fn test_render_normal_mapping_disabled() {
 #[test]
 fn test_render_normal_mapping_1() {
     let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
         post_processors: vec![OidnPostProcessor::new()],
+        ..Default::default()
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(30., 30., 30.), true);
@@ -131,9 +120,8 @@ fn test_render_normal_mapping_1() {
 #[test]
 fn test_render_normal_mapping_2() {
     let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
         post_processors: vec![OidnPostProcessor::new()],
+        ..Default::default()
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(-30., 30., 30.), true);
@@ -143,9 +131,8 @@ fn test_render_normal_mapping_2() {
 #[test]
 fn test_abort_render_scene() {
     let render_config = RenderConfig {
-        samples_per_pixel: 1000,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
+        samples_per_pixel: 1_000_000,
+        ..Default::default()
     };
     let scene = create_test_scene(render_config);
 
@@ -161,15 +148,14 @@ fn test_abort_render_scene() {
         progress_count += 1;
         abort_sender.send(true).unwrap();
     }
-    assert!(progress_count < 1000, "Most likely it should be 1 or 2 depending on timing, but definitely less than 100 as rendering is aborted")
+    assert!(progress_count < 1_000_000, "Should be less than 1_000_000 as rendering is aborted")
 }
 
 #[test]
 fn test_render_scene_without_light() {
     let render_config = RenderConfig {
         samples_per_pixel: 100,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
+        ..Default::default()
     };
     let scene = create_simple_test_scene(render_config, false);
 
@@ -186,11 +172,7 @@ fn test_render_scene_without_light() {
 
 #[test]
 fn test_render_obj_with_normal_map() {
-    let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
-    };
+    let render_config = RenderConfig::default();
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithNormalMap.obj");
 
     render_and_compare_output(scene, "obj_normal_map", 500, 500);
@@ -198,11 +180,7 @@ fn test_render_obj_with_normal_map() {
 
 #[test]
 fn test_render_obj_with_height_map() {
-    let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
-    };
+    let render_config = RenderConfig::default();
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithHeightMap.obj");
 
     render_and_compare_output(scene, "obj_height_map", 500, 500);
@@ -211,11 +189,7 @@ fn test_render_obj_with_height_map() {
 #[test]
 fn test_render_light_attenuation() {
     for attenuation_half_length in [Some(0.1), Some(0.8), None] {
-        let render_config = RenderConfig {
-            samples_per_pixel: 50,
-            shader: PathTracingShader::new(50),
-            post_processors: Vec::new(),
-        };
+        let render_config = RenderConfig::default();
         let scene = create_light_attenuation_scene(render_config, attenuation_half_length);
 
         render_and_compare_output(
@@ -273,7 +247,10 @@ fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) 
 
     let mut image = RgbImage::new(width, height);
     for render_output in output_receiver {
-        image = render_output.render_image
+        if let Some(render_image) = render_output.render_image {
+            image = render_image;
+        }
+
     }
 
     compare_output(name, &image);

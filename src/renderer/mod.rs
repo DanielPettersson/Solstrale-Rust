@@ -17,7 +17,7 @@ use crate::hittable::{Hittable, Hittables};
 use crate::material::AttenuatedColor;
 use crate::post::{PostProcessor, PostProcessors};
 use crate::random::random_normal_float;
-use crate::renderer::shader::{AlbedoShader, NormalShader, Shader, Shaders};
+use crate::renderer::shader::{AlbedoShader, NormalShader, PathTracingShader, Shader, Shaders};
 use crate::util::interval::RAY_INTERVAL;
 use crate::util::rgb_color::to_rgb_color;
 
@@ -32,6 +32,19 @@ pub struct RenderConfig {
     pub shader: Shaders,
     /// Post processor to apply to the rendered image
     pub post_processors: Vec<PostProcessors>,
+    /// Describes at which points in time the render progress should contain an image
+    pub render_image_strategy: RenderImageStrategy,
+}
+
+impl Default for RenderConfig {
+    fn default() -> Self {
+        RenderConfig {
+            samples_per_pixel: 50,
+            shader: PathTracingShader::new(50),
+            post_processors: vec![],
+            render_image_strategy: RenderImageStrategy::OnlyFinal,
+        }
+    }
 }
 
 impl RenderConfig {
@@ -52,7 +65,7 @@ pub struct Scene {
     pub render_config: RenderConfig,
 }
 
-/// progress reported back to the caller of the raytrace function
+/// Progress reported back to the caller of the raytrace function
 pub struct RenderProgress {
     /// progress is reported between 0 -> 1 and represents a percentage of completion
     pub progress: f64,
@@ -61,7 +74,19 @@ pub struct RenderProgress {
     /// Estimated time left until rendering is complete
     pub estimated_time_left: Duration,
     /// Output image so far, will be final when progress is 1
-    pub render_image: RgbImage,
+    pub render_image: Option<RgbImage>,
+}
+
+#[derive(Copy, Clone)]
+/// When should [`RenderProgress`] contain an image of the rendering
+pub enum RenderImageStrategy {
+    /// Every sample should contain an image
+    EverySample,
+    /// Only include an image if at least "duration" has elapsed since last time
+    /// Plus always include final image
+    Interval(Duration),
+    /// Only include image in last rendered sample
+    OnlyFinal,
 }
 
 /// Renderer is a central part of the raytracer responsible for controlling the
@@ -159,6 +184,7 @@ impl Renderer {
         abort: &Receiver<bool>,
     ) -> Result<(), Box<dyn Error>> {
         let mut last_frame_render_time = SystemTime::now();
+        let mut last_image_generated_time = SystemTime::now() - Duration::from_secs(1000);
         let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
@@ -227,13 +253,26 @@ impl Renderer {
             });
 
             {
-                let render_image = create_render_image(
-                    image_width as u32,
-                    image_height as u32,
-                    sample,
-                    &pixel_colors.lock().unwrap()
-                );
                 let now = SystemTime::now();
+                let render_image = if match self.scene.render_config.render_image_strategy {
+                    RenderImageStrategy::EverySample => true,
+                    RenderImageStrategy::Interval(d) => {
+                        sample == samples_per_pixel ||
+                        now.duration_since(last_image_generated_time).unwrap_or(Duration::from_millis(0)) > d
+                    },
+                    RenderImageStrategy::OnlyFinal => sample == samples_per_pixel,
+                } {
+                    last_image_generated_time = now;
+                    Some(create_render_image(
+                        image_width as u32,
+                        image_height as u32,
+                        sample,
+                        &pixel_colors.lock().unwrap()
+                    ))
+                } else {
+                    None
+                };
+
 
                 output.send(RenderProgress {
                     progress: sample as f64 / samples_per_pixel as f64,
@@ -280,7 +319,7 @@ impl Renderer {
                         progress: 1.,
                         fps: None,
                         estimated_time_left: Duration::from_millis(0),
-                        render_image: img,
+                        render_image: Some(img),
                     })?;
                     Ok(())
                 }

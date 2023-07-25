@@ -13,17 +13,12 @@ use solstrale::loader::obj::Obj;
 use solstrale::loader::Loader;
 use solstrale::material::DiffuseLight;
 use solstrale::ray_trace;
-use solstrale::renderer::shader::PathTracingShader;
 use solstrale::renderer::{RenderConfig, Scene};
 
 fn main() {
     let obj_path = &env::args().nth(1).expect("Object path argument required");
 
-    let render_config = RenderConfig {
-        samples_per_pixel: 50,
-        shader: PathTracingShader::new(50),
-        post_processors: Vec::new(),
-    };
+    let render_config = RenderConfig::default();
     let scene = create_obj_scene(render_config, obj_path);
 
     let (output_sender, output_receiver) = channel();
@@ -35,7 +30,9 @@ fn main() {
 
     let mut image = RgbImage::new(800, 400);
     for render_output in output_receiver {
-        image = render_output.render_image
+        if let Some(render_image) = render_output.render_image {
+            image = render_image;
+        }
     }
 
     image.save("out.jpg").unwrap();
