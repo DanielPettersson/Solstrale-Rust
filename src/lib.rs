@@ -22,7 +22,7 @@
 //! # use image::RgbImage;
 //! # use solstrale::camera::CameraConfig;
 //! # use solstrale::geo::vec3::Vec3;
-//! # use solstrale::hittable::{HittableList, Sphere, Hittable};
+//! # use solstrale::hittable::{Bvh, Sphere, Hittable};
 //! # use solstrale::material::{DiffuseLight, Lambertian};
 //! # use solstrale::material::texture::SolidColor;
 //! # use solstrale::ray_trace;
@@ -40,7 +40,7 @@
 //! world.push(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
 //!
 //! let scene = Scene {
-//!     world: HittableList::new(world),
+//!     world: Bvh::new(world),
 //!     camera,
 //!     background_color: Vec3::new(0.2, 0.3, 0.5),
 //!     render_config: RenderConfig::default(),
@@ -72,13 +72,13 @@ use std::sync::mpsc::{Receiver, Sender};
 pub mod camera;
 pub mod geo;
 pub mod hittable;
+pub mod loader;
 pub mod material;
 pub mod pdf;
 pub mod post;
 pub mod random;
 pub mod renderer;
 pub mod util;
-pub mod loader;
 
 /// Executes the ray tracing with the given [`Scene`] and reports [`RenderProgress`] on
 /// the output [`Sender`]. Listens to abort [`Receiver`] for aborting a started ray trace operation

@@ -12,7 +12,6 @@ use simple_error::SimpleError;
 use crate::camera::{Camera, CameraConfig};
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::geo::{Ray, Uv};
-use crate::hittable::HittableList;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::AttenuatedColor;
 use crate::post::{PostProcessor, PostProcessors};
@@ -49,7 +48,9 @@ impl Default for RenderConfig {
 
 impl RenderConfig {
     fn needs_albedo_and_normal_colors(&self) -> bool {
-        self.post_processors.iter().any(|p| p.needs_albedo_and_normal_colors())
+        self.post_processors
+            .iter()
+            .any(|p| p.needs_albedo_and_normal_colors())
     }
 }
 
@@ -94,7 +95,7 @@ pub enum RenderImageStrategy {
 pub struct Renderer {
     scene: Scene,
     /// All the light hittables in the world
-    pub lights: Hittables,
+    pub lights: Vec<Hittables>,
     albedo_shader: AlbedoShader,
     normal_shader: NormalShader,
 }
@@ -117,11 +118,9 @@ impl Renderer {
             )));
         }
 
-        let lights = HittableList::new(light_list);
-
         Ok(Renderer {
             scene,
-            lights,
+            lights: light_list,
             albedo_shader: AlbedoShader {},
             normal_shader: NormalShader {},
         })
@@ -184,7 +183,8 @@ impl Renderer {
         let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
-        let needs_albedo_and_normal_colors = !self.scene.render_config.needs_albedo_and_normal_colors();
+        let needs_albedo_and_normal_colors =
+            !self.scene.render_config.needs_albedo_and_normal_colors();
 
         let pixel_colors: Arc<Mutex<Vec<Vec3>>> =
             Arc::new(Mutex::new(vec![ZERO_VECTOR; pixel_count]));
@@ -241,8 +241,16 @@ impl Renderer {
 
                         add_row_data(yi, &mut pixel_colors.lock().unwrap(), &row_pixel_colors);
                         if needs_albedo_and_normal_colors {
-                            add_row_data(yi, &mut albedo_colors.lock().unwrap(), &row_albedo_colors);
-                            add_row_data(yi, &mut normal_colors.lock().unwrap(), &row_normal_colors);
+                            add_row_data(
+                                yi,
+                                &mut albedo_colors.lock().unwrap(),
+                                &row_albedo_colors,
+                            );
+                            add_row_data(
+                                yi,
+                                &mut normal_colors.lock().unwrap(),
+                                &row_normal_colors,
+                            );
                         }
                     });
                 }
@@ -253,9 +261,12 @@ impl Renderer {
                 let render_image = if match self.scene.render_config.render_image_strategy {
                     RenderImageStrategy::EverySample => true,
                     RenderImageStrategy::Interval(d) => {
-                        sample == samples_per_pixel ||
-                        now.duration_since(last_image_generated_time).unwrap_or(Duration::from_millis(0)) > d
-                    },
+                        sample == samples_per_pixel
+                            || now
+                                .duration_since(last_image_generated_time)
+                                .unwrap_or(Duration::from_millis(0))
+                                > d
+                    }
                     RenderImageStrategy::OnlyFinal => sample == samples_per_pixel,
                 } {
                     last_image_generated_time = now;
@@ -263,12 +274,11 @@ impl Renderer {
                         image_width as u32,
                         image_height as u32,
                         sample,
-                        &pixel_colors.lock().unwrap()
+                        &pixel_colors.lock().unwrap(),
                     ))
                 } else {
                     None
                 };
-
 
                 output.send(RenderProgress {
                     progress: sample as f64 / samples_per_pixel as f64,
@@ -284,7 +294,9 @@ impl Renderer {
             }
         }
 
-        if let Some((last_post_processor, intermediate_post_processors)) = self.scene.render_config.post_processors.split_last() {
+        if let Some((last_post_processor, intermediate_post_processors)) =
+            self.scene.render_config.post_processors.split_last()
+        {
             if abort.try_recv().is_ok() {
                 return Ok(());
             }
@@ -320,7 +332,7 @@ impl Renderer {
                     Ok(())
                 }
                 Err(e) => Err(e),
-            }
+            };
         }
         Ok(())
     }
@@ -332,7 +344,12 @@ fn add_row_data(yi: usize, colors: &mut [Vec3], row_colors: &[Vec3]) {
     }
 }
 
-fn create_render_image(image_width: u32, image_height: u32, sample: u32, colors: &[Vec3]) -> RgbImage {
+fn create_render_image(
+    image_width: u32,
+    image_height: u32,
+    sample: u32,
+    colors: &[Vec3],
+) -> RgbImage {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
 
     for y in 0..image_height {
@@ -372,8 +389,9 @@ fn calculate_estimated_time_left(
 
 #[cfg(test)]
 mod test {
-    use crate::renderer::{calculate_estimated_time_left, calculate_fps};
     use std::time::{Duration, SystemTime};
+
+    use crate::renderer::{calculate_estimated_time_left, calculate_fps};
 
     #[test]
     fn test_calculate_fps() {

@@ -8,7 +8,7 @@ use crate::geo::vec3::{random_cosine_direction, random_unit_vector, Vec3};
 use crate::geo::Onb;
 use crate::hittable::{Hittable, Hittables};
 use crate::pdf::Pdfs::{ContainerPdfType, CosinePdfType, SpherePdfType};
-use crate::random::random_normal_float;
+use crate::random::{random_element_index, random_normal_float};
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
 
@@ -74,25 +74,31 @@ impl Pdf for CosinePdf {
 
 /// A wrapper for generating pdfs for a list of hittable objects
 pub struct ContainerPdf<'a> {
-    objects: &'a Hittables,
+    objects: &'a Vec<Hittables>,
     origin: Vec3,
 }
 
 impl<'a> ContainerPdf<'a> {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of ContainerPdf
-    pub fn new(objects: &'a Hittables, origin: Vec3) -> Pdfs {
+    pub fn new(objects: &'a Vec<Hittables>, origin: Vec3) -> Pdfs {
         ContainerPdfType(ContainerPdf { objects, origin })
     }
 }
 
 impl<'a> Pdf for ContainerPdf<'a> {
     fn value(&self, direction: Vec3) -> f64 {
-        self.objects.pdf_value(self.origin, direction)
+        let sum: f64 = self
+            .objects
+            .iter()
+            .map(|i| i.pdf_value(self.origin, direction))
+            .sum();
+        sum / self.objects.len() as f64
     }
 
     fn generate(&self) -> Vec3 {
-        self.objects.random_direction(self.origin)
+        let idx = random_element_index(&self.objects);
+        self.objects[idx].random_direction(self.origin)
     }
 }
 

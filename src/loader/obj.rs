@@ -10,14 +10,14 @@ use simple_error::SimpleError;
 use tobj::LoadOptions;
 
 use crate::geo::transformation::Transformer;
-use crate::geo::Uv;
 use crate::geo::vec3::Vec3;
+use crate::geo::Uv;
 use crate::hittable::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Triangle;
 use crate::loader::Loader;
-use crate::material::{Lambertian, Materials, texture};
 use crate::material::texture::{BumpMap, ImageMap, SolidColor};
+use crate::material::{texture, Lambertian, Materials};
 use crate::util::height_map;
 
 /// Contains file information about the obj to load
@@ -157,7 +157,7 @@ impl Loader for Obj {
             }
         }
 
-        Ok(Bvh::new(triangles)?)
+        Ok(Bvh::new(triangles))
     }
 }
 

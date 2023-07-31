@@ -3,7 +3,6 @@
 
 mod bvh;
 mod constant_medium;
-mod hittable_list;
 mod quad;
 mod sphere;
 mod triangle;
@@ -13,13 +12,10 @@ use crate::geo::Aabb;
 use crate::geo::Ray;
 pub use crate::hittable::bvh::Bvh;
 pub use crate::hittable::constant_medium::ConstantMedium;
-pub use crate::hittable::hittable_list::HittableList;
 pub use crate::hittable::quad::Quad;
 pub use crate::hittable::sphere::Sphere;
 pub use crate::hittable::triangle::Triangle;
-use crate::hittable::Hittables::{
-    BvhType, ConstantMediumType, HittableListType, QuadType, SphereType, TriangleType,
-};
+use crate::hittable::Hittables::{BvhType, ConstantMediumType, QuadType, SphereType, TriangleType};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 use enum_dispatch::enum_dispatch;
@@ -52,8 +48,6 @@ pub trait Hittable {
 #[derive(Debug)]
 /// Enum of the available hittable types
 pub enum Hittables {
-    /// [`Hittable`] of the type [`HittableList`]
-    HittableListType(HittableList),
     /// [`Hittable`] of the type [`Sphere`]
     SphereType(Sphere),
     /// [`Hittable`] of the type [`ConstantMedium`]
@@ -69,7 +63,6 @@ pub enum Hittables {
 impl Clone for Hittables {
     fn clone(&self) -> Self {
         match self {
-            HittableListType(l) => HittableListType(l.clone()),
             SphereType(h) => SphereType(h.clone()),
             ConstantMediumType(h) => ConstantMediumType(h.clone()),
             QuadType(h) => QuadType(h.clone()),

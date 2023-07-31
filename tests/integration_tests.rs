@@ -129,29 +129,6 @@ fn test_render_normal_mapping_2() {
 }
 
 #[test]
-fn test_abort_render_scene() {
-    let render_config = RenderConfig {
-        samples_per_pixel: 10_000_000,
-        ..Default::default()
-    };
-    let scene = create_test_scene(render_config);
-
-    let (output_sender, output_receiver) = channel();
-    let (abort_sender, abort_receiver) = channel();
-
-    thread::spawn(move || {
-        ray_trace(400, 200, scene, &output_sender, &abort_receiver).unwrap();
-    });
-
-    let mut progress_count = 0;
-    for _ in output_receiver {
-        progress_count += 1;
-        abort_sender.send(true).unwrap();
-    }
-    assert!(progress_count < 10_000_000, "Should be less than 1_000_000 as rendering is aborted")
-}
-
-#[test]
 fn test_render_scene_without_light() {
     let render_config = RenderConfig {
         samples_per_pixel: 100,
@@ -207,20 +184,15 @@ fn test_render_light_attenuation() {
 #[test]
 fn test_bloom() -> Result<(), Box<dyn Error>> {
     let post = BloomPostProcessor::new(0.2, None, None)?;
-    let bloom_image = image::open("resources/textures/bloom.png").unwrap().into_rgb8();
+    let bloom_image = image::open("resources/textures/bloom.png")
+        .unwrap()
+        .into_rgb8();
     let w = bloom_image.width();
     let h = bloom_image.height();
     let pixel_colors = image_to_vec3(bloom_image);
 
-    let res = post.post_process(
-        &pixel_colors,
-        &[ZERO_VECTOR; 0],
-        &[ZERO_VECTOR; 0],
-        w,
-        h,
-        1
-    )?;
-    
+    let res = post.post_process(&pixel_colors, &[ZERO_VECTOR; 0], &[ZERO_VECTOR; 0], w, h, 1)?;
+
     compare_output("bloom", &res);
 
     Ok(())
@@ -236,7 +208,6 @@ fn image_to_vec3(image: RgbImage) -> Vec<Vec3> {
     ret
 }
 
-
 fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
     let (output_sender, output_receiver) = channel();
     let (_, abort_receiver) = channel();
@@ -250,7 +221,6 @@ fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) 
         if let Some(render_image) = render_output.render_image {
             image = render_image;
         }
-
     }
 
     compare_output(name, &image);

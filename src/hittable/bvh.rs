@@ -2,12 +2,11 @@ use std::fmt;
 use std::fmt::Display;
 
 use derive_more::Display;
-use simple_error::SimpleError;
 
 use crate::geo::Aabb;
 use crate::geo::Ray;
-use crate::hittable::{Hittable, Hittables};
 use crate::hittable::Hittables::BvhType;
+use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 
@@ -24,6 +23,7 @@ pub struct Bvh {
 enum BvhItem {
     Node(Bvh),
     Leaf(Box<Hittables>),
+    None,
 }
 
 impl Display for BvhItem {
@@ -31,6 +31,7 @@ impl Display for BvhItem {
         match self {
             BvhItem::Node(b) => write!(f, "{}", b),
             BvhItem::Leaf(t) => write!(f, "{}", t.bounding_box().center()),
+            BvhItem::None => write!(f, "<empty>"),
         }
     }
 }
@@ -40,6 +41,7 @@ impl BvhItem {
         match self {
             BvhItem::Node(i) => i.hit(r, ray_length),
             BvhItem::Leaf(i) => i.hit(r, ray_length),
+            BvhItem::None => None,
         }
     }
 
@@ -47,6 +49,7 @@ impl BvhItem {
         match self {
             BvhItem::Node(b) => b.get_lights(),
             BvhItem::Leaf(l) => l.get_lights(),
+            BvhItem::None => vec![],
         }
     }
 }
@@ -57,13 +60,15 @@ impl Bvh {
     /// The bounding Volume Hierarchy sorts the hittables in a binary tree
     /// where each node has a bounding box.
     /// This is to optimize the ray intersection search when having many hittable objects.
-    pub fn new(list: Vec<Hittables>) -> Result<Hittables, SimpleError> {
+    pub fn new(list: Vec<Hittables>) -> Hittables {
         if list.is_empty() {
-            Err(SimpleError::new(
-                "Cannot create a Bvh with empty list of objects",
-            ))
+            BvhType(Bvh {
+                left: Box::new(BvhItem::None),
+                right: Box::new(BvhItem::None),
+                b_box: Default::default(),
+            })
         } else {
-            Ok(BvhType(new_bvh(list)))
+            BvhType(new_bvh(list))
         }
     }
 }
@@ -82,7 +87,7 @@ fn new_bvh(mut list: Vec<Hittables>) -> Bvh {
     let (left, right, b_box) = if list.len() == 1 {
         (
             BvhItem::Leaf(Box::new(list[0].clone())),
-            BvhItem::Leaf(Box::new(list[0].clone())),
+            BvhItem::None,
             list[0].bounding_box().clone(),
         )
     } else if list.len() == 2 {
@@ -142,7 +147,12 @@ fn bounding_box_spread(list: &[Hittables], axis: u8) -> (f64, f64) {
 }
 
 fn sort_hittables_by_center(list: &mut [Hittables], center: f64, axis: u8) -> usize {
-    list.sort_unstable_by(|a, b| a.bounding_box().center().axis(axis).total_cmp(&b.bounding_box().center().axis(axis)));
+    list.sort_unstable_by(|a, b| {
+        a.bounding_box()
+            .center()
+            .axis(axis)
+            .total_cmp(&b.bounding_box().center().axis(axis))
+    });
     let mut i = 0;
     for t in list {
         if t.bounding_box().center().axis(axis) >= center {
@@ -182,19 +192,5 @@ impl Hittable for Bvh {
         ret.append(&mut self.right.get_lights());
 
         ret
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn bvh_with_empty_list() {
-        let res = Bvh::new(Vec::new());
-        assert_eq!(
-            "Cannot create a Bvh with empty list of objects",
-            res.err().unwrap().as_str()
-        )
     }
 }

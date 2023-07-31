@@ -1,16 +1,15 @@
 use solstrale::camera::CameraConfig;
 use solstrale::geo::transformation::{NopTransformer, RotationY, Transformations, Translation};
-use solstrale::geo::Uv;
 use solstrale::geo::vec3::Vec3;
-use solstrale::hittable::{Bvh, Quad};
+use solstrale::geo::Uv;
 use solstrale::hittable::ConstantMedium;
-use solstrale::hittable::HittableList;
 use solstrale::hittable::Sphere;
 use solstrale::hittable::Triangle;
-use solstrale::loader::Loader;
+use solstrale::hittable::{Bvh, Quad};
 use solstrale::loader::obj::Obj;
-use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
+use solstrale::loader::Loader;
 use solstrale::material::texture::{ImageMap, SolidColor};
+use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
 
 pub fn create_test_scene(render_config: RenderConfig) -> Scene {
@@ -45,7 +44,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         &RotationY::new(15.),
     ));
     world.push(ConstantMedium::new(
-        HittableList::new(Quad::new_box(
+        Bvh::new(Quad::new_box(
             Vec3::new(0., 0., -0.5),
             Vec3::new(1., 2., 0.5),
             red_mat.clone(),
@@ -80,7 +79,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             }
         }
     }
-    world.push(Bvh::new(balls).unwrap());
+    world.push(Bvh::new(balls));
 
     world.push(Triangle::new(
         Vec3::new(1., 0.1, 2.),
@@ -112,7 +111,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
     ));
 
     Scene {
-        world: Bvh::new(world).unwrap(),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -152,11 +151,11 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
     }
 
     if use_bvh {
-        world.push(Bvh::new(triangles).unwrap())
+        world.push(Bvh::new(triangles))
     }
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -181,7 +180,7 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
     world.push(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -217,7 +216,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
     ));
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -255,7 +254,7 @@ pub fn create_normal_mapping_scene(
         Vec3::new(-0.1, -0.1, 0.),
         Vec3::new(0.1, 0.1, 1.),
         red,
-        &NopTransformer()
+        &NopTransformer(),
     ));
 
     world.push(Quad::new(
@@ -267,7 +266,7 @@ pub fn create_normal_mapping_scene(
     ));
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
         render_config,
@@ -303,7 +302,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     ));
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -331,7 +330,7 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
     );
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -358,7 +357,7 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
     );
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
         render_config,
@@ -397,7 +396,7 @@ pub fn create_light_attenuation_scene(
     ));
 
     Scene {
-        world: HittableList::new(world),
+        world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
         render_config,
