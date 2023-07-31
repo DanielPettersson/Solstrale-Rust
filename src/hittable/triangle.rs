@@ -22,8 +22,6 @@ pub struct Triangle {
     mat: Materials,
     b_box: Aabb,
     area: f64,
-    /// Center point of the triangle
-    pub center: Vec3,
 }
 
 impl Triangle {
@@ -70,7 +68,6 @@ impl Triangle {
         let n = v0v1.cross(v0v2);
         let normal = n.unit();
         let area = n.length() / 2.;
-        let center = (v0 + v1 + v2) * 0.33333;
 
         TriangleType(Triangle {
             v0,
@@ -83,13 +80,12 @@ impl Triangle {
             mat,
             b_box,
             area,
-            center,
         })
     }
 
     /// returns the center point for the triangle on the given axis
     pub fn center(&self, axis: u8) -> f64 {
-        self.center.axis(axis)
+        self.b_box.center().axis(axis)
     }
 }
 

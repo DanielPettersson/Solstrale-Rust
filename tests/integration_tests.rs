@@ -131,7 +131,7 @@ fn test_render_normal_mapping_2() {
 #[test]
 fn test_abort_render_scene() {
     let render_config = RenderConfig {
-        samples_per_pixel: 1_000_000,
+        samples_per_pixel: 10_000_000,
         ..Default::default()
     };
     let scene = create_test_scene(render_config);
@@ -148,7 +148,7 @@ fn test_abort_render_scene() {
         progress_count += 1;
         abort_sender.send(true).unwrap();
     }
-    assert!(progress_count < 1_000_000, "Should be less than 1_000_000 as rendering is aborted")
+    assert!(progress_count < 10_000_000, "Should be less than 1_000_000 as rendering is aborted")
 }
 
 #[test]

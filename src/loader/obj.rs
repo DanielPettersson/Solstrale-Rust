@@ -2,22 +2,23 @@
 //! all triangles. It also read materials from the referred .mat file.
 //! Support for colored and textured lambertian materials.
 //! Applies supplied default material if none in model
-use crate::geo::transformation::Transformer;
-use crate::geo::vec3::Vec3;
-use crate::geo::Uv;
-use crate::hittable::Bvh;
-use crate::hittable::Hittables;
-use crate::hittable::Hittables::TriangleType;
-use crate::hittable::Triangle;
-use crate::loader::Loader;
-use crate::material::texture::{BumpMap, ImageMap, SolidColor};
-use crate::material::{texture, Lambertian, Materials};
-use crate::util::height_map;
-use simple_error::SimpleError;
 use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Arc;
+
+use simple_error::SimpleError;
 use tobj::LoadOptions;
+
+use crate::geo::transformation::Transformer;
+use crate::geo::Uv;
+use crate::geo::vec3::Vec3;
+use crate::hittable::Bvh;
+use crate::hittable::Hittables;
+use crate::hittable::Triangle;
+use crate::loader::Loader;
+use crate::material::{Lambertian, Materials, texture};
+use crate::material::texture::{BumpMap, ImageMap, SolidColor};
+use crate::util::height_map;
 
 /// Contains file information about the obj to load
 pub struct Obj {
@@ -143,7 +144,7 @@ impl Loader for Obj {
                     Some(m) => m.to_owned(),
                 };
 
-                if let TriangleType(t) = Triangle::new_with_tex_coords(
+                triangles.push(Triangle::new_with_tex_coords(
                     v0,
                     v1,
                     v2,
@@ -152,9 +153,7 @@ impl Loader for Obj {
                     uv2,
                     material,
                     transformation,
-                ) {
-                    triangles.push(t);
-                }
+                ));
             }
         }
 
@@ -164,8 +163,9 @@ impl Loader for Obj {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::geo::transformation::NopTransformer;
+
+    use super::*;
 
     #[test]
     fn missing_file() {

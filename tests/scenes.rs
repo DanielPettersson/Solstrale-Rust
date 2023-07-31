@@ -1,19 +1,18 @@
 use solstrale::camera::CameraConfig;
 use solstrale::geo::transformation::{NopTransformer, RotationY, Transformations, Translation};
-use solstrale::geo::vec3::Vec3;
 use solstrale::geo::Uv;
+use solstrale::geo::vec3::Vec3;
 use solstrale::hittable::Bvh;
 use solstrale::hittable::ConstantMedium;
 use solstrale::hittable::Hittable;
 use solstrale::hittable::HittableList;
-use solstrale::hittable::Hittables::TriangleType;
 use solstrale::hittable::Quad;
 use solstrale::hittable::Sphere;
 use solstrale::hittable::Triangle;
-use solstrale::loader::obj::Obj;
 use solstrale::loader::Loader;
-use solstrale::material::texture::{ImageMap, SolidColor};
+use solstrale::loader::obj::Obj;
 use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
+use solstrale::material::texture::{ImageMap, SolidColor};
 use solstrale::renderer::{RenderConfig, Scene};
 
 pub fn create_test_scene(render_config: RenderConfig) -> Scene {
@@ -73,15 +72,13 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             let j = jj as f64 * 0.1;
             for kk in (0..10).step_by(2) {
                 let k = kk as f64 * 0.1;
-                if let TriangleType(t) = Triangle::new(
+                balls.push(Triangle::new(
                     Vec3::new(i, j + 0.05, k + 0.8),
                     Vec3::new(i, j, k + 0.8),
                     Vec3::new(i, j + 0.05, k),
                     red_mat.clone(),
                     &nop_transformer,
-                ) {
-                    balls.push(t)
-                }
+                ));
             }
         }
     }
@@ -150,9 +147,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
             &nop_transformer,
         );
         if use_bvh {
-            if let TriangleType(tri) = t {
-                triangles.push(tri);
-            }
+            triangles.push(t);
         } else {
             world.add(t);
         }
