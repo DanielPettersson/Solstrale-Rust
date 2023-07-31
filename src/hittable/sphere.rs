@@ -97,8 +97,12 @@ impl Hittable for Sphere {
         &self.b_box
     }
 
-    fn is_light(&self) -> bool {
-        self.mat.is_light()
+    fn get_lights(&self) -> Vec<Hittables> {
+        if self.mat.is_light() {
+            vec![SphereType(self.clone())]
+        } else {
+            vec![]
+        }
     }
 }
 

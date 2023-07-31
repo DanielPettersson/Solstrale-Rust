@@ -2,11 +2,9 @@ use solstrale::camera::CameraConfig;
 use solstrale::geo::transformation::{NopTransformer, RotationY, Transformations, Translation};
 use solstrale::geo::Uv;
 use solstrale::geo::vec3::Vec3;
-use solstrale::hittable::Bvh;
+use solstrale::hittable::{Bvh, Quad};
 use solstrale::hittable::ConstantMedium;
-use solstrale::hittable::Hittable;
 use solstrale::hittable::HittableList;
-use solstrale::hittable::Quad;
 use solstrale::hittable::Sphere;
 use solstrale::hittable::Triangle;
 use solstrale::loader::Loader;
@@ -23,7 +21,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         look_at: Vec3::new(0.25, 1., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
 
     let image_tex = ImageMap::load("resources/textures/tex.jpg").unwrap();
 
@@ -32,31 +30,31 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
     let light_mat = DiffuseLight::new(10., 10., 10., None);
     let red_mat = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
-    world.add(Quad::new(
+    world.push(Quad::new(
         Vec3::new(-5., 0., -15.),
         Vec3::new(20., 0., 0.),
         Vec3::new(0., 0., 20.),
         ground_material,
         &NopTransformer(),
     ));
-    world.add(Sphere::new(Vec3::new(-1., 1., 0.), 1., glass_mat));
-    world.add(Quad::new_box(
+    world.push(Sphere::new(Vec3::new(-1., 1., 0.), 1., glass_mat));
+    world.append(&mut Quad::new_box(
         Vec3::new(0., 0., -0.5),
         Vec3::new(1., 2., 0.5),
         red_mat.clone(),
         &RotationY::new(15.),
     ));
-    world.add(ConstantMedium::new(
-        Quad::new_box(
+    world.push(ConstantMedium::new(
+        HittableList::new(Quad::new_box(
             Vec3::new(0., 0., -0.5),
             Vec3::new(1., 2., 0.5),
             red_mat.clone(),
             &Translation::new(Vec3::new(0., 0., 1.)),
-        ),
+        )),
         0.1,
         Vec3::new(1., 1., 1.),
     ));
-    world.add(Quad::new_box(
+    world.append(&mut Quad::new_box(
         Vec3::new(-1., 2., 0.),
         Vec3::new(-0.5, 2.5, 0.5),
         red_mat.clone(),
@@ -82,9 +80,9 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             }
         }
     }
-    world.add(Bvh::new(balls).unwrap());
+    world.push(Bvh::new(balls).unwrap());
 
-    world.add(Triangle::new(
+    world.push(Triangle::new(
         Vec3::new(1., 0.1, 2.),
         Vec3::new(3., 0.1, 2.),
         Vec3::new(2., 0.1, 1.),
@@ -94,8 +92,8 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
 
     // Lights
 
-    world.add(Sphere::new(Vec3::new(10., 5., 10.), 10., light_mat.clone()));
-    world.add(Quad::new(
+    world.push(Sphere::new(Vec3::new(10., 5., 10.), 10., light_mat.clone()));
+    world.push(Quad::new(
         Vec3::new(0., 0., 0.),
         Vec3::new(2., 0., 0.),
         Vec3::new(0., 0., 2.),
@@ -105,7 +103,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
             Box::new(Translation::new(Vec3::new(-1., 10., -1.))),
         ]),
     ));
-    world.add(Triangle::new(
+    world.push(Triangle::new(
         Vec3::new(-2., 1., -3.),
         Vec3::new(0., 1., -3.),
         Vec3::new(-1., 2., -3.),
@@ -114,7 +112,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
     ));
 
     Scene {
-        world,
+        world: Bvh::new(world).unwrap(),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -130,10 +128,10 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
         look_at: Vec3::new(-0.5, 0., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
     let light = DiffuseLight::new(10., 10., 10., None);
-    world.add(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
+    world.push(Sphere::new(Vec3::new(0., 4., 10.), 4., light));
 
     let nop_transformer = NopTransformer();
     let mut triangles = Vec::new();
@@ -149,16 +147,16 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
         if use_bvh {
             triangles.push(t);
         } else {
-            world.add(t);
+            world.push(t);
         }
     }
 
     if use_bvh {
-        world.add(Bvh::new(triangles).unwrap())
+        world.push(Bvh::new(triangles).unwrap())
     }
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -174,16 +172,16 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
         look_at: Vec3::new(0., 0., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
     let light = DiffuseLight::new(10., 10., 10., None);
     if add_light {
-        world.add(Sphere::new(Vec3::new(0., 100., 0.), 20., light))
+        world.push(Sphere::new(Vec3::new(0., 100., 0.), 20., light))
     }
-    world.add(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
+    world.push(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -199,15 +197,15 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
         look_at: Vec3::new(0., 1., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(10., 10., 10., None);
 
-    world.add(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
+    world.push(Sphere::new(Vec3::new(50., 50., 50.), 20., light));
 
     let tex = ImageMap::load("resources/textures/checker.jpg").unwrap();
     let checker_mat = Lambertian::new(tex, None);
 
-    world.add(Triangle::new_with_tex_coords(
+    world.push(Triangle::new_with_tex_coords(
         Vec3::new(-1., 0., 0.),
         Vec3::new(1., 0., 0.),
         Vec3::new(0., 2., 0.),
@@ -219,7 +217,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
     ));
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -239,10 +237,10 @@ pub fn create_normal_mapping_scene(
         look_at: Vec3::new(0., 0., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(45., 45., 45., None);
 
-    world.add(Sphere::new(light_pos, 5., light));
+    world.push(Sphere::new(light_pos, 5., light));
 
     let albedo_tex = ImageMap::load("resources/textures/wall_color.png").unwrap();
     let normal_tex = if normal_mapping_enabled {
@@ -253,14 +251,14 @@ pub fn create_normal_mapping_scene(
     let mat = Lambertian::new(albedo_tex, normal_tex);
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
-    world.add(Quad::new_box(
+    world.append(&mut Quad::new_box(
         Vec3::new(-0.1, -0.1, 0.),
         Vec3::new(0.1, 0.1, 1.),
         red,
         &NopTransformer()
     ));
 
-    world.add(Quad::new(
+    world.push(Quad::new(
         Vec3::new(-1., -1., 0.),
         Vec3::new(2., 0., 0.),
         Vec3::new(0., 2., 0.),
@@ -269,7 +267,7 @@ pub fn create_normal_mapping_scene(
     ));
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
         render_config,
@@ -285,18 +283,18 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
         look_at: Vec3::new(-50., 0., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(15., 15., 15., None);
 
-    world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
+    world.push(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
     let model = Obj::new("resources/spider/", "spider.obj")
         .load(&NopTransformer(), None)
         .unwrap();
-    world.add(model);
+    world.push(model);
 
     let image_tex = ImageMap::load("resources/textures/tex.jpg").unwrap();
     let ground_material = Lambertian::new(image_tex, None);
-    world.add(Quad::new(
+    world.push(Quad::new(
         Vec3::new(-200., -30., -200.),
         Vec3::new(400., 0., 0.),
         Vec3::new(0., 0., 400.),
@@ -305,7 +303,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     ));
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -321,19 +319,19 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
         look_at: Vec3::new(0., 0., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(15., 15., 15., None);
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
 
-    world.add(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
-    world.add(
+    world.push(Sphere::new(Vec3::new(-100., 100., 40.), 35., light));
+    world.push(
         Obj::new(path, filename)
             .load(&NopTransformer(), Some(red))
             .unwrap(),
     );
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,
@@ -349,18 +347,18 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
         look_at: Vec3::new(0., 0., 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(15., 15., 15., None);
 
-    world.add(Sphere::new(Vec3::new(100., 0., 100.), 35., light));
-    world.add(
+    world.push(Sphere::new(Vec3::new(100., 0., 100.), 35., light));
+    world.push(
         Obj::new(path, filename)
             .load(&NopTransformer(), None)
             .unwrap(),
     );
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
         render_config,
@@ -379,18 +377,18 @@ pub fn create_light_attenuation_scene(
         look_at: Vec3::new(0., 0.2, 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(25., 25., 25., attenuation_half_length);
     let red = Lambertian::new(SolidColor::new(1., 0., 0.), None);
     let green = Lambertian::new(SolidColor::new(0., 1., 0.), None);
     let blue = Lambertian::new(SolidColor::new(0., 0., 1.), None);
     let glass = Dielectric::new(SolidColor::new(0.8, 0.8, 0.8), None, 1.5);
 
-    world.add(Sphere::new(Vec3::new(0., 0.2, 0.), 0.03, light));
-    world.add(Sphere::new(Vec3::new(0.25, 0.1, 0.25), 0.1, green));
-    world.add(Sphere::new(Vec3::new(0.25, 0.1, -0.5), 0.1, blue));
-    world.add(Sphere::new(Vec3::new(-0.1, 0.1, -0.1), 0.1, glass));
-    world.add(Quad::new(
+    world.push(Sphere::new(Vec3::new(0., 0.2, 0.), 0.03, light));
+    world.push(Sphere::new(Vec3::new(0.25, 0.1, 0.25), 0.1, green));
+    world.push(Sphere::new(Vec3::new(0.25, 0.1, -0.5), 0.1, blue));
+    world.push(Sphere::new(Vec3::new(-0.1, 0.1, -0.1), 0.1, glass));
+    world.push(Quad::new(
         Vec3::new(-1., 0., -1.),
         Vec3::new(2., 0., 0.),
         Vec3::new(0., 0., 2.),
@@ -399,7 +397,7 @@ pub fn create_light_attenuation_scene(
     ));
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
         render_config,

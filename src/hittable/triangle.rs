@@ -83,10 +83,6 @@ impl Triangle {
         })
     }
 
-    /// returns the center point for the triangle on the given axis
-    pub fn center(&self, axis: u8) -> f64 {
-        self.b_box.center().axis(axis)
-    }
 }
 
 impl Hittable for Triangle {
@@ -165,7 +161,11 @@ impl Hittable for Triangle {
         &self.b_box
     }
 
-    fn is_light(&self) -> bool {
-        self.mat.is_light()
+    fn get_lights(&self) -> Vec<Hittables> {
+        if self.mat.is_light() {
+            vec![TriangleType(self.clone())]
+        } else {
+            vec![]
+        }
     }
 }

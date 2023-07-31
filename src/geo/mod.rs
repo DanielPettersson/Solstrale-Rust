@@ -35,16 +35,17 @@ pub struct Aabb {
     pub z: Interval,
 }
 
-impl Aabb {
-    /// Create a new aabb having empty intervals in each axis
-    pub fn new_with_empty_intervals() -> Aabb {
+impl Default for Aabb {
+    fn default() -> Self {
         Aabb {
             x: EMPTY_INTERVAL,
             y: EMPTY_INTERVAL,
             z: EMPTY_INTERVAL,
         }
     }
+}
 
+impl Aabb {
     /// Create a new aabb exactly encapsulating the two given points
     pub fn new_from_2_points(a: Vec3, b: Vec3) -> Aabb {
         Aabb {
@@ -82,11 +83,11 @@ impl Aabb {
     }
 
     /// Create a new aabb that is the sum of the two given aabb's
-    pub fn combine_aabbs(a: &Aabb, b: &Aabb) -> Aabb {
+    pub fn combine(&self, a: &Aabb) -> Aabb {
         Aabb {
-            x: combine_intervals(a.x, b.x),
-            y: combine_intervals(a.y, b.y),
-            z: combine_intervals(a.z, b.z),
+            x: combine_intervals(self.x, a.x),
+            y: combine_intervals(self.y, a.y),
+            z: combine_intervals(self.z, a.z),
         }
     }
 
@@ -140,11 +141,18 @@ impl Aabb {
     }
 
     /// return the center point of the aabb
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::Aabb;
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let aabb = Aabb::new_from_2_points(Vec3::new(-5., 0., 1.), Vec3::new(5., 2., 1.));
+    /// assert_eq!(aabb.center(), Vec3::new(0. , 1., 1.));
+    /// ```
     pub fn center(&self) -> Vec3 {
         Vec3::new(
-            self.x.min + self.x.max * 0.5,
-            self.y.min + self.y.max * 0.5,
-            self.z.min + self.z.max * 0.5,
+            (self.x.min + self.x.max) * 0.5,
+            (self.y.min + self.y.max) * 0.5,
+            (self.z.min + self.z.max) * 0.5,
         )
     }
 }

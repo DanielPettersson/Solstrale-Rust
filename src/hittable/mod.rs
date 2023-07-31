@@ -23,7 +23,6 @@ use crate::hittable::Hittables::{
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
 use enum_dispatch::enum_dispatch;
-use std::slice::Iter;
 
 /// The common trait for all objects in the ray tracing scene
 /// that can be hit by rays
@@ -45,18 +44,8 @@ pub trait Hittable {
     /// Create a bounding box that contains the hittable
     fn bounding_box(&self) -> &Aabb;
 
-    /// Is the hittable a light?
-    fn is_light(&self) -> bool;
-
-    /// Return the children of the hittable, if any
-    fn children(&self) -> Option<Iter<Hittables>> {
-        None
-    }
-
-    /// Add a new child to the hittable
-    fn add(&mut self, _hittable: Hittables) {
-        panic!("Can only add child to HittableList")
-    }
+    /// Is the hittable a light? Or does it contain any lights?
+    fn get_lights(&self) -> Vec<Hittables>;
 }
 
 #[enum_dispatch(Hittable)]
@@ -80,7 +69,7 @@ pub enum Hittables {
 impl Clone for Hittables {
     fn clone(&self) -> Self {
         match self {
-            HittableListType(_) => panic!("Should not clone HittableList"),
+            HittableListType(l) => HittableListType(l.clone()),
             SphereType(h) => SphereType(h.clone()),
             ConstantMediumType(h) => ConstantMediumType(h.clone()),
             QuadType(h) => QuadType(h.clone()),

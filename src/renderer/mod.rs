@@ -109,19 +109,15 @@ pub(crate) struct RayColorResult {
 impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
     pub fn new(scene: Scene) -> Result<Renderer, Box<dyn Error>> {
-        let mut lights = HittableList::new();
-        find_lights(&scene.world, &mut lights);
+        let light_list = scene.world.get_lights();
 
-        let has_lights = match lights.children() {
-            Some(mut list) => list.next().is_some(),
-            None => false,
-        };
-
-        if !has_lights {
+        if light_list.is_empty() {
             return Err(Box::new(SimpleError::new(
                 "Scene should have at least one light",
             )));
         }
+
+        let lights = HittableList::new(light_list);
 
         Ok(Renderer {
             scene,
@@ -372,21 +368,6 @@ fn calculate_estimated_time_left(
     time_since_start
         .div_f32(samples_done as f32)
         .mul_f32(samples_left as f32)
-}
-
-fn find_lights(s: &Hittables, list: &mut Hittables) {
-    match s.children() {
-        None => {
-            if s.is_light() {
-                list.add(s.clone());
-            }
-        }
-        Some(children) => {
-            for child in children {
-                find_lights(child, list)
-            }
-        }
-    }
 }
 
 #[cfg(test)]

@@ -6,12 +6,11 @@ use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::random::random_element_index;
 use crate::util::interval::Interval;
-use std::slice::Iter;
 
 /// A special type of hittable that is a container
 /// for a list of other hittable objects. Used to be able to have many
 /// objects in a scene
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HittableList {
     /// list of child hittables
     pub list: Vec<Hittables>,
@@ -21,10 +20,12 @@ pub struct HittableList {
 impl HittableList {
     #![allow(clippy::new_ret_no_self)]
     /// Creates new empty HittableList
-    pub fn new() -> Hittables {
+    pub fn new(list: Vec<Hittables>) -> Hittables {
+        let b_box = list.iter().map(|h| h.bounding_box()).fold(Aabb::default(), |acc, b| acc.combine(b));
+
         HittableListType(HittableList {
-            list: Vec::new(),
-            b_box: Aabb::new_with_empty_intervals(),
+            list,
+            b_box,
         })
     }
 }
@@ -62,17 +63,12 @@ impl Hittable for HittableList {
         &self.b_box
     }
 
-    fn is_light(&self) -> bool {
-        false
-    }
+    fn get_lights(&self) -> Vec<Hittables> {
+        let mut ret = Vec::new();
+        for child in &self.list {
 
-    fn children(&self) -> Option<Iter<Hittables>> {
-        Some(self.list.iter())
-    }
-
-    /// Adds a new hittable object to this HittableList
-    fn add(&mut self, h: Hittables) {
-        self.b_box = Aabb::combine_aabbs(&self.b_box, h.bounding_box());
-        self.list.push(h);
+            ret.append(&mut child.get_lights());
+        }
+        ret
     }
 }

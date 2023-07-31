@@ -79,7 +79,7 @@ impl Hittable for ConstantMedium {
         self.boundary.bounding_box()
     }
 
-    fn is_light(&self) -> bool {
-        false
+    fn get_lights(&self) -> Vec<Hittables> {
+        vec![]
     }
 }

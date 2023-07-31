@@ -1,16 +1,15 @@
-use std::sync::mpsc::channel;
 use std::{env, thread};
+use std::sync::mpsc::channel;
 
 use image::RgbImage;
 
 use solstrale::camera::CameraConfig;
 use solstrale::geo::transformation::NopTransformer;
 use solstrale::geo::vec3::Vec3;
-use solstrale::hittable::Hittable;
 use solstrale::hittable::HittableList;
 use solstrale::hittable::Sphere;
-use solstrale::loader::obj::Obj;
 use solstrale::loader::Loader;
+use solstrale::loader::obj::Obj;
 use solstrale::material::DiffuseLight;
 use solstrale::ray_trace;
 use solstrale::renderer::{RenderConfig, Scene};
@@ -46,18 +45,18 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
         look_at: Vec3::new(0., 0.05, 0.),
     };
 
-    let mut world = HittableList::new();
+    let mut world = Vec::new();
     let light = DiffuseLight::new(15., 15., 15., None);
 
-    world.add(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
-    world.add(
+    world.push(Sphere::new(Vec3::new(100., 100., 100.), 35., light));
+    world.push(
         Obj::new("", obj_path)
             .load(&NopTransformer(), None)
             .unwrap(),
     );
 
     Scene {
-        world,
+        world: HittableList::new(world),
         camera,
         background_color: Vec3::new(0.2, 0.3, 0.5),
         render_config,

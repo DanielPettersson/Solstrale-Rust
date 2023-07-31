@@ -42,6 +42,13 @@ impl BvhItem {
             BvhItem::Leaf(i) => i.hit(r, ray_length),
         }
     }
+
+    fn get_lights(&self) -> Vec<Hittables> {
+        match self {
+            BvhItem::Node(b) => b.get_lights(),
+            BvhItem::Leaf(l) => l.get_lights(),
+        }
+    }
 }
 
 impl Bvh {
@@ -82,7 +89,7 @@ fn new_bvh(mut list: Vec<Hittables>) -> Bvh {
         (
             BvhItem::Leaf(Box::new(list[0].clone())),
             BvhItem::Leaf(Box::new(list[1].clone())),
-            Aabb::combine_aabbs(list[0].bounding_box(), list[1].bounding_box()),
+            list[0].bounding_box().combine(list[1].bounding_box()),
         )
     } else {
         let mid = sort_hittables_slice_by_most_spread_axis(list.as_mut_slice());
@@ -92,7 +99,7 @@ fn new_bvh(mut list: Vec<Hittables>) -> Bvh {
             || new_bvh(list[mid..].to_vec()),
         );
 
-        let b_box = Aabb::combine_aabbs(&l.b_box, &r.b_box);
+        let b_box = l.b_box.combine(&r.b_box);
         (BvhItem::Node(l), BvhItem::Node(r), b_box)
     };
 
@@ -168,8 +175,13 @@ impl Hittable for Bvh {
         &self.b_box
     }
 
-    fn is_light(&self) -> bool {
-        false
+    fn get_lights(&self) -> Vec<Hittables> {
+        let mut ret = Vec::new();
+
+        ret.append(&mut self.left.get_lights());
+        ret.append(&mut self.right.get_lights());
+
+        ret
     }
 }
 

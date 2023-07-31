@@ -34,13 +34,13 @@
 //!     look_from: Vec3::new(0., 0., 4.),
 //!     look_at: Vec3::new(0., 0., 0.),
 //! };
-//! let mut world = HittableList::new();
+//! let mut world = Vec::new();
 //! let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
 //! let light = DiffuseLight::new(10., 10., 10., None);
-//! world.add(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
+//! world.push(Sphere::new(Vec3::new(0., 0., 0.), 0.5, yellow));
 //!
 //! let scene = Scene {
-//!     world,
+//!     world: HittableList::new(world),
 //!     camera,
 //!     background_color: Vec3::new(0.2, 0.3, 0.5),
 //!     render_config: RenderConfig::default(),
