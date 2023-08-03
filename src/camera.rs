@@ -14,6 +14,8 @@ pub struct CameraConfig {
     pub look_from: Vec3,
     /// Point where the camera is looking
     pub look_at: Vec3,
+    /// Direction pointing "up" for the camera
+    pub up: Vec3,
 }
 
 /// Contains all data needed to describe a cameras position, field of view and
@@ -40,7 +42,7 @@ impl Camera {
         let look_v = c.look_from - c.look_at;
         let focus_distance = look_v.length();
         let w = look_v.unit();
-        let u = Vec3::new(0., 1., 0.).cross(w).unit();
+        let u = c.up.unit().cross(w).unit();
         let v = w.cross(u);
 
         let horizontal = (u * view_port_width) * focus_distance;

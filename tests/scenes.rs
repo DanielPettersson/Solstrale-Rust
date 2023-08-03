@@ -18,6 +18,7 @@ pub fn create_test_scene(render_config: RenderConfig) -> Scene {
         aperture_size: 0.1,
         look_from: Vec3::new(-5., 3., 6.),
         look_at: Vec3::new(0.25, 1., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -125,6 +126,7 @@ pub fn new_bvh_test_scene(render_config: RenderConfig, use_bvh: bool, num_triang
         aperture_size: 0.1,
         look_from: Vec3::new(-0.5, 0., 4.),
         look_at: Vec3::new(-0.5, 0., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -169,6 +171,7 @@ pub fn create_simple_test_scene(render_config: RenderConfig, add_light: bool) ->
         aperture_size: 0.1,
         look_from: Vec3::new(0., 0., 4.),
         look_at: Vec3::new(0., 0., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -194,6 +197,7 @@ pub fn create_uv_scene(render_config: RenderConfig) -> Scene {
         aperture_size: 0.,
         look_from: Vec3::new(0., 1., 5.),
         look_at: Vec3::new(0., 1., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -234,6 +238,7 @@ pub fn create_normal_mapping_scene(
         aperture_size: 0.,
         look_from: Vec3::new(0.2, 0.2, 2.),
         look_at: Vec3::new(0., 0., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -280,6 +285,7 @@ pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
         aperture_size: 20.,
         look_from: Vec3::new(-250., 30., 150.),
         look_at: Vec3::new(-50., 0., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -316,6 +322,7 @@ pub fn create_obj_with_box(render_config: RenderConfig, path: &str, filename: &s
         aperture_size: 0.,
         look_from: Vec3::new(2., 1., 3.),
         look_at: Vec3::new(0., 0., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -344,6 +351,7 @@ pub fn create_obj_with_triangle(render_config: RenderConfig, path: &str, filenam
         aperture_size: 0.,
         look_from: Vec3::new(0., 0., 2.),
         look_at: Vec3::new(0., 0., 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
@@ -374,6 +382,7 @@ pub fn create_light_attenuation_scene(
         aperture_size: 0.,
         look_from: Vec3::new(0., 1., 2.),
         look_at: Vec3::new(0., 0.2, 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();

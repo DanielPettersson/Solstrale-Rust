@@ -42,6 +42,7 @@ fn create_obj_scene(render_config: RenderConfig, obj_path: &str) -> Scene {
         aperture_size: 0.,
         look_from: Vec3::new(1., 0.05, 0.),
         look_at: Vec3::new(0., 0.05, 0.),
+        up: Vec3::new(0., 1., 0.),
     };
 
     let mut world = Vec::new();
