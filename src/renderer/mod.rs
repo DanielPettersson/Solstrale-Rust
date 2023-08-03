@@ -1,24 +1,23 @@
 //! The renderer takes a [`Scene`] as input, renders it and reports [`RenderProgress`]
 
 use std::error::Error;
-use std::ops::{Deref, DerefMut};
-use std::sync::mpsc::{Receiver, Sender};
+use std::ops::Deref;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{Receiver, Sender};
 use std::time::{Duration, SystemTime};
 
-use image::{ImageBuffer, RgbImage};
+use image::RgbImage;
 use simple_error::SimpleError;
 
 use crate::camera::{Camera, CameraConfig};
-use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::geo::{Ray, Uv};
+use crate::geo::vec3::{Vec3, ZERO_VECTOR};
 use crate::hittable::{Hittable, Hittables};
 use crate::material::AttenuatedColor;
-use crate::post::{PostProcessor, PostProcessors};
+use crate::post::{NopPostProcessor, PostProcessor, PostProcessors};
 use crate::random::random_normal_float;
 use crate::renderer::shader::{AlbedoShader, NormalShader, PathTracingShader, Shader, Shaders};
 use crate::util::interval::RAY_INTERVAL;
-use crate::util::rgb_color::to_rgb_color;
 
 pub mod shader;
 
@@ -109,13 +108,17 @@ pub(crate) struct RayColorResult {
 
 impl Renderer {
     /// Creates a new renderer given a scene and channels for communicating with the caller
-    pub fn new(scene: Scene) -> Result<Renderer, Box<dyn Error>> {
+    pub fn new(mut scene: Scene) -> Result<Renderer, Box<dyn Error>> {
         let light_list = scene.world.get_lights();
 
         if light_list.is_empty() {
             return Err(Box::new(SimpleError::new(
                 "Scene should have at least one light",
             )));
+        }
+
+        if scene.render_config.post_processors.is_empty() {
+            scene.render_config.post_processors.push(NopPostProcessor::new());
         }
 
         Ok(Renderer {
@@ -270,12 +273,42 @@ impl Renderer {
                     RenderImageStrategy::OnlyFinal => sample == samples_per_pixel,
                 } {
                     last_image_generated_time = now;
-                    Some(create_render_image(
-                        image_width as u32,
-                        image_height as u32,
-                        sample,
-                        &pixel_colors.lock().unwrap(),
-                    ))
+
+                    if let Some((last_post_processor, intermediate_post_processors)) =
+                        self.scene.render_config.post_processors.split_last()
+                    {
+                        if abort.try_recv().is_ok() {
+                            return Ok(());
+                        }
+
+                        let mut intermediate_pixel_colors = pixel_colors.lock().unwrap().clone();
+
+                        for ipp in intermediate_post_processors {
+                            let processed_pixel_colors = ipp.intermediate_post_process(
+                                &intermediate_pixel_colors,
+                                albedo_colors.lock().unwrap().deref(),
+                                normal_colors.lock().unwrap().deref(),
+                                image_width as u32,
+                                image_height as u32,
+                                sample,
+                            )?;
+
+                            intermediate_pixel_colors = processed_pixel_colors;
+                        }
+
+                        Some(last_post_processor.post_process(
+                            &intermediate_pixel_colors,
+                            albedo_colors.lock().unwrap().deref(),
+                            normal_colors.lock().unwrap().deref(),
+                            image_width as u32,
+                            image_height as u32,
+                            sample,
+                        )?)
+                    } else {
+                        None
+                    }
+
+
                 } else {
                     None
                 };
@@ -293,47 +326,6 @@ impl Renderer {
                 })?
             }
         }
-
-        if let Some((last_post_processor, intermediate_post_processors)) =
-            self.scene.render_config.post_processors.split_last()
-        {
-            if abort.try_recv().is_ok() {
-                return Ok(());
-            }
-
-            for ipp in intermediate_post_processors {
-                let processed_pixel_colors = ipp.intermediate_post_process(
-                    pixel_colors.lock().unwrap().deref(),
-                    albedo_colors.lock().unwrap().deref(),
-                    normal_colors.lock().unwrap().deref(),
-                    image_width as u32,
-                    image_height as u32,
-                    samples_per_pixel,
-                )?;
-
-                *pixel_colors.lock().unwrap().deref_mut() = processed_pixel_colors;
-            }
-
-            return match last_post_processor.post_process(
-                pixel_colors.lock().unwrap().deref(),
-                albedo_colors.lock().unwrap().deref(),
-                normal_colors.lock().unwrap().deref(),
-                image_width as u32,
-                image_height as u32,
-                samples_per_pixel,
-            ) {
-                Ok(img) => {
-                    output.send(RenderProgress {
-                        progress: 1.,
-                        fps: None,
-                        estimated_time_left: Duration::from_millis(0),
-                        render_image: Some(img),
-                    })?;
-                    Ok(())
-                }
-                Err(e) => Err(e),
-            };
-        }
         Ok(())
     }
 }
@@ -342,23 +334,6 @@ fn add_row_data(yi: usize, colors: &mut [Vec3], row_colors: &[Vec3]) {
     for (x, c) in row_colors.iter().enumerate() {
         colors[yi + x] += *c;
     }
-}
-
-fn create_render_image(
-    image_width: u32,
-    image_height: u32,
-    sample: u32,
-    colors: &[Vec3],
-) -> RgbImage {
-    let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
-
-    for y in 0..image_height {
-        for x in 0..image_width {
-            let i = (y * image_width + x) as usize;
-            img.put_pixel(x, y, to_rgb_color(colors[i], sample))
-        }
-    }
-    img
 }
 
 fn calculate_fps(last_frame_render_time: &mut SystemTime, now: SystemTime) -> f64 {

@@ -2,6 +2,7 @@
 
 mod oidn;
 mod bloom;
+mod nop;
 
 use std::error::Error;
 
@@ -9,6 +10,7 @@ use enum_dispatch::enum_dispatch;
 
 use crate::geo::vec3::Vec3;
 pub use crate::post::bloom::BloomPostProcessor;
+pub use crate::post::nop::NopPostProcessor;
 pub use crate::post::oidn::OidnPostProcessor;
 
 /// Responsible for taking the rendered image and transforming it
@@ -48,6 +50,8 @@ pub enum PostProcessors {
     OidnPostProcessorType(OidnPostProcessor),
     /// [`PostProcessor`] of type [`BloomPostProcessor`]
     BloomPostProcessorType(BloomPostProcessor),
+    /// [`PostProcessor`] of type [`NopPostProcessor`]
+    NopPostProcessorType(NopPostProcessor),
 }
 
 fn pixel_colors_to_rgb_image(pixel_colors: &[Vec3], width: u32, height: u32, num_samples: u32) -> image::RgbImage {
