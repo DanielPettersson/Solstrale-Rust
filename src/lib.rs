@@ -33,6 +33,7 @@
 //!     aperture_size: 0.1,
 //!     look_from: Vec3::new(0., 0., 4.),
 //!     look_at: Vec3::new(0., 0., 0.),
+//!     up: Vec3::new(0., 1., 0.),
 //! };
 //! let mut world = Vec::new();
 //! let yellow = Lambertian::new(SolidColor::new(1., 1., 0.), None);
