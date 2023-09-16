@@ -83,6 +83,12 @@ pub mod util;
 
 /// Executes the ray tracing with the given [`Scene`] and reports [`RenderProgress`] on
 /// the output [`Sender`]. Listens to abort [`Receiver`] for aborting a started ray trace operation
+///
+/// # Arguments
+/// * `width` - Width in pixel of the rendered image
+/// * `height` - Height in pixel of the rendered image
+/// * `output` - Channel where render progress will be sent
+/// * `abort` - Channel to send abort signals to the renderer
 pub fn ray_trace<'a>(
     width: u32,
     height: u32,

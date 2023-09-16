@@ -10,14 +10,14 @@ use simple_error::SimpleError;
 use tobj::LoadOptions;
 
 use crate::geo::transformation::Transformer;
-use crate::geo::vec3::Vec3;
 use crate::geo::Uv;
+use crate::geo::vec3::Vec3;
 use crate::hittable::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Triangle;
 use crate::loader::Loader;
+use crate::material::{Lambertian, Materials, texture};
 use crate::material::texture::{BumpMap, ImageMap, SolidColor};
-use crate::material::{texture, Lambertian, Materials};
 use crate::util::height_map;
 
 /// Contains file information about the obj to load
@@ -89,31 +89,18 @@ impl Loader for Obj {
             let mesh = &m.mesh;
             for i in (0..mesh.indices.len()).step_by(3) {
                 let mut pos_offset = (mesh.indices[i] * 3) as usize;
-                let v0 = Vec3::new(
-                    mesh.positions[pos_offset] as f64,
-                    mesh.positions[pos_offset + 1] as f64,
-                    mesh.positions[pos_offset + 2] as f64,
-                );
 
+                let v0 = vec3_from_mesh_vec(&mesh.positions, pos_offset);
                 pos_offset = (mesh.indices[i + 1] * 3) as usize;
-                let v1 = Vec3::new(
-                    mesh.positions[pos_offset] as f64,
-                    mesh.positions[pos_offset + 1] as f64,
-                    mesh.positions[pos_offset + 2] as f64,
-                );
-
+                let v1 = vec3_from_mesh_vec(&mesh.positions, pos_offset);
                 pos_offset = (mesh.indices[i + 2] * 3) as usize;
-                let v2 = Vec3::new(
-                    mesh.positions[pos_offset] as f64,
-                    mesh.positions[pos_offset + 1] as f64,
-                    mesh.positions[pos_offset + 2] as f64,
-                );
+                let v2 = vec3_from_mesh_vec(&mesh.positions, pos_offset);
 
                 let (uv0, uv1, uv2) = if mesh.texcoords.is_empty() {
                     (
-                        Uv { u: 0.0, v: 0.0 },
-                        Uv { u: 0.0, v: 0.0 },
-                        Uv { u: 0.0, v: 0.0 },
+                        Uv::default(),
+                        Uv::default(),
+                        Uv::default(),
                     )
                 } else {
                     let tex_offset1 = (mesh.texcoord_indices[i] * 2) as usize;
@@ -159,6 +146,14 @@ impl Loader for Obj {
 
         Ok(Bvh::new(triangles))
     }
+}
+
+fn vec3_from_mesh_vec(positions: &[f32], offset: usize) -> Vec3 {
+    Vec3::new(
+        positions[offset] as f64,
+        positions[offset + 1] as f64,
+        positions[offset + 2] as f64,
+    )
 }
 
 #[cfg(test)]
