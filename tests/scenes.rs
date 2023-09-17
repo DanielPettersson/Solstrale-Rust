@@ -1,5 +1,5 @@
 use solstrale::camera::CameraConfig;
-use solstrale::geo::transformation::{NopTransformer, RotationY, Transformations, Translation};
+use solstrale::geo::transformation::{NopTransformer, RotationY, Transformations, Transformer, Translation};
 use solstrale::geo::vec3::Vec3;
 use solstrale::geo::Uv;
 use solstrale::hittable::ConstantMedium;
@@ -408,6 +408,30 @@ pub fn create_light_attenuation_scene(
         world: Bvh::new(world),
         camera,
         background_color: Vec3::new(0., 0., 0.),
+        render_config,
+    }
+}
+
+#[allow(dead_code)]
+pub fn create_quad_rotation_scene(
+    render_config: RenderConfig,
+    rotation: &dyn Transformer
+) -> Scene {
+    Scene {
+        world: Bvh::new(vec![
+            Quad::new(
+                Vec3::new(-100., 0., -100.),
+                Vec3::new(200., 0., 0.),
+                Vec3::new(0., 0., 200.),
+                Lambertian::new(SolidColor::new(0., 1., 0.), None),
+                rotation,
+            )]),
+        camera: CameraConfig {
+            vertical_fov_degrees: 35.0,
+            look_from: Vec3::new(0., 200., -500.),
+            ..CameraConfig::default()
+        },
+        background_color: Default::default(),
         render_config,
     }
 }

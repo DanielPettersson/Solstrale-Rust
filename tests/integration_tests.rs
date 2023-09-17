@@ -1,24 +1,23 @@
 use std::collections::HashMap;
+use std::default::Default;
 use std::error::Error;
+use std::ops::Deref;
 use std::sync::mpsc::channel;
 use std::thread;
 
 use image::imageops::FilterType;
 use image::RgbImage;
 use image_compare::Algorithm::RootMeanSquared;
+
+use solstrale::geo::transformation::{RotationX, RotationY, RotationZ, Transformer};
 use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
 use solstrale::post::{BloomPostProcessor, OidnPostProcessor, PostProcessor};
-
 use solstrale::ray_trace;
-use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
+use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::util::rgb_color::rgb_to_vec3;
 
-use crate::scenes::{
-    create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene,
-    create_obj_with_box, create_obj_with_triangle, create_simple_test_scene, create_test_scene,
-    create_uv_scene,
-};
+use crate::scenes::{create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene, create_simple_test_scene, create_test_scene, create_uv_scene};
 
 mod scenes;
 
@@ -196,6 +195,32 @@ fn test_bloom() -> Result<(), Box<dyn Error>> {
     compare_output("bloom", &res);
 
     Ok(())
+}
+
+#[test]
+fn test_aabb_of_rotated_quad() {
+    let mut rotations: Vec<Box<dyn Transformer>> = Vec::new();
+    rotations.push(Box::new(RotationX::new(40.)));
+    rotations.push(Box::new(RotationY::new(40.)));
+    rotations.push(Box::new(RotationZ::new(40.)));
+
+    for (i, rotation) in rotations.iter().enumerate() {
+        let scene = create_quad_rotation_scene(
+            RenderConfig {
+                shader: SimpleShader::new(),
+                samples_per_pixel: 1,
+                ..RenderConfig::default()
+            },
+            rotation.deref()
+        );
+
+        render_and_compare_output(
+            scene,
+            &format!("quad_rotated{}", i),
+            300,
+            300,
+        );
+    }
 }
 
 fn image_to_vec3(image: RgbImage) -> Vec<Vec3> {

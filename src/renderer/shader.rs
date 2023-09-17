@@ -31,6 +31,9 @@ pub trait Shader {
         depth: u32,
         accumulated_ray_length: f64,
     ) -> AttenuatedColor;
+
+    /// Does the shader need a hittable with a light emitting  material
+    fn needs_light(&self) -> bool;
 }
 
 #[enum_dispatch(Shader)]
@@ -112,6 +115,10 @@ impl Shader for PathTracingShader {
             },
         }
     }
+
+    fn needs_light(&self) -> bool {
+        true
+    }
 }
 
 fn filter_invalid_color_values(col: Vec3) -> Vec3 {
@@ -155,6 +162,10 @@ impl Shader for AlbedoShader {
             ..AttenuatedColor::default()
         }
     }
+
+    fn needs_light(&self) -> bool {
+        false
+    }
 }
 
 #[derive(Clone)]
@@ -176,6 +187,10 @@ impl Shader for NormalShader {
             color: rec.normal,
             ..AttenuatedColor::default()
         }
+    }
+
+    fn needs_light(&self) -> bool {
+        false
     }
 }
 
@@ -211,5 +226,9 @@ impl Shader for SimpleShader {
             },
             ..AttenuatedColor::default()
         }
+    }
+
+    fn needs_light(&self) -> bool {
+        false
     }
 }

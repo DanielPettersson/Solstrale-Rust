@@ -18,6 +18,18 @@ pub struct CameraConfig {
     pub up: Vec3,
 }
 
+impl Default for CameraConfig {
+    fn default() -> Self {
+        CameraConfig {
+            vertical_fov_degrees: 50.0,
+            aperture_size: 0.0,
+            look_from: ZERO_VECTOR,
+            look_at: ZERO_VECTOR,
+            up: Vec3::new(0., 1., 0.),
+        }
+    }
+}
+
 /// Contains all data needed to describe a cameras position, field of view and
 /// where it is pointing
 pub struct Camera {

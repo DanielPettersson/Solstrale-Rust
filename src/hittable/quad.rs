@@ -1,3 +1,4 @@
+use crate::combine_aabbs;
 use crate::geo::Aabb;
 use crate::geo::Ray;
 use crate::geo::transformation::Transformer;
@@ -37,7 +38,12 @@ impl Quad {
         let u = transformation.transform(u, true);
         let v = transformation.transform(v, true);
 
-        let b_box = Aabb::new_from_2_points(q, q + u + v).pad_if_needed();
+        let b_box = combine_aabbs!(
+            &Aabb::new_from_2_points(q, q + u),
+            &Aabb::new_from_2_points(q, q + v),
+            &Aabb::new_from_2_points(q, q + u + v)
+        ).pad_if_needed();
+
         let n = u.cross(v);
         let normal = n.unit();
 

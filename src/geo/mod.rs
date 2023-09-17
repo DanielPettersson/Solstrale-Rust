@@ -45,6 +45,34 @@ impl Default for Aabb {
     }
 }
 
+/// Combines the given [`Aabb`] arguments into a single [`Aabb`] encapsulating all
+/// # Examples:
+/// ```
+/// # use solstrale::combine_aabbs;
+/// # use solstrale::geo::Aabb;
+/// # use solstrale::geo::vec3::Vec3;
+/// # use solstrale::util::interval::Interval;
+/// let aabb = combine_aabbs![
+///     &Aabb::new_from_2_points(Vec3::new(-1., 0., 0.), Vec3::new(1., 0., 0.)),
+///     &Aabb::new_from_2_points(Vec3::new(0., -2., 0.), Vec3::new(0., 2., 0.)),
+///     &Aabb::new_from_2_points(Vec3::new(0., 0., -3.), Vec3::new(0., 0.,  3.))
+/// ];
+/// assert_eq!(aabb.x, Interval::new(-1., 1.));
+/// assert_eq!(aabb.y, Interval::new(-2., 2.));
+/// assert_eq!(aabb.z, Interval::new(-3., 3.));
+
+#[macro_export] macro_rules! combine_aabbs {
+    ( $( $x:expr ),* ) => {
+        {
+            let mut temp_aabb = Aabb::default();
+            $(
+                temp_aabb = temp_aabb.combine($x);
+            )*
+            temp_aabb
+        }
+    };
+}
+
 impl Aabb {
     /// Create a new aabb exactly encapsulating the two given points
     pub fn new_from_2_points(a: Vec3, b: Vec3) -> Aabb {
