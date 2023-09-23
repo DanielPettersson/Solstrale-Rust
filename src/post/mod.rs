@@ -1,8 +1,8 @@
 //! Post processors for applying effects to the raw rendered image
 
-mod oidn;
 mod bloom;
 mod nop;
+mod oidn;
 
 use std::error::Error;
 
@@ -54,13 +54,22 @@ pub enum PostProcessors {
     NopPostProcessorType(NopPostProcessor),
 }
 
-fn pixel_colors_to_rgb_image(pixel_colors: &[Vec3], width: u32, height: u32, num_samples: u32) -> image::RgbImage {
+fn pixel_colors_to_rgb_image(
+    pixel_colors: &[Vec3],
+    width: u32,
+    height: u32,
+    num_samples: u32,
+) -> image::RgbImage {
     let mut img: image::RgbImage = image::ImageBuffer::new(width, height);
 
     for y in 0..height {
         for x in 0..width {
             let i = (y * width + x) as usize;
-            img.put_pixel(x, y, crate::util::rgb_color::to_rgb_color(pixel_colors[i], num_samples))
+            img.put_pixel(
+                x,
+                y,
+                crate::util::rgb_color::to_rgb_color(pixel_colors[i], num_samples),
+            )
         }
     }
 

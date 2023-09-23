@@ -1,6 +1,6 @@
-use std::error::Error;
 use crate::geo::vec3::Vec3;
 use crate::post::{PostProcessor, PostProcessors};
+use std::error::Error;
 
 #[derive(Clone)]
 /// A post processor that uses Intel Open Image DeNoise on the image
@@ -63,8 +63,18 @@ impl PostProcessor for OidnPostProcessor {
         Ok(img)
     }
 
-    fn intermediate_post_process(&self, _pixel_colors: &[Vec3], _albedo_colors: &[Vec3], _normal_colors: &[Vec3], _width: u32, _height: u32, _num_samples: u32) -> Result<Vec<Vec3>, Box<dyn Error>> {
-        Err(Box::new(simple_error::SimpleError::new("Intel Open Image DeNoise can not be used as an intermediate post processor")))
+    fn intermediate_post_process(
+        &self,
+        _pixel_colors: &[Vec3],
+        _albedo_colors: &[Vec3],
+        _normal_colors: &[Vec3],
+        _width: u32,
+        _height: u32,
+        _num_samples: u32,
+    ) -> Result<Vec<Vec3>, Box<dyn Error>> {
+        Err(Box::new(simple_error::SimpleError::new(
+            "Intel Open Image DeNoise can not be used as an intermediate post processor",
+        )))
     }
 
     fn needs_albedo_and_normal_colors(&self) -> bool {
@@ -83,11 +93,33 @@ impl PostProcessor for OidnPostProcessor {
         height: u32,
         num_samples: u32,
     ) -> Result<image::RgbImage, Box<dyn Error>> {
-        crate::post::nop::NopPostProcessor::new().post_process(pixel_colors, albedo_colors, normal_colors, width, height, num_samples)
+        crate::post::nop::NopPostProcessor::new().post_process(
+            pixel_colors,
+            albedo_colors,
+            normal_colors,
+            width,
+            height,
+            num_samples,
+        )
     }
 
-    fn intermediate_post_process(&self, pixel_colors: &[Vec3], albedo_colors: &[Vec3], normal_colors: &[Vec3], width: u32, height: u32, num_samples: u32) -> Result<Vec<Vec3>, Box<dyn Error>> {
-        crate::post::nop::NopPostProcessor::new().intermediate_post_process(pixel_colors, albedo_colors, normal_colors, width, height, num_samples)
+    fn intermediate_post_process(
+        &self,
+        pixel_colors: &[Vec3],
+        albedo_colors: &[Vec3],
+        normal_colors: &[Vec3],
+        width: u32,
+        height: u32,
+        num_samples: u32,
+    ) -> Result<Vec<Vec3>, Box<dyn Error>> {
+        crate::post::nop::NopPostProcessor::new().intermediate_post_process(
+            pixel_colors,
+            albedo_colors,
+            normal_colors,
+            width,
+            height,
+            num_samples,
+        )
     }
 
     fn needs_albedo_and_normal_colors(&self) -> bool {

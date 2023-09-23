@@ -82,7 +82,6 @@ impl Triangle {
             area,
         })
     }
-
 }
 
 impl Hittable for Triangle {

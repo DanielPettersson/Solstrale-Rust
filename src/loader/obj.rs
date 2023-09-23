@@ -10,14 +10,14 @@ use simple_error::SimpleError;
 use tobj::LoadOptions;
 
 use crate::geo::transformation::Transformer;
-use crate::geo::Uv;
 use crate::geo::vec3::Vec3;
+use crate::geo::Uv;
 use crate::hittable::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Triangle;
 use crate::loader::Loader;
-use crate::material::{Lambertian, Materials, texture};
 use crate::material::texture::{BumpMap, ImageMap, SolidColor};
+use crate::material::{texture, Lambertian, Materials};
 use crate::util::height_map;
 
 /// Contains file information about the obj to load
@@ -97,11 +97,7 @@ impl Loader for Obj {
                 let v2 = vec3_from_mesh_vec(&mesh.positions, pos_offset);
 
                 let (uv0, uv1, uv2) = if mesh.texcoords.is_empty() {
-                    (
-                        Uv::default(),
-                        Uv::default(),
-                        Uv::default(),
-                    )
+                    (Uv::default(), Uv::default(), Uv::default())
                 } else {
                     let tex_offset1 = (mesh.texcoord_indices[i] * 2) as usize;
                     let tex_offset2 = (mesh.texcoord_indices[i + 1] * 2) as usize;

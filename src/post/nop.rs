@@ -1,7 +1,7 @@
-use std::error::Error;
-use image::RgbImage;
 use crate::geo::vec3::Vec3;
 use crate::post::{pixel_colors_to_rgb_image, PostProcessor, PostProcessors};
+use image::RgbImage;
+use std::error::Error;
 
 #[derive(Clone)]
 /// A post processor that does nothing
@@ -15,13 +15,33 @@ impl NopPostProcessor {
     }
 }
 
-
 impl PostProcessor for NopPostProcessor {
-    fn post_process(&self, pixel_colors: &[Vec3], _albedo_colors: &[Vec3], _normal_colors: &[Vec3], width: u32, height: u32, num_samples: u32) -> Result<RgbImage, Box<dyn Error>> {
-        Ok(pixel_colors_to_rgb_image(pixel_colors, width, height, num_samples))
+    fn post_process(
+        &self,
+        pixel_colors: &[Vec3],
+        _albedo_colors: &[Vec3],
+        _normal_colors: &[Vec3],
+        width: u32,
+        height: u32,
+        num_samples: u32,
+    ) -> Result<RgbImage, Box<dyn Error>> {
+        Ok(pixel_colors_to_rgb_image(
+            pixel_colors,
+            width,
+            height,
+            num_samples,
+        ))
     }
 
-    fn intermediate_post_process(&self, pixel_colors: &[Vec3], _albedo_colors: &[Vec3], _normal_colors: &[Vec3], _width: u32, _height: u32, _num_samples: u32) -> Result<Vec<Vec3>, Box<dyn Error>> {
+    fn intermediate_post_process(
+        &self,
+        pixel_colors: &[Vec3],
+        _albedo_colors: &[Vec3],
+        _normal_colors: &[Vec3],
+        _width: u32,
+        _height: u32,
+        _num_samples: u32,
+    ) -> Result<Vec<Vec3>, Box<dyn Error>> {
         Ok(Vec::from(pixel_colors))
     }
 

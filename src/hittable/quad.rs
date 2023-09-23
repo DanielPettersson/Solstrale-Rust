@@ -1,11 +1,11 @@
 use crate::combine_aabbs;
+use crate::geo::transformation::Transformer;
+use crate::geo::vec3::{Vec3, ALMOST_ZERO};
 use crate::geo::Aabb;
 use crate::geo::Ray;
-use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
-use crate::geo::vec3::{ALMOST_ZERO, Vec3};
-use crate::hittable::{Hittable, Hittables};
 use crate::hittable::Hittables::QuadType;
+use crate::hittable::{Hittable, Hittables};
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
@@ -42,7 +42,8 @@ impl Quad {
             &Aabb::new_from_2_points(q, q + u),
             &Aabb::new_from_2_points(q, q + v),
             &Aabb::new_from_2_points(q, q + u + v)
-        ).pad_if_needed();
+        )
+        .pad_if_needed();
 
         let n = u.cross(v);
         let normal = n.unit();

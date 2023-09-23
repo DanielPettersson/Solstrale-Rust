@@ -2,16 +2,16 @@
 
 use std::error::Error;
 use std::ops::Deref;
-use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
 
 use image::RgbImage;
 use simple_error::SimpleError;
 
 use crate::camera::{Camera, CameraConfig};
-use crate::geo::{Ray, Uv};
 use crate::geo::vec3::{Vec3, ZERO_VECTOR};
+use crate::geo::{Ray, Uv};
 use crate::hittable::{Hittable, Hittables};
 use crate::material::AttenuatedColor;
 use crate::post::{NopPostProcessor, PostProcessor, PostProcessors};
@@ -118,7 +118,10 @@ impl Renderer {
         }
 
         if scene.render_config.post_processors.is_empty() {
-            scene.render_config.post_processors.push(NopPostProcessor::new());
+            scene
+                .render_config
+                .post_processors
+                .push(NopPostProcessor::new());
         }
 
         Ok(Renderer {
@@ -307,8 +310,6 @@ impl Renderer {
                     } else {
                         None
                     }
-
-
                 } else {
                     None
                 };

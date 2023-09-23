@@ -13,11 +13,15 @@ use solstrale::geo::transformation::{RotationX, RotationY, RotationZ, Transforme
 use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
 use solstrale::post::{BloomPostProcessor, OidnPostProcessor, PostProcessor};
 use solstrale::ray_trace;
-use solstrale::renderer::{RenderConfig, Scene};
 use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
+use solstrale::renderer::{RenderConfig, Scene};
 use solstrale::util::rgb_color::rgb_to_vec3;
 
-use crate::scenes::{create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene, create_simple_test_scene, create_test_scene, create_uv_scene};
+use crate::scenes::{
+    create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene,
+    create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene,
+    create_simple_test_scene, create_test_scene, create_uv_scene,
+};
 
 mod scenes;
 
@@ -211,15 +215,10 @@ fn test_aabb_of_rotated_quad() {
                 samples_per_pixel: 1,
                 ..RenderConfig::default()
             },
-            rotation.deref()
+            rotation.deref(),
         );
 
-        render_and_compare_output(
-            scene,
-            &format!("quad_rotated{}", i),
-            300,
-            300,
-        );
+        render_and_compare_output(scene, &format!("quad_rotated{}", i), 300, 300);
     }
 }
 

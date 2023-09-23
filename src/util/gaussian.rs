@@ -32,7 +32,16 @@ mod tests {
     #[test]
     fn test_create_gaussian_blur_weights() {
         let weights = create_gaussian_blur_weights(5, 1.);
-        assert_eq!(weights, vec![0.05448868454964294, 0.24420134200323332, 0.4026199468942474, 0.24420134200323332, 0.05448868454964294]);
+        assert_eq!(
+            weights,
+            vec![
+                0.05448868454964294,
+                0.24420134200323332,
+                0.4026199468942474,
+                0.24420134200323332,
+                0.05448868454964294
+            ]
+        );
 
         let total_weight: f64 = weights.iter().sum();
         assert!((1. - total_weight).abs() < ALMOST_ZERO);
