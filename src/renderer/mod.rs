@@ -89,6 +89,28 @@ pub enum RenderImageStrategy {
     OnlyFinal,
 }
 
+impl RenderImageStrategy {
+    /// Is it time to generate a new render image for the output channel?
+    pub fn should_generate_image(&self,
+                                 sample: u32,
+                                 total_samples: u32,
+                                 now: SystemTime,
+                                 last_image_generated_time: SystemTime
+    ) -> bool {
+        match self {
+            RenderImageStrategy::EverySample => true,
+            RenderImageStrategy::Interval(d) => {
+                sample == total_samples
+                    || now
+                    .duration_since(last_image_generated_time)
+                    .unwrap_or(Duration::from_millis(0))
+                    > *d
+            }
+            RenderImageStrategy::OnlyFinal => sample == total_samples,
+        }
+    }
+}
+
 /// Renderer is a central part of the raytracer responsible for controlling the
 /// process reporting back progress to the caller
 pub struct Renderer {
@@ -185,7 +207,7 @@ impl Renderer {
         abort: &Receiver<bool>,
     ) -> Result<(), Box<dyn Error>> {
         let mut last_frame_render_time = SystemTime::now();
-        let mut last_image_generated_time = SystemTime::now() - Duration::from_secs(1000);
+        let mut last_image_generated_time = SystemTime::UNIX_EPOCH;
         let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
@@ -264,17 +286,10 @@ impl Renderer {
 
             {
                 let now = SystemTime::now();
-                let render_image = if match self.scene.render_config.render_image_strategy {
-                    RenderImageStrategy::EverySample => true,
-                    RenderImageStrategy::Interval(d) => {
-                        sample == samples_per_pixel
-                            || now
-                                .duration_since(last_image_generated_time)
-                                .unwrap_or(Duration::from_millis(0))
-                                > d
-                    }
-                    RenderImageStrategy::OnlyFinal => sample == samples_per_pixel,
-                } {
+                let render_image = if self.scene
+                    .render_config
+                    .render_image_strategy
+                    .should_generate_image(sample, samples_per_pixel, now, last_image_generated_time) {
                     last_image_generated_time = now;
 
                     if let Some((last_post_processor, intermediate_post_processors)) =
