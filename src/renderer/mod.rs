@@ -206,7 +206,6 @@ impl Renderer {
         output: &Sender<RenderProgress>,
         abort: &Receiver<bool>,
     ) -> Result<(), Box<dyn Error>> {
-        let mut last_frame_render_time = SystemTime::now();
         let mut last_image_generated_time = SystemTime::UNIX_EPOCH;
         let render_start_time = SystemTime::now();
         let pixel_count = image_width * image_height;
@@ -331,7 +330,7 @@ impl Renderer {
 
                 output.send(RenderProgress {
                     progress: sample as f64 / samples_per_pixel as f64,
-                    fps: Some(calculate_fps(&mut last_frame_render_time, now)),
+                    fps: Some(calculate_fps(render_start_time, now, sample)),
                     estimated_time_left: calculate_estimated_time_left(
                         render_start_time,
                         now,
@@ -352,14 +351,12 @@ fn add_row_data(yi: usize, colors: &mut [Vec3], row_colors: &[Vec3]) {
     }
 }
 
-fn calculate_fps(last_frame_render_time: &mut SystemTime, now: SystemTime) -> f64 {
-    let micros_since_last_frame = now
-        .duration_since(*last_frame_render_time)
-        .unwrap_or(Duration::from_millis(1))
-        .as_micros();
-    *last_frame_render_time = now;
+fn calculate_fps(render_start_time: SystemTime, now: SystemTime, samples_done: u32,) -> f64 {
+    let time_since_start = now
+        .duration_since(render_start_time)
+        .unwrap_or(Duration::from_millis(1));
 
-    1_000_000. / micros_since_last_frame as f64
+    samples_done as f64 / time_since_start.as_secs_f64()
 }
 
 fn calculate_estimated_time_left(
@@ -386,13 +383,11 @@ mod test {
 
     #[test]
     fn test_calculate_fps() {
-        let mut last_frame_render_time = SystemTime::UNIX_EPOCH + Duration::from_millis(900);
+        let render_start = SystemTime::UNIX_EPOCH + Duration::from_millis(900);
         let now = SystemTime::UNIX_EPOCH + Duration::from_millis(1000);
 
-        let fps = calculate_fps(&mut last_frame_render_time, now);
-
-        assert_eq!(fps, 10.);
-        assert_eq!(last_frame_render_time, now);
+        let fps = calculate_fps(render_start, now, 5);
+        assert_eq!(fps, 50.);
     }
 
     #[test]
