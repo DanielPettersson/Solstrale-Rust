@@ -262,7 +262,7 @@ impl Ray {
 
         // In case the lines are parallel
         if n.length() == 0. {
-            od.length()
+            self.direction.cross(od).length() / self.direction.length()
         } else {
             od.dot(n) / n.length()
         }
@@ -307,8 +307,16 @@ mod ray_tests {
     fn test_shortest_parallel() {
         let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(4., 2., 0.));
         let r2 = Ray::new(Vec3::new(-1., 1., 0.), Vec3::new(2., 1., 0.));
-        assert_eq!(r1.shortest_distance(&r2), 1.);
-        assert_eq!(r2.shortest_distance(&r1), 1.);
+        assert_eq!(r1.shortest_distance(&r2), 0.8944271909999159);
+        assert_eq!(r2.shortest_distance(&r1), 0.8944271909999159);
+    }
+
+    #[test]
+    fn test_shortest_parallel2() {
+        let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(2., 0., 0.));
+        let r2 = Ray::new(Vec3::new(-2., 3., 0.), Vec3::new(2., 0., 0.));
+        assert_eq!(r1.shortest_distance(&r2), 3.);
+        assert_eq!(r2.shortest_distance(&r1), 3.);
     }
 
     #[test]
