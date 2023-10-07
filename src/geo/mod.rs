@@ -326,4 +326,11 @@ mod ray_tests {
         assert_eq!(r1.shortest_distance(&r2), 0.);
         assert_eq!(r2.shortest_distance(&r1), 0.);
     }
+
+    #[test]
+    fn test_shortest_same() {
+        let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(4., 2., 0.));
+        assert_eq!(r1.shortest_distance(&r1), 0.);
+        assert_eq!(r1.shortest_distance(&r1), 0.);
+    }
 }
