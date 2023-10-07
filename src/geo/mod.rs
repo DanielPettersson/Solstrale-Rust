@@ -1,10 +1,11 @@
 //! Basic geometric constructs
-pub mod transformation;
-pub mod vec3;
+use std::ops::Add;
 
 use crate::geo::vec3::Vec3;
 use crate::util::interval::{combine_intervals, Interval, EMPTY_INTERVAL};
-use std::ops::Add;
+
+pub mod transformation;
+pub mod vec3;
 
 const PAD_DELTA: f64 = 0.0001;
 
@@ -239,8 +240,7 @@ pub struct Ray {
 
 impl Ray {
     /// Create a new ray instance
-    pub fn new(origin: Vec3, direction: Vec3) -> Ray {
-        let dir = direction.unit();
+    pub fn new(origin: Vec3, dir: Vec3) -> Ray {
         let dir_inv = Vec3::new(1. / dir.x, 1. / dir.y, 1. / dir.z);
 
         Ray {
@@ -264,7 +264,7 @@ mod ray_tests {
     #[test]
     fn test_at() {
         let origin = Vec3::new(1., 2., 3.);
-        let direction = Vec3::new(4., 5., 6.);
+        let direction = Vec3::new(4., 5., 6.).unit();
         let l = direction.length();
 
         let r = Ray::new(origin, direction);
@@ -272,6 +272,5 @@ mod ray_tests {
         assert_eq!(r.at(0.), origin);
         assert!((r.at(l) - origin - direction).near_zero());
         assert!((r.at(-l) - origin + direction).near_zero());
-        assert!((r.at(l * 3.) - Vec3::new(13., 17., 21.)).near_zero());
     }
 }

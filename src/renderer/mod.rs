@@ -91,20 +91,21 @@ pub enum RenderImageStrategy {
 
 impl RenderImageStrategy {
     /// Is it time to generate a new render image for the output channel?
-    pub fn should_generate_image(&self,
-                                 sample: u32,
-                                 total_samples: u32,
-                                 now: SystemTime,
-                                 last_image_generated_time: SystemTime
+    pub fn should_generate_image(
+        &self,
+        sample: u32,
+        total_samples: u32,
+        now: SystemTime,
+        last_image_generated_time: SystemTime,
     ) -> bool {
         match self {
             RenderImageStrategy::EverySample => true,
             RenderImageStrategy::Interval(d) => {
                 sample == total_samples
                     || now
-                    .duration_since(last_image_generated_time)
-                    .unwrap_or(Duration::from_millis(0))
-                    > *d
+                        .duration_since(last_image_generated_time)
+                        .unwrap_or(Duration::from_millis(0))
+                        > *d
             }
             RenderImageStrategy::OnlyFinal => sample == total_samples,
         }
@@ -285,10 +286,16 @@ impl Renderer {
 
             {
                 let now = SystemTime::now();
-                let render_image = if self.scene
+                let render_image = if self
+                    .scene
                     .render_config
                     .render_image_strategy
-                    .should_generate_image(sample, samples_per_pixel, now, last_image_generated_time) {
+                    .should_generate_image(
+                        sample,
+                        samples_per_pixel,
+                        now,
+                        last_image_generated_time,
+                    ) {
                     last_image_generated_time = now;
 
                     if let Some((last_post_processor, intermediate_post_processors)) =
@@ -351,7 +358,7 @@ fn add_row_data(yi: usize, colors: &mut [Vec3], row_colors: &[Vec3]) {
     }
 }
 
-fn calculate_fps(render_start_time: SystemTime, now: SystemTime, samples_done: u32,) -> f64 {
+fn calculate_fps(render_start_time: SystemTime, now: SystemTime, samples_done: u32) -> f64 {
     let time_since_start = now
         .duration_since(render_start_time)
         .unwrap_or(Duration::from_millis(1));
