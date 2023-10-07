@@ -254,6 +254,19 @@ impl Ray {
     pub fn at(&self, distance: f64) -> Vec3 {
         self.origin + self.direction * distance
     }
+
+    /// Calculates the shortest distance between the rays
+    pub fn shortest_distance(&self, ray: &Ray) -> f64 {
+        let n = self.direction.cross(ray.direction);
+        let od = self.origin - ray.origin;
+
+        // In case the lines are parallel
+        if n.length() == 0. {
+            od.length()
+        } else {
+            od.dot(n) / n.length()
+        }
+    }
 }
 
 #[cfg(test)]
@@ -272,5 +285,37 @@ mod ray_tests {
         assert_eq!(r.at(0.), origin);
         assert!((r.at(l) - origin - direction).near_zero());
         assert!((r.at(-l) - origin + direction).near_zero());
+    }
+
+    #[test]
+    fn test_shortest_distance() {
+        let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(2., 0., 0.));
+        let r2 = Ray::new(Vec3::new(0., 2., -1.), Vec3::new(0., 0., 2.));
+        assert_eq!(r1.shortest_distance(&r2), 2.);
+        assert_eq!(r2.shortest_distance(&r1), 2.);
+    }
+
+    #[test]
+    fn test_shortest_distance2() {
+        let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(2., 0., 0.));
+        let r2 = Ray::new(Vec3::new(0., 2., -1.), Vec3::new(0., 1., 2.));
+        assert_eq!(r1.shortest_distance(&r2), 2.23606797749979);
+        assert_eq!(r2.shortest_distance(&r1), 2.23606797749979);
+    }
+
+    #[test]
+    fn test_shortest_parallel() {
+        let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(4., 2., 0.));
+        let r2 = Ray::new(Vec3::new(-1., 1., 0.), Vec3::new(2., 1., 0.));
+        assert_eq!(r1.shortest_distance(&r2), 1.);
+        assert_eq!(r2.shortest_distance(&r1), 1.);
+    }
+
+    #[test]
+    fn test_shortest_intersecting() {
+        let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(2., 0., 0.));
+        let r2 = Ray::new(Vec3::new(0., 0., -1.), Vec3::new(0., 0., 2.));
+        assert_eq!(r1.shortest_distance(&r2), 0.);
+        assert_eq!(r2.shortest_distance(&r1), 0.);
     }
 }
