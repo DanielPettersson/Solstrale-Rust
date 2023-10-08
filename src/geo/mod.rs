@@ -184,6 +184,22 @@ impl Aabb {
             (self.z.min + self.z.max) * 0.5,
         )
     }
+
+    /// return the length of the aabb diagonal
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::Aabb;
+    /// # use solstrale::geo::vec3::Vec3;
+    /// let aabb = Aabb::new_from_2_points(Vec3::new(1., 1., 1.), Vec3::new(5., 4., 3.));
+    /// assert_eq!(aabb.diagonal_length(), 5.385164807134504);
+    /// ```
+    pub fn diagonal_length(&self) -> f64 {
+        Vec3::new(
+            self.x.min - self.x.max,
+            self.y.min - self.y.max,
+            self.z.min - self.z.max,
+        ).length()
+    }
 }
 
 impl Add<Vec3> for &Aabb {
@@ -265,7 +281,7 @@ impl Ray {
             self.direction.cross(od).length() / self.direction.length()
         } else {
             od.dot(n) / n.length()
-        }
+        }.abs()
     }
 }
 
@@ -332,5 +348,13 @@ mod ray_tests {
         let r1 = Ray::new(Vec3::new(-1., 0., 0.), Vec3::new(4., 2., 0.));
         assert_eq!(r1.shortest_distance(&r1), 0.);
         assert_eq!(r1.shortest_distance(&r1), 0.);
+    }
+
+    #[test]
+    fn test_shortest_xxx() {
+        let r1 = Ray::new(Vec3::new(395.8288, 170.6440, 112.1048), Vec3::new(-38.2351, 383.3560, 77.8286));
+        let r2 = Ray::new(Vec3::new(-3.4878, -0.0001, -95.4594), Vec3::new(629.3250, -0.0001, -95.4594));
+        assert_eq!(r1.shortest_distance(&r2), 229.4765553708466);
+        assert_eq!(r2.shortest_distance(&r1), 229.4765553708466);
     }
 }
