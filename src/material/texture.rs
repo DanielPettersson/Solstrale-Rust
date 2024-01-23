@@ -101,7 +101,7 @@ impl SolidColor {
     }
     /// Create a new solid color texture from a [`Vec3`]
     pub fn new_from_vec3(color: Vec3) -> Textures {
-        SolidColorType(SolidColor(color))
+        Textures::from(SolidColor(color))
     }
 }
 
@@ -144,7 +144,7 @@ impl ImageMap {
     pub fn new(image: Arc<RgbImage>) -> Textures {
         let w = image.width();
         let h = image.height();
-        ImageMapType(ImageMap {
+        Textures::from(ImageMap {
             image,
             max_x: w as f32 - 1.,
             max_y: h as f32 - 1.,

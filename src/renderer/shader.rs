@@ -1,16 +1,15 @@
 //! Contains the different shader used by the renderer
-use crate::geo::vec3::Vec3;
+use std::default::Default;
+
+use enum_dispatch::enum_dispatch;
+
 use crate::geo::Ray;
+use crate::geo::vec3::Vec3;
+use crate::material::{AttenuatedColor, HitRecord};
 use crate::material::Material;
 use crate::material::ScatterType::{ScatterPdf, ScatterRay};
-use crate::material::{AttenuatedColor, HitRecord};
-use crate::pdf::{mix_generate, mix_value, ContainerPdf};
-use crate::renderer::shader::Shaders::{
-    AlbedoShaderType, NormalShaderType, PathTracingShaderType, SimpleShaderType,
-};
+use crate::pdf::{ContainerPdf, mix_generate, mix_value};
 use crate::renderer::Renderer;
-use enum_dispatch::enum_dispatch;
-use std::default::Default;
 
 /// Calculates the color from a ray hitting a hittable object
 #[enum_dispatch]
@@ -60,7 +59,7 @@ impl PathTracingShader {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new path tracing shader
     pub fn new(max_depth: u32) -> Shaders {
-        PathTracingShaderType(PathTracingShader { max_depth })
+        Shaders::from(PathTracingShader { max_depth })
     }
 }
 
@@ -147,7 +146,7 @@ impl AlbedoShader {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new albedo shader
     pub fn new() -> Shaders {
-        AlbedoShaderType(AlbedoShader {})
+        Shaders::from(AlbedoShader {})
     }
 }
 
@@ -176,7 +175,7 @@ impl NormalShader {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new normal shader
     pub fn new() -> Shaders {
-        NormalShaderType(NormalShader {})
+        Shaders::from(NormalShader {})
     }
 }
 
@@ -204,7 +203,7 @@ impl SimpleShader {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new simple shader
     pub fn new() -> Shaders {
-        SimpleShaderType(SimpleShader {
+        Shaders::from(SimpleShader {
             light_dir: Vec3::new(1., 1., -1.),
         })
     }

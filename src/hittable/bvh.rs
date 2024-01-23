@@ -5,7 +5,6 @@ use derive_more::Display;
 
 use crate::geo::Aabb;
 use crate::geo::Ray;
-use crate::hittable::Hittables::BvhType;
 use crate::hittable::{Hittable, Hittables};
 use crate::material::HitRecord;
 use crate::util::interval::Interval;
@@ -62,13 +61,13 @@ impl Bvh {
     /// This is to optimize the ray intersection search when having many hittable objects.
     pub fn new(list: Vec<Hittables>) -> Hittables {
         if list.is_empty() {
-            BvhType(Bvh {
+            Hittables::from(Bvh {
                 left: Box::new(BvhItem::None),
                 right: Box::new(BvhItem::None),
                 b_box: Default::default(),
             })
         } else {
-            BvhType(new_bvh(list))
+            Hittables::from(new_bvh(list))
         }
     }
 }

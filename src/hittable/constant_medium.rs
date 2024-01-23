@@ -1,12 +1,11 @@
-use crate::geo::vec3::{random_unit_vector, Vec3};
 use crate::geo::Aabb;
 use crate::geo::Ray;
 use crate::geo::Uv;
-use crate::hittable::Hittables::ConstantMediumType;
+use crate::geo::vec3::{random_unit_vector, Vec3};
 use crate::hittable::{Hittable, Hittables};
-use crate::material::texture::SolidColor;
-use crate::material::Materials;
 use crate::material::{HitRecord, Isotropic};
+use crate::material::Materials;
+use crate::material::texture::SolidColor;
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, UNIVERSE_INTERVAL};
 
@@ -24,7 +23,7 @@ impl ConstantMedium {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of the constant medium
     pub fn new(boundary: Hittables, density: f64, color: Vec3) -> Hittables {
-        ConstantMediumType(ConstantMedium {
+        Hittables::from(ConstantMedium {
             boundary: Box::new(boundary),
             negative_inverse_density: -1. / density,
             phase_function: Isotropic::new(SolidColor::new_from_vec3(color)),

@@ -1,10 +1,10 @@
-use crate::geo::transformation::Transformer;
-use crate::geo::vec3::{Vec3, ALMOST_ZERO};
 use crate::geo::Aabb;
 use crate::geo::Ray;
+use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
-use crate::hittable::Hittables::TriangleType;
+use crate::geo::vec3::{ALMOST_ZERO, Vec3};
 use crate::hittable::{Hittable, Hittables};
+use crate::hittable::Hittables::TriangleType;
 use crate::material::{HitRecord, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
@@ -69,7 +69,7 @@ impl Triangle {
         let normal = n.unit();
         let area = n.length() / 2.;
 
-        TriangleType(Triangle {
+        Hittables::from(Triangle {
             v0,
             v0v1,
             v0v2,

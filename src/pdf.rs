@@ -4,10 +4,9 @@ use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::vec3::{random_cosine_direction, random_unit_vector, Vec3};
 use crate::geo::Onb;
+use crate::geo::vec3::{random_cosine_direction, random_unit_vector, Vec3};
 use crate::hittable::{Hittable, Hittables};
-use crate::pdf::Pdfs::{ContainerPdfType, CosinePdfType, SpherePdfType};
 use crate::random::{random_element_index, random_normal_float};
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -57,7 +56,7 @@ impl<'a> CosinePdf {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of a CosinePdf
     pub fn new(w: Vec3) -> Pdfs<'a> {
-        CosinePdfType(CosinePdf { uvw: Onb::new(w) })
+        Pdfs::from(CosinePdf { uvw: Onb::new(w) })
     }
 }
 
@@ -82,7 +81,7 @@ impl<'a> ContainerPdf<'a> {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of ContainerPdf
     pub fn new(objects: &'a Vec<Hittables>, origin: Vec3) -> Pdfs {
-        ContainerPdfType(ContainerPdf { objects, origin })
+        Pdfs::from(ContainerPdf { objects, origin })
     }
 }
 
@@ -109,7 +108,7 @@ impl<'a> SpherePdf {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of SpherePdf
     pub fn new() -> Pdfs<'a> {
-        SpherePdfType(SpherePdf {})
+        Pdfs::from(SpherePdf {})
     }
 }
 

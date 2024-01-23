@@ -10,7 +10,7 @@ impl OidnPostProcessor {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new oidn post processor
     pub fn new() -> PostProcessors {
-        PostProcessors::OidnPostProcessorType(OidnPostProcessor())
+        PostProcessors::from(OidnPostProcessor())
     }
 }
 

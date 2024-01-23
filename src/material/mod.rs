@@ -163,7 +163,7 @@ impl Lambertian {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new lambertian material
     pub fn new(albedo: Textures, normal: Option<Textures>) -> Materials {
-        LambertianType(Lambertian { albedo, normal })
+        Materials::from(Lambertian { albedo, normal })
     }
 }
 
@@ -206,7 +206,7 @@ impl Metal {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
     pub fn new(albedo: Textures, normal: Option<Textures>, fuzz: f64) -> Materials {
-        MetalType(Metal {
+        Materials::from(Metal {
             albedo,
             normal,
             fuzz,
@@ -248,7 +248,7 @@ impl Dielectric {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new dielectric material
     pub fn new(albedo: Textures, normal: Option<Textures>, index_of_refraction: f64) -> Materials {
-        DielectricType(Dielectric {
+        Materials::from(Dielectric {
             albedo,
             normal,
             index_of_refraction,
@@ -314,7 +314,7 @@ impl DiffuseLight {
     /// * `b` - The blue component of the light
     /// * `attenuation_half_length` - The distance at which the light is attenuated to half its strength
     pub fn new(r: f64, g: f64, b: f64, attenuation_half_length: Option<f64>) -> Materials {
-        DiffuseLightType(DiffuseLight {
+        Materials::from(DiffuseLight {
             tex: SolidColor::new(r, g, b),
             attenuation_factor: attenuation_half_length.map(|a| 1. / a),
         })
@@ -361,7 +361,7 @@ impl Isotropic {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new isotropic material
     pub(crate) fn new(tex: Textures) -> Materials {
-        IsotropicType(Isotropic { tex })
+        Materials::from(Isotropic { tex })
     }
 }
 

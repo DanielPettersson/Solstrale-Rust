@@ -48,7 +48,7 @@ impl Quad {
         let n = u.cross(v);
         let normal = n.unit();
 
-        QuadType(Quad {
+        Hittables::from(Quad {
             q,
             u,
             v,

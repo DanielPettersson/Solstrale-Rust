@@ -26,7 +26,7 @@ impl Sphere {
         let r_vec = Vec3::new(radius, radius, radius);
         let b_box = Aabb::new_from_2_points(center - r_vec, center + r_vec);
 
-        SphereType(Sphere {
+        Hittables::from(Sphere {
             center,
             radius,
             mat,

@@ -38,7 +38,7 @@ impl BloomPostProcessor {
         let threshold = threshold.unwrap_or(Vec3::new(1., 1., 1.).length());
         let max_intensity = max_intensity.unwrap_or(f64::MAX);
 
-        Ok(PostProcessors::BloomPostProcessorType(BloomPostProcessor {
+        Ok(PostProcessors::from(BloomPostProcessor {
             kernel_size_fraction,
             threshold,
             max_intensity,
