@@ -4,17 +4,17 @@
 [![docs.rs](https://img.shields.io/docsrs/solstrale)](https://docs.rs/solstrale)
 ------
 # Solstrale
-A multi-threaded Monte Carlo path tracing library, that as such has features like:
+A multithreaded Monte Carlo path tracing library, that as such has features like:
 * Global illumination
 * Caustics
 * Reflection
 * Refraction
 * Soft shadows
 
-Additionally the library has:
+Additionally, the library has:
 * Loading of obj models with included materials
-* Multi-threaded Bvh creation to greatly speed up rendering
-* Post processing of rendered images by:
+* Multithreaded Bvh creation to greatly speed up rendering
+* Post-processing of rendered images by:
   * [Open Image Denoise](https://www.openimagedenoise.org/)
   * Bloom filter
 * Bump mapping
