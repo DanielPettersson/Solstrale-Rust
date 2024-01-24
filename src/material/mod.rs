@@ -4,14 +4,12 @@ use std::f64::consts::PI;
 
 use enum_dispatch::enum_dispatch;
 
-use crate::geo::vec3::{random_in_unit_sphere, Vec3};
-use crate::geo::Uv;
 use crate::geo::{Onb, Ray};
-use crate::material::texture::Textures;
+use crate::geo::Uv;
+use crate::geo::vec3::{random_in_unit_sphere, Vec3};
+use crate::material::Materials::{BlendType, DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType};
 use crate::material::texture::{SolidColor, Texture};
-use crate::material::Materials::{
-    DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType,
-};
+use crate::material::texture::Textures;
 use crate::pdf::{CosinePdf, Pdfs, SpherePdf};
 use crate::random::random_normal_float;
 
@@ -21,13 +19,13 @@ pub mod texture;
 /// when a ray hits a hittable object
 #[derive(Clone, Debug)]
 #[non_exhaustive]
-pub struct HitRecord<'a> {
+pub struct HitRecord {
     /// Hit point for the ray on a hittable
     pub hit_point: Vec3,
     /// Normal vector of the hittable at the hit point
     pub normal: Vec3,
     /// Material of the hittable that the ray hit
-    pub material: &'a Materials,
+    pub material: Materials,
     /// The length of the ray from origin to hit point
     pub ray_length: f64,
     /// Texture coordinate at the hit point
@@ -36,20 +34,20 @@ pub struct HitRecord<'a> {
     pub front_face: bool,
 }
 
-impl<'a> HitRecord<'a> {
+impl HitRecord {
     /// Creates a new HitRecord
     pub fn new(
         hit_point: Vec3,
         normal: Vec3,
-        material: &'a Materials,
+        material: &Materials,
         ray_length: f64,
         uv: Uv,
         front_face: bool,
-    ) -> HitRecord<'a> {
+    ) -> HitRecord {
         HitRecord {
             hit_point,
             normal: material.get_transformed_normal(normal, uv),
-            material,
+            material: material.get_effective_material(),
             ray_length,
             uv,
             front_face,
@@ -101,6 +99,10 @@ pub trait Material {
     fn get_transformed_normal(&self, normal: Vec3, _uv: Uv) -> Vec3 {
         normal
     }
+
+    /// Get the material to use for a hit record. Most implementations just return self here
+    /// Others can return an underlying material
+    fn get_effective_material(&self) -> Materials;
 }
 
 #[derive(Default)]
@@ -138,6 +140,8 @@ pub enum Materials {
     DiffuseLightType(DiffuseLight),
     /// [`Material`] of type [`Isotropic`]
     IsotropicType(Isotropic),
+    /// [`Material`] of type [`Blend`]
+    BlendType(Blend),
 }
 
 impl Clone for Materials {
@@ -148,6 +152,7 @@ impl Clone for Materials {
             DielectricType(m) => DielectricType(m.clone()),
             DiffuseLightType(m) => DiffuseLightType(m.clone()),
             IsotropicType(m) => IsotropicType(m.clone()),
+            BlendType(m) => BlendType(m.clone())
         }
     }
 }
@@ -163,7 +168,7 @@ impl Lambertian {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new lambertian material
     pub fn new(albedo: Textures, normal: Option<Textures>) -> Materials {
-        Materials::from(Lambertian { albedo, normal })
+        LambertianType(Lambertian { albedo, normal })
     }
 }
 
@@ -192,6 +197,10 @@ impl Material for Lambertian {
             .as_ref()
             .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
+
+    fn get_effective_material(&self) -> Materials {
+        LambertianType(self.clone())
+    }
 }
 
 /// Metal is a material that is reflective
@@ -206,7 +215,7 @@ impl Metal {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
     pub fn new(albedo: Textures, normal: Option<Textures>, fuzz: f64) -> Materials {
-        Materials::from(Metal {
+        MetalType(Metal {
             albedo,
             normal,
             fuzz,
@@ -234,6 +243,10 @@ impl Material for Metal {
             .as_ref()
             .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
+
+    fn get_effective_material(&self) -> Materials {
+        MetalType(self.clone())
+    }
 }
 
 /// A glass type material with an index of refraction
@@ -248,7 +261,7 @@ impl Dielectric {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new dielectric material
     pub fn new(albedo: Textures, normal: Option<Textures>, index_of_refraction: f64) -> Materials {
-        Materials::from(Dielectric {
+        DielectricType(Dielectric {
             albedo,
             normal,
             index_of_refraction,
@@ -287,6 +300,10 @@ impl Material for Dielectric {
             .as_ref()
             .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
     }
+
+    fn get_effective_material(&self) -> Materials {
+        DielectricType(self.clone())
+    }
 }
 
 /// Calculate reflectance using Schlick's approximation
@@ -314,7 +331,7 @@ impl DiffuseLight {
     /// * `b` - The blue component of the light
     /// * `attenuation_half_length` - The distance at which the light is attenuated to half its strength
     pub fn new(r: f64, g: f64, b: f64, attenuation_half_length: Option<f64>) -> Materials {
-        Materials::from(DiffuseLight {
+        DiffuseLightType(DiffuseLight {
             tex: SolidColor::new(r, g, b),
             attenuation_factor: attenuation_half_length.map(|a| 1. / a),
         })
@@ -348,6 +365,10 @@ impl Material for DiffuseLight {
     fn is_light(&self) -> bool {
         true
     }
+
+    fn get_effective_material(&self) -> Materials {
+        DiffuseLightType(self.clone())
+    }
 }
 
 /// Isotropic is a fog type material
@@ -361,7 +382,7 @@ impl Isotropic {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new isotropic material
     pub(crate) fn new(tex: Textures) -> Materials {
-        Materials::from(Isotropic { tex })
+        IsotropicType(Isotropic { tex })
     }
 }
 
@@ -389,14 +410,44 @@ impl Material for Isotropic {
             scatter_type: ScatterType::ScatterPdf(pdf),
         })
     }
+
+    fn get_effective_material(&self) -> Materials {
+        IsotropicType(self.clone())
+    }
+}
+
+/// A blend of two underlying materials
+#[derive(Clone, Debug)]
+pub struct Blend {
+    material_1: Box<Materials>,
+    material_2: Box<Materials>,
+    blend_factor: f64,
+}
+
+impl Blend {
+    #![allow(clippy::new_ret_no_self)]
+    /// Create a new blend material from two underlying material and a blend factor [0..1]
+    pub fn new(material_1: Materials, material_2: Materials, blend_factor: f64) -> Materials {
+        BlendType(Blend { material_1: Box::new(material_1), material_2: Box::new(material_2), blend_factor })
+    }
+}
+
+impl Material for Blend {
+    fn get_effective_material(&self) -> Materials {
+        *if random_normal_float() < self.blend_factor {
+            self.material_1.clone()
+        } else {
+            self.material_2.clone()
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use std::ops::Sub;
 
-    use crate::geo::vec3::Vec3;
     use crate::geo::Uv;
+    use crate::geo::vec3::Vec3;
     use crate::material::texture::SolidColor;
     use crate::material::transform_normal_by_map;
 

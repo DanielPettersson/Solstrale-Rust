@@ -17,11 +17,7 @@ use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
 use solstrale::util::rgb_color::rgb_to_vec3;
 
-use crate::scenes::{
-    create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene,
-    create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene,
-    create_simple_test_scene, create_test_scene, create_uv_scene,
-};
+use crate::scenes::{create_blend_material_scene, create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene, create_simple_test_scene, create_test_scene, create_uv_scene};
 
 mod scenes;
 
@@ -219,6 +215,18 @@ fn test_aabb_of_rotated_quad() {
         );
 
         render_and_compare_output(scene, &format!("quad_rotated{}", i), 300, 300);
+    }
+}
+
+#[test]
+fn test_blended_materials() {
+    for blend_factor in [0., 0.5, 1.] {
+        let scene = create_blend_material_scene(
+            RenderConfig::default(),
+            blend_factor
+        );
+
+        render_and_compare_output(scene, &format!("blended_materials_{}", blend_factor), 300, 300);
     }
 }
 
