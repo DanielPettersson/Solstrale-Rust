@@ -7,7 +7,7 @@ use crate::geo::Ray;
 use crate::geo::vec3::Vec3;
 use crate::material::{AttenuatedColor, HitRecord};
 use crate::material::Material;
-use crate::material::ScatterType::{ScatterPdf, ScatterRay};
+use crate::material::ScatterType::{Emission, ScatterPdf, ScatterRay};
 use crate::pdf::{ContainerPdf, mix_generate, mix_value};
 use crate::renderer::Renderer;
 
@@ -73,45 +73,49 @@ impl Shader for PathTracingShader {
         depth: u32,
         accumulated_ray_length: f64,
     ) -> AttenuatedColor {
+
         if depth >= self.max_depth {
             return AttenuatedColor::default();
         }
 
         let total_ray_length = rec.ray_length + accumulated_ray_length;
-        let attenuated_color = rec.material.emitted(rec, total_ray_length);
-        let scatter_res = rec.material.scatter(ray, rec);
+        let scatter_record = rec.material.scatter(ray, rec);
 
-        match scatter_res {
-            None => attenuated_color,
-            Some(scatter_record) => match scatter_record.scatter_type {
-                ScatterRay(scatter_ray) => {
-                    let ray_color_res =
-                        renderer.ray_color(&scatter_ray, depth + 1, total_ray_length);
-                    AttenuatedColor {
-                        color: scatter_record.color * ray_color_res.pixel_color.color,
-                        attenuation_factor: ray_color_res.pixel_color.attenuation_factor,
-                        accumulated_ray_length: ray_color_res.pixel_color.accumulated_ray_length,
-                    }
-                }
-                ScatterPdf(pdf) => {
-                    let light_pdf = ContainerPdf::new(&renderer.lights, rec.hit_point);
-
-                    let pdf_direction = mix_generate(&light_pdf, &pdf);
-                    let scattered = Ray::new(rec.hit_point, pdf_direction);
-                    let pdf_val = mix_value(&light_pdf, &pdf, scattered.direction);
-                    let scattering_pdf = rec.material.scattering_pdf(rec, &scattered);
-                    let ray_color_res = renderer.ray_color(&scattered, depth + 1, total_ray_length);
-                    let scatter_color =
-                        scatter_record.color * scattering_pdf * ray_color_res.pixel_color.color
-                            / pdf_val;
-
-                    AttenuatedColor {
-                        color: filter_invalid_color_values(attenuated_color.color + scatter_color),
-                        attenuation_factor: ray_color_res.pixel_color.attenuation_factor,
-                        accumulated_ray_length: ray_color_res.pixel_color.accumulated_ray_length,
-                    }
+        match scatter_record.scatter_type {
+            Emission(attenuation_factor) => {
+                AttenuatedColor {
+                    color: scatter_record.color,
+                    attenuation_factor,
+                    accumulated_ray_length: total_ray_length,
                 }
             },
+            ScatterRay(scatter_ray) => {
+                let ray_color_res =
+                    renderer.ray_color(&scatter_ray, depth + 1, total_ray_length);
+                AttenuatedColor {
+                    color: scatter_record.color * ray_color_res.pixel_color.color,
+                    attenuation_factor: ray_color_res.pixel_color.attenuation_factor,
+                    accumulated_ray_length: ray_color_res.pixel_color.accumulated_ray_length,
+                }
+            }
+            ScatterPdf(pdf) => {
+                let light_pdf = ContainerPdf::new(&renderer.lights, rec.hit_point);
+
+                let pdf_direction = mix_generate(&light_pdf, &pdf);
+                let scattered = Ray::new(rec.hit_point, pdf_direction);
+                let pdf_val = mix_value(&light_pdf, &pdf, scattered.direction);
+                let scattering_pdf = rec.material.scattering_pdf(rec, &scattered);
+                let ray_color_res = renderer.ray_color(&scattered, depth + 1, total_ray_length);
+                let scatter_color =
+                    scatter_record.color * scattering_pdf * ray_color_res.pixel_color.color
+                        / pdf_val;
+
+                AttenuatedColor {
+                    color: filter_invalid_color_values(scatter_color),
+                    attenuation_factor: ray_color_res.pixel_color.attenuation_factor,
+                    accumulated_ray_length: ray_color_res.pixel_color.accumulated_ray_length,
+                }
+            }
         }
     }
 
@@ -154,10 +158,7 @@ impl Shader for AlbedoShader {
     /// Calculates the color only attenuation color
     fn shade(&self, _: &Renderer, rec: &HitRecord, ray: &Ray, _: u32, _: f64) -> AttenuatedColor {
         AttenuatedColor {
-            color: match rec.material.scatter(ray, rec) {
-                None => rec.material.emitted(rec, 0.).color,
-                Some(scatter_record) => scatter_record.color,
-            },
+            color: rec.material.scatter(ray, rec).color,
             ..AttenuatedColor::default()
         }
     }
@@ -212,10 +213,11 @@ impl SimpleShader {
 impl Shader for SimpleShader {
     /// Calculates the color only using normal and attenuation color
     fn shade(&self, _: &Renderer, rec: &HitRecord, ray: &Ray, _: u32, _: f64) -> AttenuatedColor {
+        let scatter_record = rec.material.scatter(ray, rec);
         AttenuatedColor {
-            color: match rec.material.scatter(ray, rec) {
-                None => rec.material.emitted(rec, 0.).color,
-                Some(scatter_record) => {
+            color: match scatter_record.scatter_type {
+                Emission(_) => scatter_record.color,
+                _ => {
                     // Get a factor to multiply attenuation color, range between .25 -> 1.25
                     // To get some decent flat shading
                     let normal_factor = rec.normal.dot(self.light_dir) * 0.5 + 0.75;
