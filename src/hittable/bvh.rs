@@ -6,7 +6,7 @@ use derive_more::Display;
 use crate::geo::Aabb;
 use crate::geo::Ray;
 use crate::hittable::{Hittable, Hittables};
-use crate::material::HitRecord;
+use crate::material::RayHit;
 use crate::util::interval::Interval;
 
 /// Bounding Volume Hierarchy
@@ -36,7 +36,7 @@ impl Display for BvhItem {
 }
 
 impl BvhItem {
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit> {
         match self {
             BvhItem::Node(i) => i.hit(r, ray_length),
             BvhItem::Leaf(i) => i.hit(r, ray_length),
@@ -163,7 +163,7 @@ fn sort_hittables_by_center(list: &mut [Hittables], center: f64, axis: u8) -> us
 }
 
 impl Hittable for Bvh {
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit> {
         if !self.b_box.hit(r) {
             return None;
         }

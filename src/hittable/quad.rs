@@ -6,7 +6,7 @@ use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::hittable::Hittables::QuadType;
 use crate::hittable::{Hittable, Hittables};
-use crate::material::{HitRecord, Material, Materials};
+use crate::material::{RayHit, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
@@ -143,7 +143,7 @@ impl Hittable for Quad {
         p - origin
     }
 
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit> {
         let denom = self.normal.dot(r.direction);
 
         // No hit if the ray is parallel to the plane
@@ -173,7 +173,7 @@ impl Hittable for Quad {
         if !front_face {
             normal = normal.neg();
         }
-        Some(HitRecord::new(
+        Some(RayHit::new(
             hit_point,
             normal,
             &self.mat,

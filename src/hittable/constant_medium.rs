@@ -3,7 +3,7 @@ use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::geo::vec3::{random_unit_vector, Vec3};
 use crate::hittable::{Hittable, Hittables};
-use crate::material::{HitRecord, Isotropic};
+use crate::material::{RayHit, Isotropic};
 use crate::material::Materials;
 use crate::material::texture::SolidColor;
 use crate::random::random_normal_float;
@@ -32,7 +32,7 @@ impl ConstantMedium {
 }
 
 impl Hittable for ConstantMedium {
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit> {
         match self.boundary.hit(r, &UNIVERSE_INTERVAL) {
             None => None,
             Some(rec1) => {
@@ -60,7 +60,7 @@ impl Hittable for ConstantMedium {
 
                         let t = rec1_ray_length + hit_distance / r_length;
 
-                        Some(HitRecord::new(
+                        Some(RayHit::new(
                             r.at(t),
                             random_unit_vector(),
                             &self.phase_function,
