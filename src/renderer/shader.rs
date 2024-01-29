@@ -5,9 +5,9 @@ use enum_dispatch::enum_dispatch;
 
 use crate::geo::Ray;
 use crate::geo::vec3::Vec3;
-use crate::material::{AttenuatedColor, HitRecord};
+use crate::material::{AttenuatedColor, RayHit};
 use crate::material::Material;
-use crate::material::ScatterType::{Emission, ScatterPdf, ScatterRay};
+use crate::material::RayScatter::{ScatterEmission, ScatterBasic, ScatterPdf};
 use crate::renderer::Renderer;
 
 /// Calculates the color from a ray hitting a hittable object
@@ -17,14 +17,14 @@ pub trait Shader {
     ///
     /// # Arguments
     /// * `renderer` - A reference to the [`Renderer`]
-    /// * `rec` - [`HitRecord`] for the current ray hit
-    /// * `ray` - The [`Ray`] for the current hit
+    /// * `rec` - [`RayHit`] for the current ray hit
+    /// * `ray` - The [`Basic`] for the current hit
     /// * `depth` - The recursive depth of the rendering
     /// * `accumulated_ray_length` - Sum of ray length so far including all bounces
     fn shade(
         &self,
         renderer: &Renderer,
-        rec: &HitRecord,
+        rec: &RayHit,
         ray: &Ray,
         depth: u32,
         accumulated_ray_length: f64,
@@ -64,7 +64,7 @@ impl Shader for PathTracingShader {
     fn shade(
         &self,
         renderer: &Renderer,
-        rec: &HitRecord,
+        rec: &RayHit,
         ray: &Ray,
         depth: u32,
         accumulated_ray_length: f64,
@@ -74,29 +74,29 @@ impl Shader for PathTracingShader {
         }
 
         let total_ray_length = rec.ray_length + accumulated_ray_length;
-        let scatter_record = rec.material.scatter(ray, rec, &renderer.lights);
+        let ray_scatter = rec.material.scatter(ray, rec, &renderer.lights);
 
-        match scatter_record.scatter_type {
-            Emission(attenuation_factor) => {
+        match ray_scatter {
+            ScatterEmission(s) => {
                 AttenuatedColor {
-                    color: scatter_record.color,
-                    attenuation_factor,
+                    color: s.color,
+                    attenuation_factor: s.attenuation_factor,
                     accumulated_ray_length: total_ray_length,
                 }
             }
-            ScatterRay(scatter_ray) => {
+            ScatterBasic(s) => {
                 let ray_color_res =
-                    renderer.ray_color(&scatter_ray, depth + 1, total_ray_length);
+                    renderer.ray_color(&s.ray, depth + 1, total_ray_length);
 
                 AttenuatedColor {
-                    color: scatter_record.color * ray_color_res.pixel_color.color,
+                    color: s.color * ray_color_res.pixel_color.color,
                     attenuation_factor: ray_color_res.pixel_color.attenuation_factor,
                     accumulated_ray_length: ray_color_res.pixel_color.accumulated_ray_length,
                 }
             }
-            ScatterPdf(scatter_ray, scatter_probability) => {
-                let ray_color_res = renderer.ray_color(&scatter_ray, depth + 1, total_ray_length);
-                let scatter_color = scatter_record.color * scatter_probability * ray_color_res.pixel_color.color;
+            ScatterPdf(s) => {
+                let ray_color_res = renderer.ray_color(&s.ray, depth + 1, total_ray_length);
+                let scatter_color = s.color * s.probability * ray_color_res.pixel_color.color;
 
                 AttenuatedColor {
                     color: filter_invalid_color_values(scatter_color),
@@ -140,9 +140,13 @@ impl AlbedoShader {
 
 impl Shader for AlbedoShader {
     /// Calculates the color only attenuation color
-    fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, _: u32, _: f64) -> AttenuatedColor {
+    fn shade(&self, renderer: &Renderer, rec: &RayHit, ray: &Ray, _: u32, _: f64) -> AttenuatedColor {
         AttenuatedColor {
-            color: rec.material.scatter(ray, rec, &renderer.lights).color,
+            color: match rec.material.scatter(ray, rec, &renderer.lights) {
+                ScatterEmission(s) => s.color,
+                ScatterBasic(s) => s.color,
+                ScatterPdf(s) => s.color
+            },
             ..AttenuatedColor::default()
         }
     }
@@ -162,7 +166,7 @@ impl NormalShader {
 
 impl Shader for NormalShader {
     /// Calculates the color only using normal
-    fn shade(&self, _: &Renderer, rec: &HitRecord, _: &Ray, _: u32, _: f64) -> AttenuatedColor {
+    fn shade(&self, _: &Renderer, rec: &RayHit, _: &Ray, _: u32, _: f64) -> AttenuatedColor {
         AttenuatedColor {
             color: rec.normal,
             ..AttenuatedColor::default()
@@ -188,17 +192,23 @@ impl SimpleShader {
 
 impl Shader for SimpleShader {
     /// Calculates the color only using normal and attenuation color
-    fn shade(&self, renderer: &Renderer, rec: &HitRecord, ray: &Ray, _: u32, _: f64) -> AttenuatedColor {
-        let scatter_record = rec.material.scatter(ray, rec, &renderer.lights);
+    fn shade(&self, renderer: &Renderer, rec: &RayHit, ray: &Ray, _: u32, _: f64) -> AttenuatedColor {
         AttenuatedColor {
-            color: match scatter_record.scatter_type {
-                Emission(_) => scatter_record.color,
-                _ => {
+            color: match rec.material.scatter(ray, rec, &renderer.lights) {
+                ScatterEmission(s) => s.color,
+                ScatterBasic(s) => {
                     // Get a factor to multiply attenuation color, range between .25 -> 1.25
                     // To get some decent flat shading
                     let normal_factor = rec.normal.dot(self.light_dir) * 0.5 + 0.75;
 
-                    scatter_record.color * normal_factor
+                    s.color * normal_factor
+                },
+                ScatterPdf(s) => {
+                    // Get a factor to multiply attenuation color, range between .25 -> 1.25
+                    // To get some decent flat shading
+                    let normal_factor = rec.normal.dot(self.light_dir) * 0.5 + 0.75;
+
+                    s.color * normal_factor
                 }
             },
             ..AttenuatedColor::default()

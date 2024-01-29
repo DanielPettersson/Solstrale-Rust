@@ -16,7 +16,7 @@ pub use crate::hittable::quad::Quad;
 pub use crate::hittable::sphere::Sphere;
 pub use crate::hittable::triangle::Triangle;
 use crate::hittable::Hittables::{BvhType, ConstantMediumType, QuadType, SphereType, TriangleType};
-use crate::material::HitRecord;
+use crate::material::RayHit;
 use crate::util::interval::Interval;
 use enum_dispatch::enum_dispatch;
 
@@ -35,7 +35,7 @@ pub trait Hittable {
     }
 
     /// Check if the given ray hits the hittable within the interval
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit>;
 
     /// Create a bounding box that contains the hittable
     fn bounding_box(&self) -> &Aabb;

@@ -20,7 +20,7 @@ pub mod texture;
 /// when a ray hits a hittable object
 #[derive(Clone, Debug)]
 #[non_exhaustive]
-pub struct HitRecord<'a> {
+pub struct RayHit<'a> {
     /// Hit point for the ray on a hittable
     pub hit_point: Vec3,
     /// Normal vector of the hittable at the hit point
@@ -35,7 +35,7 @@ pub struct HitRecord<'a> {
     pub front_face: bool,
 }
 
-impl<'a> HitRecord<'a> {
+impl<'a> RayHit<'a> {
     /// Creates a new HitRecord
     pub fn new(
         hit_point: Vec3,
@@ -44,8 +44,8 @@ impl<'a> HitRecord<'a> {
         ray_length: f64,
         uv: Uv,
         front_face: bool,
-    ) -> HitRecord<'a> {
-        HitRecord {
+    ) -> RayHit<'a> {
+        RayHit {
             hit_point,
             normal: material.get_transformed_normal(normal, uv),
             material,
@@ -56,22 +56,40 @@ impl<'a> HitRecord<'a> {
     }
 }
 
-/// A collection of attributes from the scattering of a ray with a material
-pub struct ScatterRecord {
+/// Scattering of a ray against a pdf material
+pub struct ScatterPdf {
     /// The attenuation color from the ray hit
     pub color: Vec3,
-    /// The type of scattering to do for the ray, depends on the material
-    pub scatter_type: ScatterType,
+    /// The scattered ray
+    pub ray: Ray,
+    /// The probability factor for the scattered ray
+    pub probability: f64
+}
+
+/// Scattering of a ray against a basic material
+pub struct ScatterBasic {
+    /// The attenuation color from the ray hit
+    pub color: Vec3,
+    /// The scattered ray
+    pub ray: Ray,
+}
+
+/// Scattering of a ray against a light emitting material
+pub struct ScatterEmission {
+    /// The emitted color from the ray hit
+    pub color: Vec3,
+    /// The attenuation factor of the light source
+    pub attenuation_factor: Option<f64>,
 }
 
 /// An enum of scatter types
-pub enum ScatterType {
+pub enum RayScatter {
     /// Scatters using [`Pdfs`] to determine the ray
-    ScatterPdf(Ray, f64),
+    ScatterPdf(ScatterPdf),
     /// A basic scattering without the use of [`Pdfs`]
-    ScatterRay(Ray),
-    /// No scattering of light, only emission. Contains the attenuation factor.
-    Emission(Option<f64>),
+    ScatterBasic(ScatterBasic),
+    /// No scattering of light, only emission.
+    ScatterEmission(ScatterEmission),
 }
 
 /// The trait for types that describe how
@@ -84,7 +102,7 @@ pub trait Material {
     }
 
     /// Calculate scattering of the ray
-    fn scatter(&self, _ray: &Ray, _rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord;
+    fn scatter(&self, _ray: &Ray, _rec: &RayHit, _lights: &[Hittables]) -> RayScatter;
 
     /// Get normal transformed by the material, implementations typically uses a normal texture map
     fn get_transformed_normal(&self, normal: Vec3, _uv: Uv) -> Vec3 {
@@ -155,7 +173,7 @@ impl Lambertian {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new lambertian material
     pub fn new(albedo: Textures, normal: Option<Textures>) -> Materials {
-        LambertianType(Lambertian { albedo, normal })
+        Materials::from(Lambertian { albedo, normal })
     }
 
     fn scattering_pdf_value(normal: Vec3, scatter_direction: Vec3) -> f64 {
@@ -170,7 +188,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
 
-    fn scatter(&self, _: &Ray, rec: &HitRecord, lights: &[Hittables]) -> ScatterRecord {
+    fn scatter(&self, _: &Ray, rec: &RayHit, lights: &[Hittables]) -> RayScatter {
         let color = self.albedo.color(rec.uv);
         let pdf = CosinePdf::new(rec.normal);
 
@@ -181,10 +199,11 @@ impl Material for Lambertian {
         let light_pdf_value = mix_value(&light_pdf, &pdf, scattered.direction);
         let scattering_pdf_value = Lambertian::scattering_pdf_value(rec.normal, scattered.direction.unit());
 
-        ScatterRecord {
+        RayScatter::ScatterPdf(ScatterPdf {
             color,
-            scatter_type: ScatterType::ScatterPdf(scattered, scattering_pdf_value / light_pdf_value),
-        }
+            ray: scattered,
+            probability: scattering_pdf_value / light_pdf_value,
+        })
     }
 
     fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
@@ -206,7 +225,7 @@ impl Metal {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a metal material
     pub fn new(albedo: Textures, normal: Option<Textures>, fuzz: f64) -> Materials {
-        MetalType(Metal {
+        Materials::from(Metal {
             albedo,
             normal,
             fuzz,
@@ -217,16 +236,16 @@ impl Metal {
 impl Material for Metal {
     /// Returns a reflected scattered ray for the metal material
     /// The Fuzz property of the metal defines the randomness applied to the reflection
-    fn scatter(&self, ray: &Ray, rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord {
+    fn scatter(&self, ray: &Ray, rec: &RayHit, _lights: &[Hittables]) -> RayScatter {
         let reflected = ray.direction.unit().reflect(rec.normal);
 
-        ScatterRecord {
+        RayScatter::ScatterBasic(ScatterBasic {
             color: self.albedo.color(rec.uv),
-            scatter_type: ScatterType::ScatterRay(Ray::new(
+            ray: Ray::new(
                 rec.hit_point,
                 reflected + random_in_unit_sphere() * self.fuzz,
-            )),
-        }
+            ),
+        })
     }
 
     fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
@@ -248,7 +267,7 @@ impl Dielectric {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new dielectric material
     pub fn new(albedo: Textures, normal: Option<Textures>, index_of_refraction: f64) -> Materials {
-        DielectricType(Dielectric {
+        Materials::from(Dielectric {
             albedo,
             normal,
             index_of_refraction,
@@ -257,7 +276,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray: &Ray, rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord {
+    fn scatter(&self, ray: &Ray, rec: &RayHit, _lights: &[Hittables]) -> RayScatter {
         let refraction_ratio = if rec.front_face {
             1. / self.index_of_refraction
         } else {
@@ -276,10 +295,10 @@ impl Material for Dielectric {
                 unit_direction.refract(rec.normal, refraction_ratio)
             };
 
-        ScatterRecord {
+        RayScatter::ScatterBasic(ScatterBasic {
             color: self.albedo.color(rec.uv),
-            scatter_type: ScatterType::ScatterRay(Ray::new(rec.hit_point, direction)),
-        }
+            ray: Ray::new(rec.hit_point, direction),
+        })
     }
 
     fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
@@ -314,7 +333,7 @@ impl DiffuseLight {
     /// * `b` - The blue component of the light
     /// * `attenuation_half_length` - The distance at which the light is attenuated to half its strength
     pub fn new(r: f64, g: f64, b: f64, attenuation_half_length: Option<f64>) -> Materials {
-        DiffuseLightType(DiffuseLight {
+        Materials::from(DiffuseLight {
             tex: SolidColor::new(r, g, b),
             attenuation_factor: attenuation_half_length.map(|a| 1. / a),
         })
@@ -337,15 +356,15 @@ impl Material for DiffuseLight {
         true
     }
 
-    fn scatter(&self, _ray: &Ray, rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord {
-        ScatterRecord {
+    fn scatter(&self, _ray: &Ray, rec: &RayHit, _lights: &[Hittables]) -> RayScatter {
+        RayScatter::ScatterEmission(ScatterEmission {
             color: if rec.front_face {
                 self.tex.color(rec.uv)
             } else {
                 ZERO_VECTOR
             },
-            scatter_type: ScatterType::Emission(self.attenuation_factor),
-        }
+            attenuation_factor: self.attenuation_factor,
+        })
     }
 }
 
@@ -360,7 +379,7 @@ impl Isotropic {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new isotropic material
     pub(crate) fn new(tex: Textures) -> Materials {
-        IsotropicType(Isotropic { tex })
+        Materials::from(Isotropic { tex })
     }
 }
 
@@ -374,7 +393,7 @@ const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
 impl Material for Isotropic {
 
     /// Returns a randomly scattered ray in any direction
-    fn scatter(&self, _: &Ray, rec: &HitRecord, lights: &[Hittables]) -> ScatterRecord {
+    fn scatter(&self, _: &Ray, rec: &RayHit, lights: &[Hittables]) -> RayScatter {
         let color = self.tex.color(rec.uv);
 
         let pdf = SpherePdf::new();
@@ -383,10 +402,11 @@ impl Material for Isotropic {
         let scattered = Ray::new(rec.hit_point, pdf_direction);
         let light_pdf_value = mix_value(&light_pdf, &pdf, scattered.direction);
 
-        ScatterRecord {
+        RayScatter::ScatterPdf(ScatterPdf {
             color,
-            scatter_type: ScatterType::ScatterPdf(scattered, SPHERE_PDF_VALUE / light_pdf_value),
-        }
+            ray: scattered, 
+            probability: SPHERE_PDF_VALUE / light_pdf_value,
+        })
   }
 }
 
@@ -402,12 +422,12 @@ impl Blend {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new blend material from two underlying material and a blend factor [0..1]
     pub fn new(material_1: Materials, material_2: Materials, blend_factor: f64) -> Materials {
-        BlendType(Blend { material_1: Box::new(material_1), material_2: Box::new(material_2), blend_factor })
+        Materials::from(Blend { material_1: Box::new(material_1), material_2: Box::new(material_2), blend_factor })
     }
 }
 
 impl Material for Blend {
-    fn scatter(&self, ray: &Ray, rec: &HitRecord, lights: &[Hittables]) -> ScatterRecord {
+    fn scatter(&self, ray: &Ray, rec: &RayHit, lights: &[Hittables]) -> RayScatter {
         if random_normal_float() < self.blend_factor {
             self.material_1.scatter(ray, rec, lights)
         } else {
