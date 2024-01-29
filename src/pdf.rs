@@ -73,14 +73,14 @@ impl Pdf for CosinePdf {
 
 /// A wrapper for generating pdfs for a list of hittable objects
 pub struct ContainerPdf<'a> {
-    objects: &'a Vec<Hittables>,
+    objects: &'a [Hittables],
     origin: Vec3,
 }
 
 impl<'a> ContainerPdf<'a> {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new instance of ContainerPdf
-    pub fn new(objects: &'a Vec<Hittables>, origin: Vec3) -> Pdfs {
+    pub fn new(objects: &'a [Hittables], origin: Vec3) -> Pdfs {
         Pdfs::from(ContainerPdf { objects, origin })
     }
 }
@@ -96,7 +96,7 @@ impl<'a> Pdf for ContainerPdf<'a> {
     }
 
     fn generate(&self) -> Vec3 {
-        let idx = random_element_index(&self.objects);
+        let idx = random_element_index(self.objects);
         self.objects[idx].random_direction(self.origin)
     }
 }

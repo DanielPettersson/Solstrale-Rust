@@ -16,7 +16,7 @@ pub fn random_uint32(max: u32) -> u32 {
 }
 
 /// Returns a random element from the given vector
-pub fn random_element_index<T>(v: &Vec<T>) -> usize {
+pub fn random_element_index<T>(v: &[T]) -> usize {
     fastrand::usize(..v.len())
 }
 

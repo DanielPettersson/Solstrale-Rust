@@ -7,10 +7,11 @@ use enum_dispatch::enum_dispatch;
 use crate::geo::{Onb, Ray};
 use crate::geo::Uv;
 use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
+use crate::hittable::Hittables;
 use crate::material::Materials::{BlendType, DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType};
 use crate::material::texture::{SolidColor, Texture};
 use crate::material::texture::Textures;
-use crate::pdf::{CosinePdf, Pdfs, SpherePdf};
+use crate::pdf::{ContainerPdf, CosinePdf, mix_generate, mix_value, SpherePdf};
 use crate::random::random_normal_float;
 
 pub mod texture;
@@ -19,13 +20,13 @@ pub mod texture;
 /// when a ray hits a hittable object
 #[derive(Clone, Debug)]
 #[non_exhaustive]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     /// Hit point for the ray on a hittable
     pub hit_point: Vec3,
     /// Normal vector of the hittable at the hit point
     pub normal: Vec3,
     /// Material of the hittable that the ray hit
-    pub material: Materials,
+    pub material: &'a Materials,
     /// The length of the ray from origin to hit point
     pub ray_length: f64,
     /// Texture coordinate at the hit point
@@ -34,20 +35,20 @@ pub struct HitRecord {
     pub front_face: bool,
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     /// Creates a new HitRecord
     pub fn new(
         hit_point: Vec3,
         normal: Vec3,
-        material: &Materials,
+        material: &'a Materials,
         ray_length: f64,
         uv: Uv,
         front_face: bool,
-    ) -> HitRecord {
+    ) -> HitRecord<'a> {
         HitRecord {
             hit_point,
             normal: material.get_transformed_normal(normal, uv),
-            material: material.get_effective_material(),
+            material,
             ray_length,
             uv,
             front_face,
@@ -56,17 +57,17 @@ impl HitRecord {
 }
 
 /// A collection of attributes from the scattering of a ray with a material
-pub struct ScatterRecord<'a> {
+pub struct ScatterRecord {
     /// The attenuation color from the ray hit
     pub color: Vec3,
     /// The type of scattering to do for the ray, depends on the material
-    pub scatter_type: ScatterType<'a>,
+    pub scatter_type: ScatterType,
 }
 
 /// An enum of scatter types
-pub enum ScatterType<'a> {
+pub enum ScatterType {
     /// Scatters using [`Pdfs`] to determine the ray
-    ScatterPdf(Pdfs<'a>),
+    ScatterPdf(Ray, f64),
     /// A basic scattering without the use of [`Pdfs`]
     ScatterRay(Ray),
     /// No scattering of light, only emission. Contains the attenuation factor.
@@ -77,27 +78,18 @@ pub enum ScatterType<'a> {
 /// a ray behaves when hitting an object.
 #[enum_dispatch]
 pub trait Material {
-    /// Return the pdf to use for ray scattering
-    fn scattering_pdf(&self, _rec: &HitRecord, _scattered: &Ray) -> f64 {
-        0.
-    }
-
     /// Is the material emitting light
     fn is_light(&self) -> bool {
         false
     }
 
     /// Calculate scattering of the ray
-    fn scatter(&self, _ray: &Ray, _rec: &HitRecord) -> ScatterRecord;
+    fn scatter(&self, _ray: &Ray, _rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord;
 
     /// Get normal transformed by the material, implementations typically uses a normal texture map
     fn get_transformed_normal(&self, normal: Vec3, _uv: Uv) -> Vec3 {
         normal
     }
-
-    /// Get the material to use for a hit record. Most implementations just return self here
-    /// Others can return an underlying material
-    fn get_effective_material(&self) -> Materials;
 }
 
 #[derive(Default)]
@@ -165,36 +157,40 @@ impl Lambertian {
     pub fn new(albedo: Textures, normal: Option<Textures>) -> Materials {
         LambertianType(Lambertian { albedo, normal })
     }
-}
 
-impl Material for Lambertian {
-    fn scattering_pdf(&self, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cos_theta = rec.normal.dot(scattered.direction.unit());
+    fn scattering_pdf_value(normal: Vec3, scatter_direction: Vec3) -> f64 {
+        let cos_theta = normal.dot(scatter_direction);
         if cos_theta < 0. {
             0.
         } else {
             cos_theta / PI
         }
     }
+}
 
-    fn scatter(&self, _: &Ray, rec: &HitRecord) -> ScatterRecord {
+impl Material for Lambertian {
+
+    fn scatter(&self, _: &Ray, rec: &HitRecord, lights: &[Hittables]) -> ScatterRecord {
         let color = self.albedo.color(rec.uv);
         let pdf = CosinePdf::new(rec.normal);
 
-        return ScatterRecord {
+        let light_pdf = ContainerPdf::new(lights, rec.hit_point);
+
+        let pdf_direction = mix_generate(&light_pdf, &pdf);
+        let scattered = Ray::new(rec.hit_point, pdf_direction);
+        let light_pdf_value = mix_value(&light_pdf, &pdf, scattered.direction);
+        let scattering_pdf_value = Lambertian::scattering_pdf_value(rec.normal, scattered.direction.unit());
+
+        ScatterRecord {
             color,
-            scatter_type: ScatterType::ScatterPdf(pdf),
-        };
+            scatter_type: ScatterType::ScatterPdf(scattered, scattering_pdf_value / light_pdf_value),
+        }
     }
 
     fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
             .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
-    }
-
-    fn get_effective_material(&self) -> Materials {
-        LambertianType(self.clone())
     }
 }
 
@@ -221,7 +217,7 @@ impl Metal {
 impl Material for Metal {
     /// Returns a reflected scattered ray for the metal material
     /// The Fuzz property of the metal defines the randomness applied to the reflection
-    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> ScatterRecord {
+    fn scatter(&self, ray: &Ray, rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord {
         let reflected = ray.direction.unit().reflect(rec.normal);
 
         ScatterRecord {
@@ -237,10 +233,6 @@ impl Material for Metal {
         self.normal
             .as_ref()
             .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
-    }
-
-    fn get_effective_material(&self) -> Materials {
-        MetalType(self.clone())
     }
 }
 
@@ -265,7 +257,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray: &Ray, rec: &HitRecord) -> ScatterRecord {
+    fn scatter(&self, ray: &Ray, rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord {
         let refraction_ratio = if rec.front_face {
             1. / self.index_of_refraction
         } else {
@@ -294,10 +286,6 @@ impl Material for Dielectric {
         self.normal
             .as_ref()
             .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
-    }
-
-    fn get_effective_material(&self) -> Materials {
-        DielectricType(self.clone())
     }
 }
 
@@ -345,7 +333,11 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, _ray: &Ray, rec: &HitRecord) -> ScatterRecord {
+    fn is_light(&self) -> bool {
+        true
+    }
+
+    fn scatter(&self, _ray: &Ray, rec: &HitRecord, _lights: &[Hittables]) -> ScatterRecord {
         ScatterRecord {
             color: if rec.front_face {
                 self.tex.color(rec.uv)
@@ -354,14 +346,6 @@ impl Material for DiffuseLight {
             },
             scatter_type: ScatterType::Emission(self.attenuation_factor),
         }
-    }
-
-    fn is_light(&self) -> bool {
-        true
-    }
-
-    fn get_effective_material(&self) -> Materials {
-        DiffuseLightType(self.clone())
     }
 }
 
@@ -388,26 +372,22 @@ fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, uv: Uv) -> Vec3 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
 
 impl Material for Isotropic {
-    /// returns the pdf value for a given rays for the isotropic material
-    fn scattering_pdf(&self, _: &HitRecord, _: &Ray) -> f64 {
-        SPHERE_PDF_VALUE
-    }
 
     /// Returns a randomly scattered ray in any direction
-    fn scatter(&self, _: &Ray, rec: &HitRecord) -> ScatterRecord {
+    fn scatter(&self, _: &Ray, rec: &HitRecord, lights: &[Hittables]) -> ScatterRecord {
         let color = self.tex.color(rec.uv);
 
         let pdf = SpherePdf::new();
+        let light_pdf = ContainerPdf::new(lights, rec.hit_point);
+        let pdf_direction = mix_generate(&light_pdf, &pdf);
+        let scattered = Ray::new(rec.hit_point, pdf_direction);
+        let light_pdf_value = mix_value(&light_pdf, &pdf, scattered.direction);
 
         ScatterRecord {
             color,
-            scatter_type: ScatterType::ScatterPdf(pdf),
+            scatter_type: ScatterType::ScatterPdf(scattered, SPHERE_PDF_VALUE / light_pdf_value),
         }
-    }
-
-    fn get_effective_material(&self) -> Materials {
-        IsotropicType(self.clone())
-    }
+  }
 }
 
 /// A blend of two underlying materials
@@ -427,15 +407,11 @@ impl Blend {
 }
 
 impl Material for Blend {
-    fn scatter(&self, _ray: &Ray, _rec: &HitRecord) -> ScatterRecord {
-        panic!("Should never be called for this type of material")
-    }
-
-    fn get_effective_material(&self) -> Materials {
-        *if random_normal_float() < self.blend_factor {
-            self.material_1.clone()
+    fn scatter(&self, ray: &Ray, rec: &HitRecord, lights: &[Hittables]) -> ScatterRecord {
+        if random_normal_float() < self.blend_factor {
+            self.material_1.scatter(ray, rec, lights)
         } else {
-            self.material_2.clone()
+            self.material_2.scatter(ray, rec, lights)
         }
     }
 }
