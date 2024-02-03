@@ -428,7 +428,7 @@ impl Blend {
 
 impl Material for Blend {
     fn scatter(&self, ray: &Ray, rec: &RayHit, lights: &[Hittables]) -> RayScatter {
-        if random_normal_float() < self.blend_factor {
+        if random_normal_float() > self.blend_factor {
             self.material_1.scatter(ray, rec, lights)
         } else {
             self.material_2.scatter(ray, rec, lights)
