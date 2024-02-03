@@ -11,7 +11,7 @@ impl NopPostProcessor {
     #![allow(clippy::new_ret_no_self)]
     /// Create a new nop post processor
     pub fn new() -> PostProcessors {
-        PostProcessors::NopPostProcessorType(NopPostProcessor())
+        PostProcessors::from(NopPostProcessor())
     }
 }
 

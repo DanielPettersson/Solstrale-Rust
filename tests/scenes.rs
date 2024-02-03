@@ -11,7 +11,7 @@ use solstrale::hittable::{Bvh, Quad};
 use solstrale::loader::obj::Obj;
 use solstrale::loader::Loader;
 use solstrale::material::texture::{ImageMap, SolidColor};
-use solstrale::material::{Dielectric, DiffuseLight, Lambertian};
+use solstrale::material::{Blend, Dielectric, DiffuseLight, Lambertian};
 use solstrale::renderer::{RenderConfig, Scene};
 
 pub fn create_test_scene(render_config: RenderConfig) -> Scene {
@@ -420,16 +420,50 @@ pub fn create_quad_rotation_scene(
     rotation: &dyn Transformer,
 ) -> Scene {
     Scene {
-        world: Bvh::new(vec![Quad::new(
-            Vec3::new(-100., 0., -100.),
-            Vec3::new(200., 0., 0.),
-            Vec3::new(0., 0., 200.),
-            Lambertian::new(SolidColor::new(0., 1., 0.), None),
-            rotation,
-        )]),
+        world: Bvh::new(vec![
+            Quad::new(
+                Vec3::new(-100., 0., -100.),
+                Vec3::new(200., 0., 0.),
+                Vec3::new(0., 0., 200.),
+                Lambertian::new(SolidColor::new(0., 1., 0.), None),
+                rotation,
+            ),
+            Sphere::new(Vec3::new(100., 300., -500.), 50., DiffuseLight::new(15., 15., 15., None)),
+        ]),
         camera: CameraConfig {
             vertical_fov_degrees: 35.0,
             look_from: Vec3::new(0., 200., -500.),
+            ..CameraConfig::default()
+        },
+        background_color: Default::default(),
+        render_config,
+    }
+}
+
+
+#[allow(dead_code)]
+pub fn create_blend_material_scene(
+    render_config: RenderConfig,
+    blend_factor: f64,
+) -> Scene {
+    Scene {
+        world: Bvh::new(vec![
+            Quad::new(
+                Vec3::new(-100., 0., -100.),
+                Vec3::new(200., 0., 0.),
+                Vec3::new(0., 0., 200.),
+                Blend::new(
+                    Lambertian::new(ImageMap::load("resources/textures/checker.jpg").unwrap(), None),
+                    Lambertian::new(SolidColor::new(0., 1., 0.), None),
+                    blend_factor,
+                ),
+                &NopTransformer(),
+            ),
+            Sphere::new(Vec3::new(0., 500., -200.), 50., DiffuseLight::new(15., 15., 15., None)),
+        ]),
+        camera: CameraConfig {
+            vertical_fov_degrees: 35.0,
+            look_from: Vec3::new(0., 400., -100.),
             ..CameraConfig::default()
         },
         background_color: Default::default(),

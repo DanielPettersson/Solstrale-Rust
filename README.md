@@ -1,20 +1,20 @@
-[![license](https://img.shields.io/github/license/DanielPettersson/solstrale.svg)](https://tldrlegal.com/license/gnu-general-public-license-v3-(gpl-3))
+[![license](https://img.shields.io/github/license/DanielPettersson/solstrale-rust.svg)](https://www.tldrlegal.com/license/apache-license-2-0-apache-2-0)
 [![CI](https://github.com/DanielPettersson/solstrale-rust/workflows/CI/badge.svg)](https://github.com/DanielPettersson/solstrale-rust/actions/workflows/ci.yaml)
 [![Crates.io](https://img.shields.io/crates/d/solstrale?color=green&label=crates.io)](https://crates.io/crates/solstrale)
 [![docs.rs](https://img.shields.io/docsrs/solstrale)](https://docs.rs/solstrale)
 ------
 # Solstrale
-A multi-threaded Monte Carlo path tracing library, that as such has features like:
+A multithreaded Monte Carlo path tracing library, that as such has features like:
 * Global illumination
 * Caustics
 * Reflection
 * Refraction
 * Soft shadows
 
-Additionally the library has:
+Additionally, the library has:
 * Loading of obj models with included materials
-* Multi-threaded Bvh creation to greatly speed up rendering
-* Post processing of rendered images by:
+* Multithreaded Bvh creation to greatly speed up rendering
+* Post-processing of rendered images by:
   * [Open Image Denoise](https://www.openimagedenoise.org/)
   * Bloom filter
 * Bump mapping

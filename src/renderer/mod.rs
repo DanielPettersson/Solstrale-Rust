@@ -134,7 +134,7 @@ impl Renderer {
     pub fn new(mut scene: Scene) -> Result<Renderer, Box<dyn Error>> {
         let light_list = scene.world.get_lights();
 
-        if light_list.is_empty() && scene.render_config.shader.needs_light() {
+        if light_list.is_empty() {
             return Err(Box::new(SimpleError::new(
                 "Scene should have at least one light",
             )));

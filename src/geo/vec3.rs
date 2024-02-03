@@ -382,16 +382,6 @@ pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().unit()
 }
 
-/// Creates a random Vec3 that is shorter than 1.
-/// And in the same general direction as given normal.
-pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-    let in_unit_sphere = random_in_unit_sphere();
-    if in_unit_sphere.dot(normal) > 0. {
-        return in_unit_sphere;
-    }
-    in_unit_sphere.neg()
-}
-
 /// Creates a random Vec3 that is shorter than 1 and that has a Z value of 0
 pub fn random_in_unit_disc() -> Vec3 {
     loop {
@@ -462,26 +452,6 @@ mod tests {
         for _ in 0..100 {
             let vec = random_cosine_direction();
             assert!((vec.length() - 1.) < ALMOST_ZERO);
-        }
-    }
-
-    #[test]
-    fn test_random_in_hemisphere() {
-        for _ in 0..100 {
-            let normal = random_unit_vector();
-            let vec = random_in_hemisphere(normal);
-            assert!(
-                vec.length() <= 1.,
-                "vec {} is not in unit sphere as length is {}",
-                vec,
-                vec.length()
-            );
-            assert!(
-                vec.dot(normal) > 0.,
-                "vec {} is not is not pointing in same general direction as normal {}",
-                vec,
-                normal
-            )
         }
     }
 

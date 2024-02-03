@@ -1,11 +1,11 @@
-use crate::geo::transformation::Transformer;
-use crate::geo::vec3::{Vec3, ALMOST_ZERO};
 use crate::geo::Aabb;
 use crate::geo::Ray;
+use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
-use crate::hittable::Hittables::TriangleType;
+use crate::geo::vec3::{ALMOST_ZERO, Vec3};
 use crate::hittable::{Hittable, Hittables};
-use crate::material::{HitRecord, Material, Materials};
+use crate::hittable::Hittables::TriangleType;
+use crate::material::{RayHit, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
@@ -69,7 +69,7 @@ impl Triangle {
         let normal = n.unit();
         let area = n.length() / 2.;
 
-        TriangleType(Triangle {
+        Hittables::from(Triangle {
             v0,
             v0v1,
             v0v2,
@@ -104,7 +104,7 @@ impl Hittable for Triangle {
         p - origin
     }
 
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit> {
         let p_vec = r.direction.cross(self.v0v2);
         let det = self.v0v1.dot(p_vec);
 
@@ -146,7 +146,7 @@ impl Hittable for Triangle {
         if !front_face {
             normal = normal.neg()
         }
-        Some(HitRecord::new(
+        Some(RayHit::new(
             intersection,
             normal,
             &self.mat,

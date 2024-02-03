@@ -5,7 +5,7 @@ use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::hittable::Hittables::SphereType;
 use crate::hittable::{Hittable, Hittables};
-use crate::material::{HitRecord, Material, Materials};
+use crate::material::{RayHit, Material, Materials};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 use std::f64::consts::PI;
@@ -26,7 +26,7 @@ impl Sphere {
         let r_vec = Vec3::new(radius, radius, radius);
         let b_box = Aabb::new_from_2_points(center - r_vec, center + r_vec);
 
-        SphereType(Sphere {
+        Hittables::from(Sphere {
             center,
             radius,
             mat,
@@ -60,7 +60,7 @@ impl Hittable for Sphere {
         uvw.local(random_to_sphere(self.radius, direction.length_squared()))
     }
 
-    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, ray_length: &Interval) -> Option<RayHit> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = oc.dot(r.direction);
@@ -88,7 +88,7 @@ impl Hittable for Sphere {
         if !front_face {
             normal = normal.neg();
         }
-        Some(HitRecord::new(
+        Some(RayHit::new(
             hit_point, normal, &self.mat, root, uv, front_face,
         ))
     }
