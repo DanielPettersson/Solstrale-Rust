@@ -2,15 +2,16 @@
 use std::error::Error;
 use std::sync::Arc;
 
-use crate::geo::Uv;
 use enum_dispatch::enum_dispatch;
 use image::io::Reader;
 use image::RgbImage;
 use simple_error::SimpleError;
 
+use crate::geo::Uv;
 use crate::geo::vec3::Vec3;
 use crate::material::texture::BumpMap::{Height, Normal};
 use crate::material::texture::Textures::{ImageMapType, SolidColorType};
+use crate::util::height_map;
 use crate::util::rgb_color::rgb_to_vec3;
 
 /// Describes the color of a material.
@@ -48,8 +49,8 @@ pub enum BumpMap {
     Height(RgbImage),
 }
 
-/// Load a bump map image texture and detect if it is a normal of height map
-pub fn load_bump_map(path: &str) -> Result<BumpMap, Box<dyn Error>> {
+/// Load a bump map image texture and detect if it is a normal or height map
+fn load_bump_map(path: &str) -> Result<BumpMap, Box<dyn Error>> {
     let mut reader = Reader::open(path).map_err(|err| {
         SimpleError::new(format!("Failed to open bump texture {}: {}", path, err))
     })?;
@@ -81,6 +82,17 @@ pub fn load_bump_map(path: &str) -> Result<BumpMap, Box<dyn Error>> {
         Ok(Height(image))
     } else {
         Ok(Normal(image))
+    }
+}
+
+/// Load a normal map texture. Source image can either be a normal or height map
+pub fn load_normal_texture(path: &str) -> Result<Textures, Box<dyn Error>> {
+    match load_bump_map(path)? {
+        Normal(n) => Ok(ImageMap::new(Arc::new(n))),
+        Height(h) => {
+            let n = height_map::to_normal_map(h);
+            Ok(ImageMap::new(Arc::new(n)))
+        }
     }
 }
 
@@ -169,7 +181,7 @@ impl Texture for ImageMap {
 
 #[cfg(test)]
 mod tests {
-    use crate::material::texture::{load_bump_map, BumpMap};
+    use crate::material::texture::{BumpMap, load_bump_map};
 
     #[test]
     fn test_load_normal_bump_map() {

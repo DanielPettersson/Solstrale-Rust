@@ -4,21 +4,19 @@
 //! Applies supplied default material if none in model
 use std::collections::HashMap;
 use std::error::Error;
-use std::sync::Arc;
 
 use simple_error::SimpleError;
 use tobj::LoadOptions;
 
 use crate::geo::transformation::Transformer;
-use crate::geo::vec3::Vec3;
 use crate::geo::Uv;
+use crate::geo::vec3::Vec3;
 use crate::hittable::Bvh;
 use crate::hittable::Hittables;
 use crate::hittable::Triangle;
 use crate::loader::Loader;
-use crate::material::texture::{BumpMap, ImageMap, SolidColor};
-use crate::material::{texture, Lambertian, Materials};
-use crate::util::height_map;
+use crate::material::{Lambertian, Materials, texture};
+use crate::material::texture::{ImageMap, SolidColor};
 
 /// Contains file information about the obj to load
 pub struct Obj {
@@ -71,13 +69,7 @@ impl Loader for Obj {
                 None => None,
                 Some(bump_texture_filename) => {
                     let bump_texture_path = format!("{}{}", self.path, bump_texture_filename);
-                    match texture::load_bump_map(&bump_texture_path)? {
-                        BumpMap::Normal(n) => Some(ImageMap::new(Arc::new(n))),
-                        BumpMap::Height(h) => {
-                            let n = height_map::to_normal_map(h);
-                            Some(ImageMap::new(Arc::new(n)))
-                        }
-                    }
+                    Some(texture::load_normal_texture(&bump_texture_path)?)
                 }
             };
             mat_map.insert(i as i8, Lambertian::new(albedo_texture, normal_texture));

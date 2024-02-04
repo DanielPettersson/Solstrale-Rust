@@ -45,7 +45,7 @@ impl AdjacentPixels {
     }
 
     /// Calculates the normals along the x-axis. Usually used for the red
-    /// channel after normalization..
+    /// channel after normalization.
     fn x_normals(&self) -> f32 {
         -(self.se - self.sw + 2.0 * (self.e - self.w) + self.ne - self.nw)
     }

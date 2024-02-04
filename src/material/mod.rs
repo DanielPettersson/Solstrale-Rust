@@ -111,7 +111,7 @@ pub trait Material {
 }
 
 #[derive(Default)]
-/// An color along with along with attenuation information
+/// A color along with attenuation information
 pub struct AttenuatedColor {
     /// Color value before attenuation
     pub color: Vec3,

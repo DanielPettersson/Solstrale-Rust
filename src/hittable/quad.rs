@@ -164,15 +164,18 @@ impl Hittable for Quad {
         let beta = self.w.dot(self.u.cross(planar_hit_point_vector)) as f32;
 
         // Is hit point outside of primitive
-        if !(0. ..=1.).contains(&alpha) || !(0. ..=1.).contains(&beta) {
+        let zero_to_one = 0. ..=1.;
+        if !zero_to_one.contains(&alpha) || !zero_to_one.contains(&beta) {
             return None;
         }
 
-        let mut normal = self.normal;
-        let front_face = r.direction.dot(normal) < 0.;
-        if !front_face {
-            normal = normal.neg();
-        }
+        let front_face = r.direction.dot(self.normal) < 0.;
+        let normal = if front_face {
+            self.normal
+        } else {
+            self.normal.neg()
+        };
+
         Some(RayHit::new(
             hit_point,
             normal,
