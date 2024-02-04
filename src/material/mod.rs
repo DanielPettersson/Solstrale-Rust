@@ -6,7 +6,7 @@ use enum_dispatch::enum_dispatch;
 
 use crate::geo::{Onb, Ray};
 use crate::geo::Uv;
-use crate::geo::vec3::{random_in_unit_sphere, Vec3, ZERO_VECTOR};
+use crate::geo::vec3::{ONE_VECTOR, random_in_unit_sphere, Vec3, ZERO_VECTOR};
 use crate::hittable::Hittables;
 use crate::material::Materials::{BlendType, DielectricType, DiffuseLightType, IsotropicType, LambertianType, MetalType};
 use crate::material::texture::{SolidColor, Texture};
@@ -384,8 +384,8 @@ impl Isotropic {
 }
 
 fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, uv: Uv) -> Vec3 {
-    let map_normal = (normal_map.color(uv) - 0.5) * 2.;
-    Onb::new(map_normal).local(normal)
+    let n: Vec3 = normal_map.color(uv) * 2. - ONE_VECTOR;
+    Onb::new(normal).local(Vec3::new(-n.x, -n.y, n.z))
 }
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -432,6 +432,14 @@ impl Material for Blend {
             self.material_1.scatter(ray, rec, lights)
         } else {
             self.material_2.scatter(ray, rec, lights)
+        }
+    }
+
+    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+        if random_normal_float() > self.blend_factor {
+            self.material_1.get_transformed_normal(normal, uv)
+        } else {
+            self.material_2.get_transformed_normal(normal, uv)
         }
     }
 }

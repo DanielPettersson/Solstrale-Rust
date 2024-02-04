@@ -27,6 +27,13 @@ pub const ZERO_VECTOR: Vec3 = Vec3 {
     z: 0.,
 };
 
+/// Vector at exactly one in all axis
+pub const ONE_VECTOR: Vec3 = Vec3 {
+    x: 1.,
+    y: 1.,
+    z: 1.,
+};
+
 impl Add for Vec3 {
     type Output = Vec3;
 
