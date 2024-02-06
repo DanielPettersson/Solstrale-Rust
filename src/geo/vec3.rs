@@ -1,4 +1,4 @@
-//! 3 dimensional vector module, used for positions and also
+//! 3-dimensional vector module, used for positions and also
 //! colors in the crate
 use crate::random;
 use derive_more::{Constructor, Display};

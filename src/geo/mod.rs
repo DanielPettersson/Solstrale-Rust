@@ -1,5 +1,5 @@
 //! Basic geometric constructs
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use crate::geo::vec3::Vec3;
 use crate::util::interval::{combine_intervals, Interval, EMPTY_INTERVAL};
@@ -10,7 +10,7 @@ pub mod vec3;
 const PAD_DELTA: f64 = 0.0001;
 
 /// Texture map coordinates
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Uv {
     /// U coordinate
     pub u: f32,
@@ -22,6 +22,21 @@ impl Uv {
     /// Create a new instance of Uv
     pub fn new(u: f32, v: f32) -> Uv {
         Uv { u, v }
+    }
+}
+
+impl Sub for Uv {
+    type Output = Uv;
+
+    /// returns a Uv that has all values subtracted by corresponding value in given Uv
+    /// # Examples:
+    /// ```
+    /// # use solstrale::geo::Uv;
+    /// let res = Uv::new(1., 2.) - Uv::new(6., 5.);
+    /// assert_eq!(Uv::new(-5., -3.), res)
+    /// ```
+    fn sub(self, rhs: Self) -> Self::Output {
+        Uv::new(self.u - rhs.u, self.v - rhs.v)
     }
 }
 
@@ -217,8 +232,8 @@ impl Add<Vec3> for &Aabb {
 /// Orthonormal Basis
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Onb {
-    u: Vec3,
-    v: Vec3,
+    pub(crate) u: Vec3,
+    pub(crate) v: Vec3,
     pub(crate) w: Vec3,
 }
 

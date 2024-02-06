@@ -1,12 +1,12 @@
 use crate::combine_aabbs;
-use crate::geo::transformation::Transformer;
-use crate::geo::vec3::{Vec3, ALMOST_ZERO};
 use crate::geo::Aabb;
 use crate::geo::Ray;
+use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
-use crate::hittable::Hittables::QuadType;
+use crate::geo::vec3::{ALMOST_ZERO, Vec3};
 use crate::hittable::{Hittable, Hittables};
-use crate::material::{RayHit, Material, Materials};
+use crate::hittable::Hittables::QuadType;
+use crate::material::{Material, Materials, RayHit};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
@@ -160,12 +160,12 @@ impl Hittable for Quad {
         // Determine the hit point lies within the planar shape using its plane coordinates.
         let hit_point = r.at(t);
         let planar_hit_point_vector = hit_point - self.q;
-        let alpha = self.w.dot(planar_hit_point_vector.cross(self.v)) as f32;
-        let beta = self.w.dot(self.u.cross(planar_hit_point_vector)) as f32;
+        let u = self.w.dot(planar_hit_point_vector.cross(self.v)) as f32;
+        let v = self.w.dot(self.u.cross(planar_hit_point_vector)) as f32;
 
         // Is hit point outside of primitive
-        let zero_to_one = 0. ..=1.;
-        if !zero_to_one.contains(&alpha) || !zero_to_one.contains(&beta) {
+        let zero_to_one = 0. ..= 1.;
+        if !zero_to_one.contains(&u) || !zero_to_one.contains(&v) {
             return None;
         }
 
@@ -179,9 +179,11 @@ impl Hittable for Quad {
         Some(RayHit::new(
             hit_point,
             normal,
+            self.u.unit(),
+            self.v.unit(),
             &self.mat,
             t,
-            Uv::new(alpha, beta),
+            Uv::new(u, v),
             front_face,
         ))
     }

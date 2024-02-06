@@ -5,7 +5,7 @@ use crate::geo::Uv;
 use crate::geo::vec3::{ALMOST_ZERO, Vec3};
 use crate::hittable::{Hittable, Hittables};
 use crate::hittable::Hittables::TriangleType;
-use crate::material::{RayHit, Material, Materials};
+use crate::material::{Material, Materials, RayHit};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
 
@@ -19,6 +19,8 @@ pub struct Triangle {
     uv1: Uv,
     uv2: Uv,
     normal: Vec3,
+    tangent: Vec3,
+    bi_tangent: Vec3,
     mat: Materials,
     b_box: Aabb,
     area: f64,
@@ -69,6 +71,14 @@ impl Triangle {
         let normal = n.unit();
         let area = n.length() / 2.;
 
+        let delta_pos_1 = v1 - v0;
+        let delta_pos_2 = v2 - v0;
+        let delta_uv_1 = uv1 - uv0;
+        let delta_uv_2 = uv2 - uv0;
+        let r = 1. / (delta_uv_1.u * delta_uv_2.v - delta_uv_1.v * delta_uv_2.u);
+        let tangent = ((delta_pos_1 * delta_uv_2.v - delta_pos_2 * delta_uv_1.v) * r).unit();
+        let bi_tangent = ((delta_pos_2 * delta_uv_1.u - delta_pos_1 * delta_uv_2.u) * r).unit();
+
         Hittables::from(Triangle {
             v0,
             v0v1,
@@ -77,6 +87,8 @@ impl Triangle {
             uv1,
             uv2,
             normal,
+            tangent,
+            bi_tangent,
             mat,
             b_box,
             area,
@@ -149,6 +161,8 @@ impl Hittable for Triangle {
         Some(RayHit::new(
             intersection,
             normal,
+            self.tangent,
+            self.bi_tangent,
             &self.mat,
             tt,
             uv,

@@ -1,7 +1,7 @@
 use crate::geo::Aabb;
 use crate::geo::Ray;
 use crate::geo::Uv;
-use crate::geo::vec3::{random_unit_vector, Vec3};
+use crate::geo::vec3::{ONE_VECTOR, random_unit_vector, Vec3};
 use crate::hittable::{Hittable, Hittables};
 use crate::material::{RayHit, Isotropic};
 use crate::material::Materials;
@@ -63,6 +63,8 @@ impl Hittable for ConstantMedium {
                         Some(RayHit::new(
                             r.at(t),
                             random_unit_vector(),
+                            ONE_VECTOR,
+                            ONE_VECTOR,
                             &self.phase_function,
                             t,
                             Uv::default(),

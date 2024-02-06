@@ -1,4 +1,4 @@
-use crate::geo::vec3::Vec3;
+use crate::geo::vec3::{ONE_VECTOR, Vec3};
 use crate::geo::Aabb;
 use crate::geo::Onb;
 use crate::geo::Ray;
@@ -89,7 +89,7 @@ impl Hittable for Sphere {
             normal = normal.neg();
         }
         Some(RayHit::new(
-            hit_point, normal, &self.mat, root, uv, front_face,
+            hit_point, normal, ONE_VECTOR, ONE_VECTOR, &self.mat, root, uv, front_face,
         ))
     }
 

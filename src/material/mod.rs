@@ -40,6 +40,8 @@ impl<'a> RayHit<'a> {
     pub fn new(
         hit_point: Vec3,
         normal: Vec3,
+        tangent: Vec3,
+        bi_tangent: Vec3,
         material: &'a Materials,
         ray_length: f64,
         uv: Uv,
@@ -47,7 +49,7 @@ impl<'a> RayHit<'a> {
     ) -> RayHit<'a> {
         RayHit {
             hit_point,
-            normal: material.get_transformed_normal(normal, uv),
+            normal: material.get_transformed_normal(normal, tangent, bi_tangent, uv),
             material,
             ray_length,
             uv,
@@ -105,7 +107,7 @@ pub trait Material {
     fn scatter(&self, _ray: &Ray, _rec: &RayHit, _lights: &[Hittables]) -> RayScatter;
 
     /// Get normal transformed by the material, implementations typically uses a normal texture map
-    fn get_transformed_normal(&self, normal: Vec3, _uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, normal: Vec3, _tangent: Vec3, _bi_tangent: Vec3, _uv: Uv) -> Vec3 {
         normal
     }
 }
@@ -206,10 +208,10 @@ impl Material for Lambertian {
         })
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
-            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
+            .map_or(normal, |n| transform_normal_by_map(n, normal, tangent, bi_tangent, uv))
     }
 }
 
@@ -248,10 +250,10 @@ impl Material for Metal {
         })
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
-            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
+            .map_or(normal, |n| transform_normal_by_map(n, normal, tangent, bi_tangent, uv))
     }
 }
 
@@ -301,10 +303,10 @@ impl Material for Dielectric {
         })
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
-            .map_or(normal, |n| transform_normal_by_map(n, normal, uv))
+            .map_or(normal, |n| transform_normal_by_map(n, normal, tangent, bi_tangent, uv))
     }
 }
 
@@ -383,9 +385,13 @@ impl Isotropic {
     }
 }
 
-fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, uv: Uv) -> Vec3 {
+fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
     let n: Vec3 = normal_map.color(uv) * 2. - ONE_VECTOR;
-    Onb::new(normal).local(Vec3::new(-n.x, -n.y, n.z))
+    Onb {
+        u: tangent,
+        v: bi_tangent,
+        w: normal,
+    }.local(n)
 }
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -435,11 +441,11 @@ impl Material for Blend {
         }
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
         if random_normal_float() > self.blend_factor {
-            self.material_1.get_transformed_normal(normal, uv)
+            self.material_1.get_transformed_normal(normal, tangent, bi_tangent, uv)
         } else {
-            self.material_2.get_transformed_normal(normal, uv)
+            self.material_2.get_transformed_normal(normal, tangent, bi_tangent, uv)
         }
     }
 }
@@ -458,9 +464,11 @@ mod tests {
         let n = transform_normal_by_map(
             &SolidColor::new(1., 0.5, 0.5),
             Vec3::new(1., 0., 0.),
+            Vec3::new(0., 1., 0.),
+            Vec3::new(0., 0., 1.),
             Uv::default(),
         );
 
-        assert!(Vec3::new(0., -1., 0.).sub(n).near_zero(), "n was {}", n);
+        assert!(Vec3::new(0., 1., 0.).sub(n).near_zero(), "n was {}", n);
     }
 }
