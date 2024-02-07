@@ -280,6 +280,41 @@ pub fn create_normal_mapping_scene(
 }
 
 #[allow(dead_code)]
+pub fn create_normal_mapping_sphere_scene(
+    render_config: RenderConfig,
+    light_pos: Vec3,
+) -> Scene {
+    let camera = CameraConfig {
+        vertical_fov_degrees: 40.,
+        aperture_size: 0.,
+        look_from: Vec3::new(0.2, 0.2, 2.),
+        look_at: Vec3::new(0., 0., 0.),
+        up: Vec3::new(0., 1., 0.),
+    };
+
+    let mut world = Vec::new();
+    let light = DiffuseLight::new(45., 45., 45., None);
+
+    world.push(Sphere::new(light_pos, 5., light));
+
+    let normal_tex = Some(load_normal_texture("resources/textures/earth_height.jpg").unwrap());
+    let mat = Lambertian::new(SolidColor::new(0.8, 0.8, 0.8), normal_tex);
+
+    world.push(Sphere::new(
+        Vec3::new(0., 0., 0.),
+        0.6,
+        mat,
+    ));
+
+    Scene {
+        world: Bvh::new(world),
+        camera,
+        background_color: Vec3::new(0., 0., 0.),
+        render_config,
+    }
+}
+
+#[allow(dead_code)]
 pub fn create_obj_scene(render_config: RenderConfig) -> Scene {
     let camera = CameraConfig {
         vertical_fov_degrees: 30.,

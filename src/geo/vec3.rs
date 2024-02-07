@@ -34,6 +34,13 @@ pub const ONE_VECTOR: Vec3 = Vec3 {
     z: 1.,
 };
 
+/// A unit vector pointing towards positive Y
+pub const UNIT_Y: Vec3 = Vec3 {
+    x: 0.,
+    y: 1.,
+    z: 0.,
+};
+
 impl Add for Vec3 {
     type Output = Vec3;
 

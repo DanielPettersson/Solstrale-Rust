@@ -17,7 +17,7 @@ use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
 use solstrale::util::rgb_color::rgb_to_vec3;
 
-use crate::scenes::{create_blend_material_scene, create_light_attenuation_scene, create_normal_mapping_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene, create_simple_test_scene, create_test_scene, create_uv_scene};
+use crate::scenes::{create_blend_material_scene, create_light_attenuation_scene, create_normal_mapping_scene, create_normal_mapping_sphere_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene, create_simple_test_scene, create_test_scene, create_uv_scene};
 
 mod scenes;
 
@@ -125,6 +125,18 @@ fn test_render_normal_mapping_2() {
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(-30., 30., 30.), true);
     render_and_compare_output(scene, "normal_mapping_2", 400, 400);
+}
+
+#[test]
+fn test_render_normal_mapping_sphere_1() {
+    let scene = create_normal_mapping_sphere_scene(RenderConfig::default(), Vec3::new(-30., 30., 30.));
+    render_and_compare_output(scene, "normal_mapping_sphere_1", 400, 400);
+}
+
+#[test]
+fn test_render_normal_mapping_sphere_2() {
+    let scene = create_normal_mapping_sphere_scene(RenderConfig::default(), Vec3::new(30., 30., 30.));
+    render_and_compare_output(scene, "normal_mapping_sphere_2", 400, 400);
 }
 
 #[test]
