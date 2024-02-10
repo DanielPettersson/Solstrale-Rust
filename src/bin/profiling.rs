@@ -23,7 +23,7 @@ fn main() {
     let (_, abort_receiver) = channel();
 
     thread::spawn(move || {
-        ray_trace(800, 400, scene, &output_sender, &abort_receiver).unwrap();
+        ray_trace(scene, &output_sender, &abort_receiver).unwrap();
     });
 
     let mut image = RgbImage::new(800, 400);

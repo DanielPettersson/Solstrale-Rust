@@ -13,8 +13,8 @@ use solstrale::geo::transformation::{RotationX, RotationY, RotationZ, Transforme
 use solstrale::geo::vec3::{Vec3, ZERO_VECTOR};
 use solstrale::post::{BloomPostProcessor, OidnPostProcessor, PostProcessor};
 use solstrale::ray_trace;
-use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::renderer::{RenderConfig, Scene};
+use solstrale::renderer::shader::{PathTracingShader, Shaders, SimpleShader};
 use solstrale::util::rgb_color::rgb_to_vec3;
 
 use crate::scenes::{create_blend_material_scene, create_light_attenuation_scene, create_normal_mapping_scene, create_normal_mapping_sphere_scene, create_obj_scene, create_obj_with_box, create_obj_with_triangle, create_quad_rotation_scene, create_simple_test_scene, create_test_scene, create_uv_scene};
@@ -32,13 +32,15 @@ fn test_render_scene() {
 
     for (shader_name, shader) in shaders {
         let render_config = RenderConfig {
+            width: 200,
+            height: 100,
             samples_per_pixel: 25,
             shader,
             ..Default::default()
         };
         let scene = create_test_scene(render_config);
 
-        render_and_compare_output(scene, shader_name, 200, 100)
+        render_and_compare_output(scene, shader_name)
     }
 }
 
@@ -46,6 +48,8 @@ fn test_render_scene() {
 #[cfg(feature = "oidn-postprocessor")]
 fn test_render_scene_with_oidn() {
     let render_config = RenderConfig {
+        width: 200,
+        height: 100,
         samples_per_pixel: 20,
         shader: PathTracingShader::new(50),
         post_processors: vec![OidnPostProcessor::new()],
@@ -53,95 +57,125 @@ fn test_render_scene_with_oidn() {
     };
 
     let scene = create_simple_test_scene(render_config, true);
-    render_and_compare_output(scene, "oidn", 200, 100)
+    render_and_compare_output(scene, "oidn")
 }
 
 #[test]
 fn test_render_obj_with_textures() {
     let render_config = RenderConfig {
+        width: 200,
+        height: 100,
         samples_per_pixel: 20,
         ..Default::default()
     };
     let scene = create_obj_scene(render_config);
 
-    render_and_compare_output(scene, "obj", 200, 100);
+    render_and_compare_output(scene, "obj");
 }
 
 #[test]
 fn test_render_obj_with_default_material() {
-    let render_config = RenderConfig::default();
+    let render_config = RenderConfig {
+        width: 200,
+        height: 100,
+        ..Default::default()
+    };
     let scene = create_obj_with_box(render_config, "resources/obj/", "box.obj");
 
-    render_and_compare_output(scene, "obj_default", 200, 100);
+    render_and_compare_output(scene, "obj_default");
 }
 
 #[test]
 fn test_render_obj_with_diffuse_material() {
-    let render_config = RenderConfig::default();
+    let render_config = RenderConfig {
+        width: 200,
+        height: 100,
+        ..Default::default()
+    };
     let scene = create_obj_with_box(render_config, "resources/obj/", "boxWithMat.obj");
 
-    render_and_compare_output(scene, "obj_diffuse", 200, 100);
+    render_and_compare_output(scene, "obj_diffuse");
 }
 
 #[test]
 fn test_render_uv_mapping() {
     let render_config = RenderConfig {
+        width: 200,
+        height: 200,
         samples_per_pixel: 5,
         ..Default::default()
     };
     let scene = create_uv_scene(render_config);
 
-    render_and_compare_output(scene, "uv", 200, 200);
+    render_and_compare_output(scene, "uv");
 }
 
 #[test]
 fn test_render_normal_mapping_disabled() {
     let render_config = RenderConfig {
+        width: 300,
+        height: 300,
         post_processors: vec![OidnPostProcessor::new()],
         ..Default::default()
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(30., 30., 30.), false);
-    render_and_compare_output(scene, "normal_mapping_disabled", 400, 400);
+    render_and_compare_output(scene, "normal_mapping_disabled");
 }
 
 #[test]
 fn test_render_normal_mapping_1() {
     let render_config = RenderConfig {
+        width: 300,
+        height: 300,
         post_processors: vec![OidnPostProcessor::new()],
         ..Default::default()
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(30., 30., 30.), true);
-    render_and_compare_output(scene, "normal_mapping_1", 400, 400);
+    render_and_compare_output(scene, "normal_mapping_1");
 }
 
 #[test]
 fn test_render_normal_mapping_2() {
     let render_config = RenderConfig {
+        width: 300,
+        height: 300,
         post_processors: vec![OidnPostProcessor::new()],
         ..Default::default()
     };
 
     let scene = create_normal_mapping_scene(render_config, Vec3::new(-30., 30., 30.), true);
-    render_and_compare_output(scene, "normal_mapping_2", 400, 400);
+    render_and_compare_output(scene, "normal_mapping_2");
 }
 
 #[test]
 fn test_render_normal_mapping_sphere_1() {
-    let scene = create_normal_mapping_sphere_scene(RenderConfig::default(), Vec3::new(-30., 30., 30.));
-    render_and_compare_output(scene, "normal_mapping_sphere_1", 400, 400);
+    let render_config = RenderConfig {
+        width: 300,
+        height: 300,
+        ..Default::default()
+    };
+    let scene = create_normal_mapping_sphere_scene(render_config, Vec3::new(-30., 30., 30.));
+    render_and_compare_output(scene, "normal_mapping_sphere_1");
 }
 
 #[test]
 fn test_render_normal_mapping_sphere_2() {
-    let scene = create_normal_mapping_sphere_scene(RenderConfig::default(), Vec3::new(30., 30., 30.));
-    render_and_compare_output(scene, "normal_mapping_sphere_2", 400, 400);
+    let render_config = RenderConfig {
+        width: 300,
+        height: 300,
+        ..Default::default()
+    };
+    let scene = create_normal_mapping_sphere_scene(render_config, Vec3::new(30., 30., 30.));
+    render_and_compare_output(scene, "normal_mapping_sphere_2");
 }
 
 #[test]
 fn test_render_scene_without_light() {
     let render_config = RenderConfig {
+        width: 20,
+        height: 10,
         samples_per_pixel: 100,
         ..Default::default()
     };
@@ -150,7 +184,7 @@ fn test_render_scene_without_light() {
     let (output_sender, _) = channel();
     let (_, abort_receiver) = channel();
 
-    let res = ray_trace(20, 10, scene, &output_sender, &abort_receiver);
+    let res = ray_trace(scene, &output_sender, &abort_receiver);
 
     match res {
         Ok(_) => panic!("There should be an error"),
@@ -160,24 +194,36 @@ fn test_render_scene_without_light() {
 
 #[test]
 fn test_render_obj_with_normal_map() {
-    let render_config = RenderConfig::default();
+    let render_config = RenderConfig {
+        width: 300,
+        height: 300,
+        ..Default::default()
+    };
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithNormalMap.obj");
 
-    render_and_compare_output(scene, "obj_normal_map", 500, 500);
+    render_and_compare_output(scene, "obj_normal_map");
 }
 
 #[test]
 fn test_render_obj_with_height_map() {
-    let render_config = RenderConfig::default();
+    let render_config = RenderConfig {
+        width: 300,
+        height: 300,
+        ..Default::default()
+    };
     let scene = create_obj_with_triangle(render_config, "resources/obj/", "triWithHeightMap.obj");
 
-    render_and_compare_output(scene, "obj_height_map", 500, 500);
+    render_and_compare_output(scene, "obj_height_map");
 }
 
 #[test]
 fn test_render_light_attenuation() {
     for attenuation_half_length in [Some(0.1), Some(0.8), None] {
-        let render_config = RenderConfig::default();
+        let render_config = RenderConfig {
+            width: 300,
+            height: 300,
+            ..Default::default()
+        };
         let scene = create_light_attenuation_scene(render_config, attenuation_half_length);
 
         render_and_compare_output(
@@ -185,9 +231,7 @@ fn test_render_light_attenuation() {
             &format!(
                 "light_attenuation_{}",
                 attenuation_half_length.map_or(-1., |a| a)
-            ),
-            300,
-            300,
+            )
         );
     }
 }
@@ -219,6 +263,8 @@ fn test_aabb_of_rotated_quad() {
     for (i, rotation) in rotations.iter().enumerate() {
         let scene = create_quad_rotation_scene(
             RenderConfig {
+                width: 300,
+                height: 300,
                 shader: SimpleShader::new(),
                 samples_per_pixel: 1,
                 ..RenderConfig::default()
@@ -226,7 +272,7 @@ fn test_aabb_of_rotated_quad() {
             rotation.deref(),
         );
 
-        render_and_compare_output(scene, &format!("quad_rotated{}", i), 300, 300);
+        render_and_compare_output(scene, &format!("quad_rotated{}", i));
     }
 }
 
@@ -234,11 +280,15 @@ fn test_aabb_of_rotated_quad() {
 fn test_blended_materials() {
     for blend_factor in [0., 0.5, 1.] {
         let scene = create_blend_material_scene(
-            RenderConfig::default(),
+            RenderConfig {
+                width: 300,
+                height: 300,
+                ..RenderConfig::default()
+            },
             blend_factor
         );
 
-        render_and_compare_output(scene, &format!("blended_materials_{}", blend_factor), 300, 300);
+        render_and_compare_output(scene, &format!("blended_materials_{}", blend_factor));
     }
 }
 
@@ -252,12 +302,15 @@ fn image_to_vec3(image: RgbImage) -> Vec<Vec3> {
     ret
 }
 
-fn render_and_compare_output(scene: Scene, name: &str, width: u32, height: u32) {
+fn render_and_compare_output(scene: Scene, name: &str) {
     let (output_sender, output_receiver) = channel();
     let (_, abort_receiver) = channel();
 
+    let width = scene.render_config.width as u32;
+    let height = scene.render_config.height as u32;
+
     thread::spawn(move || {
-        ray_trace(width, height, scene, &output_sender, &abort_receiver).unwrap();
+        ray_trace(scene, &output_sender, &abort_receiver).unwrap();
     });
 
     let mut image = RgbImage::new(width, height);

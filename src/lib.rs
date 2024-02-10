@@ -51,7 +51,7 @@
 //! let (_, abort_receiver) = channel();
 //!
 //! thread::spawn(move || {
-//!     ray_trace(800, 400, scene, &output_sender, &abort_receiver).unwrap();
+//!     ray_trace(scene, &output_sender, &abort_receiver).unwrap();
 //! });
 //!
 //! for render_output in output_receiver {
@@ -87,16 +87,13 @@ pub mod util;
 /// the output [`Sender`]. Listens to abort [`Receiver`] for aborting a started ray trace operation
 ///
 /// # Arguments
-/// * `width` - Width in pixel of the rendered image
-/// * `height` - Height in pixel of the rendered image
+/// * `scene` - A scene describing how, and what should be rendered
 /// * `output` - Channel where render progress will be sent
 /// * `abort` - Channel to send abort signals to the renderer
 pub fn ray_trace<'a>(
-    width: u32,
-    height: u32,
     scene: Scene,
     output: &'a Sender<RenderProgress>,
     abort: &'a Receiver<bool>,
 ) -> Result<(), Box<dyn Error>> {
-    Renderer::new(scene)?.render(width as usize, height as usize, output, abort)
+    Renderer::new(scene)?.render(output, abort)
 }

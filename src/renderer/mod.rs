@@ -24,6 +24,10 @@ pub mod shader;
 ///Input to the ray tracer for how the image should be rendered
 #[derive(Clone)]
 pub struct RenderConfig {
+    /// Width in pixels of the rendered image
+    pub width: usize,
+    /// Height in pixels of the rendered image
+    pub height: usize,
     /// Number of times each pixel should be sampled
     pub samples_per_pixel: u32,
     /// Shader to use when rendering the image
@@ -37,6 +41,8 @@ pub struct RenderConfig {
 impl Default for RenderConfig {
     fn default() -> Self {
         RenderConfig {
+            width: 300,
+            height: 200,
             samples_per_pixel: 50,
             shader: PathTracingShader::new(50),
             post_processors: vec![],
@@ -202,13 +208,13 @@ impl Renderer {
     /// Executes the rendering of the image
     pub fn render(
         &self,
-        image_width: usize,
-        image_height: usize,
         output: &Sender<RenderProgress>,
         abort: &Receiver<bool>,
     ) -> Result<(), Box<dyn Error>> {
         let mut last_image_generated_time = SystemTime::UNIX_EPOCH;
         let render_start_time = SystemTime::now();
+        let image_width = self.scene.render_config.width;
+        let image_height = self.scene.render_config.height;
         let pixel_count = image_width * image_height;
         let samples_per_pixel = self.scene.render_config.samples_per_pixel;
         let needs_albedo_and_normal_colors =
