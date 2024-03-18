@@ -230,7 +230,7 @@ impl Add<Vec3> for &Aabb {
 }
 
 /// Orthonormal Basis
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
+#[derive(Clone, PartialEq, Debug, Default)]
 pub struct Onb {
     pub(crate) u: Vec3,
     pub(crate) v: Vec3,

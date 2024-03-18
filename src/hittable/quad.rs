@@ -1,5 +1,5 @@
 use crate::combine_aabbs;
-use crate::geo::Aabb;
+use crate::geo::{Aabb, Onb};
 use crate::geo::Ray;
 use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
@@ -178,9 +178,11 @@ impl Hittable for Quad {
 
         Some(RayHit::new(
             hit_point,
-            normal,
-            self.u.unit(),
-            self.v.unit(),
+            &Onb {
+                u: self.u.unit(),
+                v: self.v.unit(),
+                w: normal,
+            },
             &self.mat,
             t,
             Uv::new(u, v),

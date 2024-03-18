@@ -39,9 +39,7 @@ impl<'a> RayHit<'a> {
     /// Creates a new HitRecord
     pub fn new(
         hit_point: Vec3,
-        normal: Vec3,
-        tangent: Vec3,
-        bi_tangent: Vec3,
+        onb: &Onb,
         material: &'a Materials,
         ray_length: f64,
         uv: Uv,
@@ -49,7 +47,7 @@ impl<'a> RayHit<'a> {
     ) -> RayHit<'a> {
         RayHit {
             hit_point,
-            normal: material.get_transformed_normal(normal, tangent, bi_tangent, uv),
+            normal: material.get_transformed_normal(onb, uv),
             material,
             ray_length,
             uv,
@@ -107,8 +105,8 @@ pub trait Material {
     fn scatter(&self, _ray: &Ray, _rec: &RayHit, _lights: &[Hittables]) -> RayScatter;
 
     /// Get normal transformed by the material, implementations typically uses a normal texture map
-    fn get_transformed_normal(&self, normal: Vec3, _tangent: Vec3, _bi_tangent: Vec3, _uv: Uv) -> Vec3 {
-        normal
+    fn get_transformed_normal(&self, onb: &Onb, _uv: Uv) -> Vec3 {
+        onb.w
     }
 }
 
@@ -208,10 +206,10 @@ impl Material for Lambertian {
         })
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, onb: &Onb, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
-            .map_or(normal, |n| transform_normal_by_map(n, normal, tangent, bi_tangent, uv))
+            .map_or(onb.w, |n| transform_normal_by_map(n, onb, uv))
     }
 }
 
@@ -250,10 +248,10 @@ impl Material for Metal {
         })
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, onb: &Onb, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
-            .map_or(normal, |n| transform_normal_by_map(n, normal, tangent, bi_tangent, uv))
+            .map_or(onb.w, |n| transform_normal_by_map(n, onb, uv))
     }
 }
 
@@ -303,10 +301,10 @@ impl Material for Dielectric {
         })
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, onb: &Onb, uv: Uv) -> Vec3 {
         self.normal
             .as_ref()
-            .map_or(normal, |n| transform_normal_by_map(n, normal, tangent, bi_tangent, uv))
+            .map_or(onb.w, |n| transform_normal_by_map(n, onb, uv))
     }
 }
 
@@ -385,13 +383,9 @@ impl Isotropic {
     }
 }
 
-fn transform_normal_by_map(normal_map: &Textures, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
+fn transform_normal_by_map(normal_map: &Textures, onb: &Onb, uv: Uv) -> Vec3 {
     let n: Vec3 = normal_map.color(uv) * 2. - ONE_VECTOR;
-    Onb {
-        u: tangent,
-        v: bi_tangent,
-        w: normal,
-    }.local(n)
+    onb.local(n)
 }
 
 const SPHERE_PDF_VALUE: f64 = 1. / (4. * PI);
@@ -441,11 +435,11 @@ impl Material for Blend {
         }
     }
 
-    fn get_transformed_normal(&self, normal: Vec3, tangent: Vec3, bi_tangent: Vec3, uv: Uv) -> Vec3 {
+    fn get_transformed_normal(&self, onb: &Onb, uv: Uv) -> Vec3 {
         if random_normal_float() > self.blend_factor {
-            self.material_1.get_transformed_normal(normal, tangent, bi_tangent, uv)
+            self.material_1.get_transformed_normal(onb, uv)
         } else {
-            self.material_2.get_transformed_normal(normal, tangent, bi_tangent, uv)
+            self.material_2.get_transformed_normal(onb, uv)
         }
     }
 }
@@ -454,7 +448,7 @@ impl Material for Blend {
 mod tests {
     use std::ops::Sub;
 
-    use crate::geo::Uv;
+    use crate::geo::{Onb, Uv};
     use crate::geo::vec3::Vec3;
     use crate::material::texture::SolidColor;
     use crate::material::transform_normal_by_map;
@@ -463,9 +457,11 @@ mod tests {
     fn test_transform_normal_by_map() {
         let n = transform_normal_by_map(
             &SolidColor::new(1., 0.5, 0.5),
-            Vec3::new(1., 0., 0.),
-            Vec3::new(0., 1., 0.),
-            Vec3::new(0., 0., 1.),
+            &Onb {
+                u: Vec3::new(0., 1., 0.),
+                v: Vec3::new(0., 0., 1.),
+                w: Vec3::new(1., 0., 0.),
+            },
             Uv::default(),
         );
 
