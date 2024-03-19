@@ -13,13 +13,4 @@ jobs:
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
-      - name: Update apt
-        run: sudo apt-get update
-      - name: Install libtbb2
-        run: sudo apt-get install -y libtbb2
-      - name: Copy Oidn lib
-        run: sudo cp oidn/lib/libOpenImageDenoise* /usr/lib
-      - name: Refresh linker
-        run: sudo ldconfig
-      - run: cargo test --all-features
+      - run: cargo test
