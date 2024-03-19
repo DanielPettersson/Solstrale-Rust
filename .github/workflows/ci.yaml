@@ -20,4 +20,6 @@ jobs:
         run: sudo apt-get install -y libtbb2
       - name: Copy Oidn lib
         run: sudo cp oidn/lib/libOpenImageDenoise* /usr/lib
+      - name: Refresh linker
+        run: sudo ldconfig
       - run: cargo test --all-features
