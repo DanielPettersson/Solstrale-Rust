@@ -21,13 +21,13 @@ debug = 1
 
 [dependencies]
 fastrand = "2.0.1"
-image = "0.24.8"
+image = "0.24.9"
 simple-error = "0.3.0"
 enum_dispatch = "0.3.12"
 tobj = "4.0.1"
-oidn = { version = "1.4.3", optional = true }
+oidn = { git = "https://github.com/Twinklebear/oidn-rs.git", branch = "master", optional = true }
 derive_more = "0.99.17"
-rayon = "1.8.1"
+rayon = "1.9.0"
 
 [dev-dependencies]
 image-compare = "0.3.1"

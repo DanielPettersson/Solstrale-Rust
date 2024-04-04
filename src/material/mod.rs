@@ -460,7 +460,7 @@ mod tests {
             Onb {
                 tangent: Vec3::new(0., 1., 0.),
                 bi_tangent: Vec3::new(0., 0., 1.),
-                normal: Vec3::new(1., 0., 0.)  
+                normal: Vec3::new(1., 0., 0.)
             },
             Uv::default(),
         );
