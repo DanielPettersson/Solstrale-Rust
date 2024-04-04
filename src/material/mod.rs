@@ -84,9 +84,9 @@ pub struct ScatterEmission {
 
 /// An enum of scatter types
 pub enum RayScatter {
-    /// Scatters using [`Pdfs`] to determine the ray
+    /// Scatters using pdfs to determine the ray
     ScatterPdf(ScatterPdf),
-    /// A basic scattering without the use of [`Pdfs`]
+    /// A basic scattering without the use of pdfs
     ScatterBasic(ScatterBasic),
     /// No scattering of light, only emission.
     ScatterEmission(ScatterEmission),

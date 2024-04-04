@@ -18,7 +18,7 @@ pub trait Shader {
     /// # Arguments
     /// * `renderer` - A reference to the [`Renderer`]
     /// * `rec` - [`RayHit`] for the current ray hit
-    /// * `ray` - The [`Basic`] for the current hit
+    /// * `ray` - The [`Ray`] for the current hit
     /// * `depth` - The recursive depth of the rendering
     /// * `accumulated_ray_length` - Sum of ray length so far including all bounces
     fn shade(
