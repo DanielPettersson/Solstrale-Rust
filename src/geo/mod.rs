@@ -1,5 +1,6 @@
 //! Basic geometric constructs
 use std::ops::{Add, Sub};
+use derive_more::Constructor;
 
 use crate::geo::vec3::Vec3;
 use crate::util::interval::{combine_intervals, Interval, EMPTY_INTERVAL};
@@ -10,19 +11,12 @@ pub mod vec3;
 const PAD_DELTA: f64 = 0.0001;
 
 /// Texture map coordinates
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Constructor)]
 pub struct Uv {
     /// U coordinate
     pub u: f32,
     /// V coordinate
     pub v: f32,
-}
-
-impl Uv {
-    /// Create a new instance of Uv
-    pub fn new(u: f32, v: f32) -> Uv {
-        Uv { u, v }
-    }
 }
 
 impl Sub for Uv {

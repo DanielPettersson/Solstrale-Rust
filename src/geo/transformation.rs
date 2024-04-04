@@ -1,5 +1,6 @@
 //! Contains transformations that can modify [`Vec3`]
 //! Used to translate and rotate hittables
+use derive_more::Constructor;
 use crate::geo::vec3::Vec3;
 use crate::util::degrees_to_radians;
 
@@ -36,15 +37,9 @@ impl Transformer for NopTransformer {
 /// ]).transform(Vec3::new(1., 0., 0.), false);
 /// assert_eq!(Vec3::new(1., 0., -1.), res)
 /// ```
+#[derive(Constructor)]
 pub struct Transformations {
     transformations: Vec<Box<dyn Transformer>>,
-}
-
-impl Transformations {
-    /// Creates a new list of transformations
-    pub fn new(transformations: Vec<Box<dyn Transformer>>) -> Transformations {
-        Transformations { transformations }
-    }
 }
 
 impl Transformer for Transformations {
@@ -199,15 +194,9 @@ impl Transformer for RotationZ {
 /// let res = Scale::new(3.).transform(Vec3::new(2., 1., 0.), false);
 /// assert_eq!(Vec3::new(6., 3., 0.), res);
 /// ```
+#[derive(Constructor)]
 pub struct Scale {
     scale: f64,
-}
-
-impl Scale {
-    /// Creates a new scale transformer
-    pub fn new(scale: f64) -> Scale {
-        Scale { scale }
-    }
 }
 
 impl Transformer for Scale {
