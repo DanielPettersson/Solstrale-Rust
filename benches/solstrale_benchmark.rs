@@ -2,13 +2,13 @@ use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, black_box, Criterion, criterion_group, criterion_main, Throughput};
+use derive_more::{Constructor, Display};
+
+use solstrale::ray_trace;
+use solstrale::renderer::RenderConfig;
 
 use crate::scenes::{create_test_scene, new_bvh_test_scene};
-use derive_more::{Constructor, Display};
-use solstrale::ray_trace;
-use solstrale::renderer::shader::PathTracingShader;
-use solstrale::renderer::RenderConfig;
 
 #[path = "../tests/scenes.rs"]
 mod scenes;
@@ -34,8 +34,9 @@ pub fn bvh_benchmark(c: &mut Criterion) {
                     || {
                         let render_config = RenderConfig {
                             samples_per_pixel: 1,
-                            shader: PathTracingShader::new(50),
-                            post_processor: None,
+                            width: black_box(20),
+                            height: black_box(10),
+                            ..RenderConfig::default()
                         };
                         new_bvh_test_scene(
                             render_config,
@@ -49,8 +50,6 @@ pub fn bvh_benchmark(c: &mut Criterion) {
 
                         thread::spawn(move || {
                             ray_trace(
-                                black_box(20),
-                                black_box(10),
                                 scene,
                                 &output_sender,
                                 &abort_receiver,
@@ -73,8 +72,9 @@ pub fn scene_benchmark(c: &mut Criterion) {
             || {
                 let render_config = RenderConfig {
                     samples_per_pixel: 1,
-                    shader: PathTracingShader::new(50),
-                    post_processor: None,
+                    width: black_box(100),
+                    height: black_box(50),
+                    ..RenderConfig::default()
                 };
                 create_test_scene(render_config)
             },
@@ -84,8 +84,6 @@ pub fn scene_benchmark(c: &mut Criterion) {
 
                 thread::spawn(move || {
                     ray_trace(
-                        black_box(100),
-                        black_box(50),
                         scene,
                         &output_sender,
                         &abort_receiver,

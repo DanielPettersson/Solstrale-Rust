@@ -94,7 +94,16 @@ impl Hittable for Sphere {
             normal = normal.neg();
         }
         Some(RayHit::new(
-            hit_point, normal, tangent, bi_tangent, &self.mat, root, uv, front_face,
+            hit_point,
+            Onb {
+                tangent,
+                bi_tangent,
+                normal,
+            },
+            &self.mat,
+            root,
+            uv,
+            front_face,
         ))
     }
 

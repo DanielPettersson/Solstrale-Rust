@@ -1,5 +1,7 @@
+use std::ops::RangeInclusive;
+
 use crate::combine_aabbs;
-use crate::geo::Aabb;
+use crate::geo::{Aabb, Onb};
 use crate::geo::Ray;
 use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
@@ -9,6 +11,8 @@ use crate::hittable::Hittables::QuadType;
 use crate::material::{Material, Materials, RayHit};
 use crate::random::random_normal_float;
 use crate::util::interval::{Interval, RAY_INTERVAL};
+
+const ZERO_TO_ONE: RangeInclusive<f32> = 0. ..= 1.;
 
 /// A rectangular flat hittable object
 #[derive(Clone, Debug)]
@@ -164,8 +168,7 @@ impl Hittable for Quad {
         let v = self.w.dot(self.u.cross(planar_hit_point_vector)) as f32;
 
         // Is hit point outside of primitive
-        let zero_to_one = 0. ..= 1.;
-        if !zero_to_one.contains(&u) || !zero_to_one.contains(&v) {
+        if !ZERO_TO_ONE.contains(&u) || !ZERO_TO_ONE.contains(&v) {
             return None;
         }
 
@@ -178,9 +181,11 @@ impl Hittable for Quad {
 
         Some(RayHit::new(
             hit_point,
-            normal,
-            self.u.unit(),
-            self.v.unit(),
+            Onb {
+                tangent: self.u.unit(),
+                bi_tangent: self.v.unit(),
+                normal,
+            },
             &self.mat,
             t,
             Uv::new(u, v),

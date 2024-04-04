@@ -1,4 +1,4 @@
-use crate::geo::Aabb;
+use crate::geo::{Aabb, Onb};
 use crate::geo::Ray;
 use crate::geo::transformation::Transformer;
 use crate::geo::Uv;
@@ -160,9 +160,11 @@ impl Hittable for Triangle {
         }
         Some(RayHit::new(
             intersection,
-            normal,
-            self.tangent,
-            self.bi_tangent,
+            Onb {
+                tangent: self.tangent,
+                bi_tangent: self.bi_tangent,
+                normal,
+            },
             &self.mat,
             tt,
             uv,

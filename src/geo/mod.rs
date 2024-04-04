@@ -230,11 +230,11 @@ impl Add<Vec3> for &Aabb {
 }
 
 /// Orthonormal Basis
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
+#[derive(Clone, PartialEq, Debug, Default)]
 pub struct Onb {
-    pub(crate) u: Vec3,
-    pub(crate) v: Vec3,
-    pub(crate) w: Vec3,
+    pub(crate) tangent: Vec3,
+    pub(crate) bi_tangent: Vec3,
+    pub(crate) normal: Vec3,
 }
 
 impl Onb {
@@ -250,12 +250,12 @@ impl Onb {
         let v = unit_w.cross(a).unit();
         let u = unit_w.cross(v);
 
-        Onb { u, v, w: unit_w }
+        Onb { tangent: u, bi_tangent: v, normal: unit_w }
     }
 
     /// Translates the given vector to the Orthonormal Basis
     pub fn local(&self, a: Vec3) -> Vec3 {
-        self.u * a.x + self.v * a.y + self.w * a.z
+        self.tangent * a.x + self.bi_tangent * a.y + self.normal * a.z
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::geo::Aabb;
+use crate::geo::{Aabb, Onb};
 use crate::geo::Ray;
 use crate::geo::Uv;
 use crate::geo::vec3::{ONE_VECTOR, random_unit_vector, Vec3};
@@ -62,9 +62,11 @@ impl Hittable for ConstantMedium {
 
                         Some(RayHit::new(
                             r.at(t),
-                            random_unit_vector(),
-                            ONE_VECTOR,
-                            ONE_VECTOR,
+                            Onb {
+                                tangent: ONE_VECTOR,
+                                bi_tangent: ONE_VECTOR,
+                                normal: random_unit_vector(),
+                            },
                             &self.phase_function,
                             t,
                             Uv::default(),
