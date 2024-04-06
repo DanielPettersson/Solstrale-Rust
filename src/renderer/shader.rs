@@ -1,13 +1,11 @@
 //! Contains the different shader used by the renderer
-use std::default::Default;
-
 use enum_dispatch::enum_dispatch;
 
 use crate::geo::Ray;
 use crate::geo::vec3::Vec3;
 use crate::material::{AttenuatedColor, RayHit};
 use crate::material::Material;
-use crate::material::RayScatter::{ScatterEmission, ScatterBasic, ScatterPdf};
+use crate::material::RayScatter::{ScatterBasic, ScatterEmission, ScatterPdf};
 use crate::renderer::Renderer;
 
 /// Calculates the color from a ray hitting a hittable object
