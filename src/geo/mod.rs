@@ -157,25 +157,34 @@ impl Aabb {
 
     /// Checks if the given ray hits the aabb
     pub fn hit(&self, r: &Ray) -> bool {
-        let mut t1 = (self.x.min - r.origin.x) * r.direction_inverted.x;
-        let mut t2 = (self.x.max - r.origin.x) * r.direction_inverted.x;
+        let mut t_min = 0.;
+        let mut t_max = f64::INFINITY;
 
-        let mut tmin = t1.min(t2);
-        let mut tmax = t1.max(t2);
+        if r.direction_inverted.x.is_sign_negative() {
+            t_min = ((self.x.max - r.origin.x) * r.direction_inverted.x).max(t_min);
+            t_max = ((self.x.min - r.origin.x) * r.direction_inverted.x).min(t_max);
+        } else {
+            t_min = ((self.x.min - r.origin.x) * r.direction_inverted.x).max(t_min);
+            t_max = ((self.x.max - r.origin.x) * r.direction_inverted.x).min(t_max);
+        };
 
-        t1 = (self.y.min - r.origin.y) * r.direction_inverted.y;
-        t2 = (self.y.max - r.origin.y) * r.direction_inverted.y;
+        if r.direction_inverted.y.is_sign_negative() {
+            t_min = ((self.y.max - r.origin.y) * r.direction_inverted.y).max(t_min);
+            t_max = ((self.y.min - r.origin.y) * r.direction_inverted.y).min(t_max);
+        } else {
+            t_min = ((self.y.min - r.origin.y) * r.direction_inverted.y).max(t_min);
+            t_max = ((self.y.max - r.origin.y) * r.direction_inverted.y).min(t_max);
+        };
 
-        tmin = tmin.max(t1.min(t2));
-        tmax = tmax.min(t1.max(t2));
+        if r.direction_inverted.z.is_sign_negative() {
+            t_min = ((self.z.max - r.origin.z) * r.direction_inverted.z).max(t_min);
+            t_max = ((self.z.min - r.origin.z) * r.direction_inverted.z).min(t_max);
+        } else {
+            t_min = ((self.z.min - r.origin.z) * r.direction_inverted.z).max(t_min);
+            t_max = ((self.z.max - r.origin.z) * r.direction_inverted.z).min(t_max);
+        };
 
-        t1 = (self.z.min - r.origin.z) * r.direction_inverted.z;
-        t2 = (self.z.max - r.origin.z) * r.direction_inverted.z;
-
-        tmin = tmin.max(t1.min(t2));
-        tmax = tmax.min(t1.max(t2));
-
-        tmax > tmin.max(0.)
+        t_min < t_max
     }
 
     /// return the center point of the aabb
