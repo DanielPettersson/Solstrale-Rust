@@ -20,9 +20,9 @@ codegen-units = 1
 debug = 1
 
 [dependencies]
-fastrand = "2.0.2"
-image = "0.25.1"
-simple-error = "0.3.0"
+fastrand = "2.1.0"
+image = "0.25.2"
+simple-error = "0.3.1"
 enum_dispatch = "0.3.13"
 tobj = "4.0.2"
 oidn = { git = "https://github.com/Twinklebear/oidn-rs.git", branch = "master", optional = true }
@@ -30,7 +30,7 @@ derive_more = "0.99.17"
 rayon = "1.10.0"
 
 [dev-dependencies]
-image-compare = "0.4.0"
+image-compare = "0.4.1"
 criterion = "0.5.1"
 
 [[bench]]

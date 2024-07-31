@@ -3,7 +3,7 @@ use std::error::Error;
 use std::sync::Arc;
 
 use enum_dispatch::enum_dispatch;
-use image::io::Reader;
+use image::ImageReader;
 use image::RgbImage;
 use simple_error::SimpleError;
 
@@ -51,7 +51,7 @@ pub enum BumpMap {
 
 /// Load a bump map image texture and detect if it is a normal or height map
 fn load_bump_map(path: &str) -> Result<BumpMap, Box<dyn Error>> {
-    let mut reader = Reader::open(path).map_err(|err| {
+    let mut reader = ImageReader::open(path).map_err(|err| {
         SimpleError::new(format!("Failed to open bump texture {}: {}", path, err))
     })?;
     reader.no_limits();
@@ -135,7 +135,7 @@ impl ImageMap {
     #![allow(clippy::new_ret_no_self)]
     /// Creates a new image texture from a file path
     pub fn load(path: &str) -> Result<Textures, Box<dyn Error>> {
-        let mut reader = Reader::open(path).map_err(|err| {
+        let mut reader = ImageReader::open(path).map_err(|err| {
             SimpleError::new(format!("Failed to open image texture {}: {}", path, err))
         })?;
         reader.no_limits();
