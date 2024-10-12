@@ -7,7 +7,7 @@ use std::ops::{Add, AddAssign, Div, Mul, Sub};
 
 /// A 3 dimensional vector
 #[derive(Copy, Clone, PartialEq, Debug, Default, Constructor, Display)]
-#[display(fmt = "{{ x: {:.4}, y: {:.4}, z: {:.4} }}", x, y, z)]
+#[display("{{ x: {:.4}, y: {:.4}, z: {:.4} }}", x, y, z)]
 pub struct Vec3 {
     /// x position
     pub x: f64,

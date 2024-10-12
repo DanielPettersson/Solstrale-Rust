@@ -1,5 +1,4 @@
 use std::fmt;
-use std::fmt::Display;
 
 use derive_more::Display;
 
@@ -11,7 +10,7 @@ use crate::util::interval::Interval;
 
 /// Bounding Volume Hierarchy
 #[derive(Display, Debug)]
-#[display(fmt = "{{\"left\": {}, \"right\": {}}}", left, right)]
+#[display("{{\"left\": {}, \"right\": {}}}", left, right)]
 pub struct Bvh {
     left: Box<BvhItem>,
     right: Box<BvhItem>,
